@@ -1,7 +1,7 @@
 import FraseSection from "./components/homepage/FraseSection";
 import Hero from "./components/homepage/Hero";
 import NavBar from "./components/homepage/NavBar";
-import Proyects from "./components/homepage/Proyects";
+import Works from "./components/homepage/Works";
 
 function App() {
   return (
@@ -9,7 +9,7 @@ function App() {
       <NavBar />
       <Hero />
       <FraseSection />
-      <Proyects />
+      <Works />
     </div>
   );
 }
