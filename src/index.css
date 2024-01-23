@@ -21,11 +21,15 @@ html {
     scroll-behavior: smooth;
 }
 
+.noise, .noise-2 {
+    background-repeat: repeat;
+}
+
 .noise {
     background-image: url("./assets/images/noise.png");
-    background-repeat: repeat;
-    background-size: 100%;
+
 }
+
 
 .transition {
     @apply transition-all duration-300 ease-in-out

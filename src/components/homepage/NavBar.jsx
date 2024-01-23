@@ -37,18 +37,13 @@ const NavBar = () => {
         {navItems.map((item) => (
           <a
             key={item.href}
+            href={item.href}
             className="flex flex-col w-fit cursor-pointer h-7 overflow-hidden group"
           >
-            <span
-              href={item.href}
-              className="group-hover:-translate-y-full transition"
-            >
+            <span className="group-hover:-translate-y-full transition">
               {item.name}
             </span>
-            <span
-              href={item.href}
-              className="group-hover:-translate-y-full transition"
-            >
+            <span className="group-hover:-translate-y-full transition">
               {item.name}
             </span>
           </a>

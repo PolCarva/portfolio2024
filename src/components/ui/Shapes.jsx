@@ -8,9 +8,9 @@ import { gsap } from "gsap";
 
 export function Shapes() {
   return (
-    <div className="w-full md:w-1/2 h-full">
+    <div className="w-full lg:w-1/2 h-full">
       <Canvas
-        className="z-0"
+        className="z-0 aspect-square"
         shadows
         gl={{ antialias: false }}
         dpr={[1, 1.5]}
@@ -40,7 +40,7 @@ function Geometries() {
       geometry: new THREE.IcosahedronGeometry(4), // Gem
     },
     {
-      position: [1.2, -0.80, 4],
+      position: [1.2, -0.8, 4],
       r: 0.4,
       geometry: new THREE.CapsuleGeometry(0.6, 1.6, 2, 15), // Pill
     },
@@ -75,16 +75,16 @@ function Geometries() {
       roughness: 0,
     }),
     new THREE.MeshStandardMaterial({
-      color: 0xCBA14E,
-      roughness: 0.4,
-    }),
-    new THREE.MeshStandardMaterial({
-      color: 0xAA9751,
+      color: 0xcba14e,
       roughness: 0,
     }),
     new THREE.MeshStandardMaterial({
-      color: 0x948B3C,
-      roughness: 0.1,
+      color: 0xaa9751,
+      roughness: 0,
+    }),
+    new THREE.MeshStandardMaterial({
+      color: 0x948b3c,
+      roughness: 0,
     }),
   ];
 

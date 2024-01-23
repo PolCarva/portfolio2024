@@ -6,34 +6,35 @@ const Project = ({
   name = "Project name",
   bg = defaultBg,
   img = defaultProyectImg,
-  alt = "default image",
-  type = "Project type",
   link = "#",
   year = 2024,
-  tools = ["React", "Node", "APIs", "TailwindCSS", "Firebase", "React"],
+  tools = ["Development"],
+  comingSoon = false,
 }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  const handleClick = () => {
-    setExpanded(!expanded);
-  };
-
-  const displayedTools = expanded ? tools : tools.slice(0, 3);
+  const displayedTools = tools.slice(0, 5);
 
   return (
-    <div className="w-full">
-      <a href={link}>
+    <div className={`w-full`}>
+      <a href={link} target="_blank">
         <div className="relative group overflow-hidden rounded-md hover:rounded-3xl transition">
           <img
             className="absolute group-hover:scale-100 scale-95 transition z-50 shadow-mdobject-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
             src={img}
-            alt={alt}
+            alt={`${name} proyect image`}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = defaultProyectImg;
+            }}
           />
           <div className="absolute w-full h-full bg-white bg-opacity-20 backdrop-blur-md"></div>
           <img
-            className="w-full object-cover"
+            className={`w-full object-cover ${comingSoon && "grayscale blur-md"}`}
             src={bg}
             alt={`${name} background image`}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = defaultBg;
+            }}
           />
         </div>
       </a>
@@ -42,26 +43,25 @@ const Project = ({
           <h3 className="flex-grow text-works-title 2xl:text-5xl font-medium uppercase text-primary-400">
             {name}
           </h3>
-          <p className="rounded-full h-fit bg-transparent bg-secondary-600 flex justify-center items-center px-4 py-1 text-primary-400 text-body-4 2xl:text-3xl">
+          <p className="rounded-full h-fit bg-transparent md:bg-secondary-600 flex justify-center items-center px-4 py-1 text-primary-400 text-body-4 2xl:text-3xl">
             {year}
           </p>
         </div>
         <div className="2xl:space-y-3">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap content-start">
             {displayedTools.map((tool, index) => (
               <p
                 key={index}
-                className="rounded-full bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-xl"
+                className="rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-xl"
               >
                 {tool}
               </p>
             ))}
-            {tools.length > 3 && (
+            {tools.length > 5 && (
               <p
-                className="rounded-full bg-transparent hover:bg-secondary-300 transition border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-xl cursor-pointer"
-                onClick={handleClick}
+                className="rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-xl cursor-pointer"
               >
-                {expanded ? "-" : "..."}
+                ...
               </p>
             )}
           </div>
