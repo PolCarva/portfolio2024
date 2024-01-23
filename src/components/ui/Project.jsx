@@ -9,7 +9,7 @@ const Project = ({
   link = "#",
   year = 2024,
   tools = ["Development"],
-  comingSoon = false,
+  inactive = false,
 }) => {
   const displayedTools = tools.slice(0, 5);
 
@@ -28,7 +28,7 @@ const Project = ({
           />
           <div className="absolute w-full h-full bg-white bg-opacity-20 backdrop-blur-md"></div>
           <img
-            className={`w-full object-cover ${comingSoon && "grayscale blur-md"}`}
+            className={`w-full object-cover ${inactive && "grayscale blur-md"}`}
             src={bg}
             alt={`${name} background image`}
             onError={(e) => {

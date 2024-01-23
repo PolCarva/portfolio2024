@@ -16,7 +16,7 @@ export const projects = [
     year: 2024,
     tools: ["Backend", "MongoDB", "Node", "React", "Redux", "Tailwind"],
     size: "big",
-    comingSoon: true,
+    inactive: true,
   },
   {
     name: "Darío Spain",
