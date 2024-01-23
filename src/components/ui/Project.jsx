@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import defaultBg from "../../assets/images/default-bg-img.png";
 import defaultProyectImg from "../../assets/images/default-project-img.png";
 
@@ -18,7 +17,7 @@ const Project = ({
       <a href={link} target="_blank">
         <div className="relative group overflow-hidden rounded-md hover:rounded-3xl transition">
           <img
-            className="absolute group-hover:scale-100 scale-95 transition z-50 shadow-mdobject-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="absolute select-none group-hover:scale-100 scale-95 transition z-50 shadow-mdobject-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
             src={img}
             alt={`${name} proyect image`}
             onError={(e) => {
@@ -28,7 +27,7 @@ const Project = ({
           />
           <div className="absolute w-full h-full bg-white bg-opacity-20 backdrop-blur-md"></div>
           <img
-            className={`w-full object-cover ${inactive && "grayscale blur-md"}`}
+            className={`w-full select-none object-cover ${inactive && "grayscale blur-md"}`}
             src={bg}
             alt={`${name} background image`}
             onError={(e) => {
