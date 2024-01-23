@@ -7,7 +7,7 @@ const Hero = () => {
   return (
     <section
       id="hero"
-      className="w-full h-screen flex items-center justify-center pt-10"
+      className="w-full h-svh flex items-center justify-center pt-10"
     >
       <div
         className="absolute overflow-hidden gradient-mask bg-center top-1/2 left-1/2 w-5/6 md:4/5 lg:w-2/6 rounded-full aspect-square -translate-x-1/2 -translate-y-[40%]"
