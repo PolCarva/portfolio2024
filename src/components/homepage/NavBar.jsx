@@ -40,14 +40,12 @@ const NavBar = () => {
             className="flex flex-col w-fit cursor-pointer h-7 overflow-hidden group"
           >
             <span
-              key={"nav item" + item.href}
               href={item.href}
               className="group-hover:-translate-y-full transition"
             >
               {item.name}
             </span>
             <span
-              key={"nav item" + item.href}
               href={item.href}
               className="group-hover:-translate-y-full transition"
             >
