@@ -6,12 +6,12 @@ const About = () => {
   return (
     <section id="about" className="p-10">
       <Heading title="ABOUT ME" />
-      <div className="grid grid-cols-1 mx-auto md:w-9/12 md:grid-cols-2 mt-10">
+      <div className="grid grid-cols-1 gap-10 mx-auto lg:w-9/12 md:grid-cols-2 mt-10">
         <div className="w-full h-full flex justify-center col-span-1">
           <img
             src={aboutImage}
             alt="Pablo Carvalho"
-            className="max-h-[110vh]"
+            className="max-h-[110vh] object-cover rounded-lg"
           />
         </div>
         <div className="w-full h-full col-span-1 flex flex-col gap-5 mt-5 md:mt-0">
