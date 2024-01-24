@@ -38,7 +38,7 @@ const Accordeon = ({ name, tools = [], text, isOpen, handleOpenAccordeon }) => {
           {tools.map((tool, index) => (
             <p
               key={index}
-              className="rounded-full h-fit bg-transparent border border-accent flex justify-center items-center px-4 py-1 text-accent text-xl"
+              className="rounded-full h-fit bg-transparent border border-accent flex justify-center items-center px-4 py-1 text-accent text-md md:text-xl"
             >
               {tool}
             </p>

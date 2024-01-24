@@ -51,7 +51,7 @@ const Project = ({
             {displayedTools.map((tool, index) => (
               <p
                 key={index}
-                className="rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-xl"
+                className="rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-md md:text-xl"
               >
                 {tool}
               </p>
