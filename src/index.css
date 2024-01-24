@@ -18,7 +18,12 @@
 }
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: initial !important;
+}
+
+html, body {
+    min-height: 100%;
+    height: auto;
 }
 
 .noise, .noise-2 {
