@@ -2,6 +2,7 @@ import FraseSection from "./components/homepage/FraseSection";
 import Hero from "./components/homepage/Hero";
 import NavBar from "./components/homepage/NavBar";
 import Works from "./components/homepage/Works";
+import About from "./components/homepage/About";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       <Hero />
       <FraseSection />
       <Works />
+      <About />
     </div>
   );
 }
