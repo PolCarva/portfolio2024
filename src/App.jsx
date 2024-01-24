@@ -4,6 +4,7 @@ import FraseSection from "./components/homepage/FraseSection";
 import Works from "./components/homepage/Works";
 import About from "./components/homepage/About";
 import Skills from "./components/homepage/Skills";
+import Contact from "./components/homepage/Contact";
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Works />
         <About />
         <Skills />
+        <Contact />
       </div>
   );
 }
