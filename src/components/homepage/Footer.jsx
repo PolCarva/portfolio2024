@@ -1,9 +1,84 @@
-import React from 'react'
+import React from "react";
+const navigationItems = [
+  {
+    name: "Home",
+    href: "/",
+  },
+  {
+    name: "Projects",
+    href: "#projects",
+  },
+  {
+    name: "About",
+    href: "#about",
+  },
+  {
+    name: "Contact",
+    href: "#contact",
+  },
+];
+
+const socialItems = [
+  {
+    name: "Linkedin",
+    href: "https://www.linkedin.com/in/pablo-carvalho-gimenez",
+  },
+  {
+    name: "Github",
+    href: "https://github.com/PolCarva",
+  },
+  {
+    name: "Blog",
+    href: "https://multimediasocialmedia.vercel.app/",
+  },
+];
 
 const Footer = () => {
   return (
-    <footer>Footer</footer>
-  )
-}
+    <footer className="p-5 w-full md:w-9/12 mx-auto flex items-end justify-between">
+      <div class="grid grid-cols-3 gap-y-7 lg:gap-y-10 md:grid-cols-6 w-full">
+        <div class="col-span-2 md:col-span-2 flex flex-col">
+          <span class="flex pb-1 font-bold uppercase  text-secondary-600 mb-3">
+            Navigation
+          </span>
+          {navigationItems.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="flex flex-col w-fit cursor-pointer h-7 overflow-hidden group"
+            >
+              <span className="group-hover:-translate-y-full transition">
+                {item.name}
+              </span>
+              <span className="group-hover:-translate-y-full transition">
+                {item.name}
+              </span>
+            </a>
+          ))}
+        </div>
+        <div class="md:col-span-2  flex flex-col">
+          <span class="flex border-b-[1.5px]  border-accent-500 pb-1 font-bold uppercase link-text  text-secondary-600 mb-3">
+            Socials
+          </span>
+          {socialItems.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="flex flex-col w-fit cursor-pointer h-7 overflow-hidden group"
+            >
+              <span className="group-hover:-translate-y-full transition">
+                {item.name}
+              </span>
+              <span className="group-hover:-translate-y-full transition">
+                {item.name}
+              </span>
+            </a>
+          ))}
+        </div>
+        <p className="col-span-2 flex flex-col md:flex-row gap-2 self-end justify-end md:text-end">© Copyright <span className="font-extrabold uppercase">Pablo Carvalho</span></p>
+      </div>
+    </footer>
+  );
+};
 
-export default Footer
+export default Footer;

@@ -111,7 +111,10 @@ const Contact = () => {
             <h3 className="text-3xl md:text-4xl font-extrabold">Location</h3>
             <div className="flex flex-col gap-2">
               <p className="text-xl">Montevideo, Uruguay</p>
-              <span className="text-2xl">{date} (GMT-3)</span>
+              <p className="flex flex-col md:flex-row gap-2">
+                <span className="text-2xl">{date}</span>
+                <span className="text-2xl">(GMT-3)</span>
+              </p>
             </div>
           </div>
         </div>
