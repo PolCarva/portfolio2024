@@ -24,7 +24,7 @@ const NavBar = () => {
     <header className="z-50 absolute top-0 flex w-full items-baseline justify-between p-5 md:px-10">
       {/* Logo */}
       <a href="#hero">
-        <img src="/img/logo.png" alt="Polcar" className="h-6" />
+        <img src="/img/logo.png" alt="Polcar" className="h-8" />
       </a>
 
       {/* Available */}

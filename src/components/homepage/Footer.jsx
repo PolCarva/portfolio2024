@@ -35,9 +35,9 @@ const socialItems = [
 
 const Footer = () => {
   return (
-    <footer className="p-5 w-full md:w-9/12 mx-auto flex items-end justify-between">
+    <footer className="p-5 md:px-0 w-full md:w-9/12 mx-auto flex items-end justify-between">
       <div class="grid grid-cols-3 gap-y-7 lg:gap-y-10 md:grid-cols-6 w-full">
-        <div class="col-span-2 md:col-span-2 flex flex-col">
+        <div class="col-span-2 md:col-span-3 lg:col-span-2 flex flex-col">
           <span class="flex pb-1 font-bold uppercase  text-secondary-600 mb-3">
             Navigation
           </span>
@@ -75,7 +75,7 @@ const Footer = () => {
             </a>
           ))}
         </div>
-        <p className="col-span-2 flex flex-col md:flex-row gap-2 self-end justify-end md:text-end">© Copyright <span className="font-extrabold uppercase">Pablo Carvalho</span></p>
+        <p className="col-span-2 flex flex-col md:flex-row md:gap-2 md:col-span-6 self-end md:justify-center lg:justify-end items-baseline md:text-end">© Copyright 2024<span className="font-extrabold uppercase text-xl">Pablo Carvalho</span></p>
       </div>
     </footer>
   );

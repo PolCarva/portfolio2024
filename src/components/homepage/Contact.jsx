@@ -18,7 +18,7 @@ const Contact = () => {
   return (
     <section id="contact" className="mt-16 px-5 md:px-0">
       <Heading title="Contact me" />
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-10 w-full md:w-9/12 mx-auto pt-10">
+      <div className="grid grid-cols-1 lg:grid-cols-6 gap-10 w-full md:w-9/12 mx-auto pt-10">
         <div className="w-full h-full col-span-4 flex flex-col gap-5">
           <h2 className="text-5xl md:text-6xl font-bold">
             Let's give life to your awesome ideas!
@@ -52,8 +52,8 @@ const Contact = () => {
             </div>
           </form>
         </div>
-        <div className="w-full h-full col-span-2 md:order-1 flex flex-col gap-10">
-          <div className="flex flex-col gap-3">
+        <div className="w-full h-full col-span-2 md:order-1 flex flex-col md:grid lg:flex grid-cols-4 gap-10">
+          <div className="flex flex-col gap-3 col-span-3">
             <h3 className="text-3xl md:text-4xl font-extrabold">
               Contact Details
             </h3>
@@ -107,7 +107,7 @@ const Contact = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 col-span-4">
             <h3 className="text-3xl md:text-4xl font-extrabold">Location</h3>
             <div className="flex flex-col gap-2">
               <p className="text-xl">Montevideo, Uruguay</p>
