@@ -28,12 +28,12 @@ const NavBar = () => {
       className="z-50 absolute top-0 flex w-full items-baseline justify-between p-5 md:px-10"
     >
       {/* Logo */}
-      <a href="#hero">
+      <a href="#hero" id="logo">
         <img src="/img/logo.png" alt="Polcar" className="h-8" />
       </a>
 
       {/* Available */}
-      <p className="hidden md:block font-extrabold md:text-center text-secondary">
+      <p id="availability" className="hidden md:block font-extrabold md:text-center text-secondary">
         AVAILABLE FOR WORK
       </p>
 
@@ -43,7 +43,7 @@ const NavBar = () => {
           <a
             key={item.href}
             href={item.href}
-            className="flex flex-col w-fit cursor-pointer h-7 overflow-hidden group"
+            className="nav-link flex flex-col w-fit cursor-pointer h-7 overflow-hidden group"
           >
             <span className="group-hover:-translate-y-full transition">
               {item.name}

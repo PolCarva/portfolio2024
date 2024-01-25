@@ -3,7 +3,7 @@ import { Shapes } from "../ui/Shapes";
 
 const FraseSection = () => {
   return (
-    <section id="#frase-section">
+    <section id="#frase-section" >
       <div className="bg-accent-400 rounded-t-3xl items-center p-10 md:p-16 lg:h-[80vh] flex flex-col lg:flex-row place-content-center grid-cols-2">
         <Shapes />
         <p className="select-none lg:w-1/2 font-grotesk col-span-2 md:col-span-1 font-bold text-xl md:text-5xl text-primary">
