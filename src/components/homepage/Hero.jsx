@@ -22,7 +22,7 @@ const Hero = () => {
       />
       <div className="flex z-10 flex-col gap-3 md:gap-7 h-full md:h-auto justify-end p-5">
         <div className="order-1">
-          <h1 className="w-full hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto">
+          <h1 className="w-full max-h-[1em] hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto">
             {heroTextArray.map((letter, index) => (
               <span
                 key={index}
@@ -34,7 +34,7 @@ const Hero = () => {
               </span>
             ))}
           </h1>
-          <h1 className="w-full md:ml-12 hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto">
+          <h1 className="w-full md:ml-12 max-h-[1em] hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto">
             {heroTextArray2.map((letter, index) => (
               <span
                 key={index}

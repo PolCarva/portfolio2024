@@ -5,10 +5,11 @@ import { Canvas } from "@react-three/fiber";
 import { ContactShadows, Float, Environment } from "@react-three/drei";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export function Shapes() {
   return (
-    <div className="w-full lg:w-1/2 h-full">
+    <div className="w-full lg:w-1/2 h-full" id="shapes">
       <Canvas
         className="z-0 aspect-square"
         shadows
@@ -138,13 +139,17 @@ function Geometry({ r, position, geometry, soundEffects, materials }) {
   useEffect(() => {
     let ctx = gsap.context(() => {
       setVisible(true);
-      gsap.from(meshRef.current.scale, {
-        x: 0,
-        y: 0,
-        z: 0,
-        duration: gsap.utils.random(0.8, 1.2),
-        ease: "elastic.out(1,0.3)",
-        delay: gsap.utils.random(0, 0.5),
+      ScrollTrigger.create({
+        trigger: "#shapes",
+        start: "top 50%",
+        animation: gsap.from(meshRef.current.scale, {
+          x: 0,
+          y: 0,
+          z: 0,
+          duration: gsap.utils.random(0.8, 1.2),
+          ease: "elastic.out(1,0.3)",
+          delay: gsap.utils.random(0, 0.5),
+        }),
       });
     });
     return () => ctx.revert();

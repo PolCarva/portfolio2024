@@ -79,6 +79,17 @@ function App() {
           ease: "power-out",
         }),
       });
+
+      ScrollTrigger.create({
+        trigger: "#frase",
+        start: "center bottom",
+        animation: gsap.from("#frase", {
+          opacity: 0,
+          duration: 1.5,
+          x: -20,
+          ease: "power-out",
+        }),
+      });
     }, comp);
 
     return () => ctx.revert();
