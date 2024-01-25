@@ -36,9 +36,9 @@ const socialItems = [
 const Footer = () => {
   return (
     <footer className="p-5 md:px-0 w-full md:w-9/12 mx-auto flex items-end justify-between">
-      <div class="grid grid-cols-3 gap-y-7 lg:gap-y-10 md:grid-cols-6 w-full">
-        <div class="col-span-2 md:col-span-3 lg:col-span-2 flex flex-col">
-          <span class="flex pb-1 font-bold uppercase  text-secondary-600 mb-3">
+      <div className="grid grid-cols-3 gap-y-7 lg:gap-y-10 md:grid-cols-6 w-full">
+        <div className="col-span-2 md:col-span-3 lg:col-span-2 flex flex-col">
+          <span className="flex pb-1 font-bold uppercase  text-secondary-600 mb-3">
             Navigation
           </span>
           {navigationItems.map((item) => (
@@ -56,8 +56,8 @@ const Footer = () => {
             </a>
           ))}
         </div>
-        <div class="md:col-span-2  flex flex-col">
-          <span class="flex border-b-[1.5px]  border-accent-500 pb-1 font-bold uppercase link-text  text-secondary-600 mb-3">
+        <div className="md:col-span-2  flex flex-col">
+          <span className="flex border-b-[1.5px]  border-accent-500 pb-1 font-bold uppercase link-text  text-secondary-600 mb-3">
             Socials
           </span>
           {socialItems.map((item) => (

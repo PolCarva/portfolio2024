@@ -7,7 +7,9 @@ import Skills from "./components/homepage/Skills";
 import Contact from "./components/homepage/Contact";
 import Footer from "./components/homepage/Footer";
 
+
 function App() {
+
   return (
     <div className="bg-primary text-accent noise min-h-svh font-general">
       <NavBar />

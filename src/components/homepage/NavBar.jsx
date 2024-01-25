@@ -1,27 +1,43 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { gsap } from "gsap/gsap-core";
+
+const navItems = [
+  {
+    name: "projects",
+    href: "#projects",
+  },
+  {
+    name: "about",
+    href: "#about",
+  },
+  {
+    name: "skills",
+    href: "#skills",
+  },
+  {
+    name: "contact",
+    href: "#contact",
+  },
+];
 
 const NavBar = () => {
-  const navItems = [
-    {
-      name: "projects",
-      href: "#projects",
-    },
-    {
-      name: "about",
-      href: "#about",
-    },
-    {
-      name: "skills",
-      href: "#skills",
-    },
-    {
-      name: "contact",
-      href: "#contact",
-    },
-  ];
+  const navRef = useRef();
+
+  useEffect(() => {
+    gsap.from(navRef.current, {
+      y: -100,
+      opacity: 0,
+      duration: 1,
+      ease: "power3.out",
+    });
+  }, []);
 
   return (
-    <header className="z-50 absolute top-0 flex w-full items-baseline justify-between p-5 md:px-10">
+    <header
+      ref={navRef}
+      id="nav"
+      className="z-50 absolute top-0 flex w-full items-baseline justify-between p-5 md:px-10"
+    >
       {/* Logo */}
       <a href="#hero">
         <img src="/img/logo.png" alt="Polcar" className="h-8" />

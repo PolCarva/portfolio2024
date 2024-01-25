@@ -1,4 +1,5 @@
 import React from "react";
+import cvPdf from "../../assets/documents/cv_en.pdf";
 import { MdOutlineFileDownload } from "react-icons/md";
 
 import patternImg from "../../assets/images/pattern.png";
@@ -14,17 +15,22 @@ const Hero = () => {
         style={{ backgroundImage: `url(${patternImg})` }}
       />
       <div className="z-40 flex flex-col gap-3 md:gap-7 h-full md:h-auto justify-end p-5">
-        <h1 className="text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto order-1">
+        <h1 className="hero-text text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto order-1">
           <span>HI THERE, I’M </span>
           <br /> <span className="md:ml-12">PABLO CARVALHO.</span>
         </h1>
         <p className="pr-5 md:text-center font-grotesk font-bold text-lg md:text-4xl md:w-2/3 md:m-auto text-secondary-600 order-2">
           Fullstack developer & web designer based in Montevideo, Uruguay.
         </p>
-        <div className="py-2 px-6 w-fit self-end md:self-center cursor-pointer hover:scale-95 transition rounded-full font-grotesk order-0 md:order-2 md:text-2xl bg-accent-400 text-primary">
+        {/* download doc */}
+        <a
+          href={cvPdf}
+          download="Pablo_Carvalho_CV_EN.pdf"
+          className="py-2 px-6 w-fit self-end md:self-center cursor-pointer hover:scale-95 transition rounded-full font-grotesk order-0 md:order-2 md:text-2xl bg-accent-400 text-primary"
+        >
           <span>resume</span>
           <MdOutlineFileDownload className="inline-block ml-2" />
-        </div>
+        </a>
       </div>
     </section>
   );
