@@ -44,7 +44,7 @@ const Contact = () => {
         </div>
         <div className="w-full h-full col-span-2 md:order-1 flex flex-col gap-10">
           <div className="flex flex-col gap-3">
-            <h3 className="text-2xl md:text-4xl font-extrabold">
+            <h3 className="text-3xl md:text-4xl font-extrabold">
               Contact Details
             </h3>
             <div className="flex flex-col gap-2">
@@ -60,7 +60,7 @@ const Contact = () => {
             </div>
           </div>
           <div className="flex flex-col gap-3">
-            <h3 className="text-2xl md:text-4xl font-extrabold">
+            <h3 className="text-3xl md:text-4xl font-extrabold">
               Social Media
             </h3>
             <div className="flex flex-col gap-2">
