@@ -1,40 +1,61 @@
 import React from "react";
 import Heading from "../ui/Heading";
-import aboutImage from "../../assets/images/about/aboutimg.png";
+import aboutImage1 from "../../assets/images/about/aboutimg.png";
+
+const aboutData = [
+  {
+    title: "Who am I?",
+    content:
+      "I am a web developer with a passion for creating beautiful and functional websites. I am a self-taught developer and I am always looking for new challenges and opportunities to learn more.",
+    img: { path: aboutImage1, alt: "Pablo's picture" },
+  },
+  {
+    title: "My values.",
+    content:
+      "I am a web developer with a passion for creating beautiful and functional websites. I am a self-taught developer and I am always looking for new challenges and opportunities to learn more.",
+    img: { path: "https://picsum.photos/200/300", alt: "Lorem 1" },
+  },
+  {
+    title: "My hobbies.",
+    content:
+      "I am a web developer with a passion for creating beautiful and functional websites. I am a self-taught developer and I am always looking for new challenges and opportunities to learn more.",
+    img: { path: "https://picsum.photos/300/300", alt: "Lorem 2" },
+  },
+];
 
 const About = () => {
   return (
-    <section id="about" className="mt-16 px-5 md:px-0">
+    <section id="about" className="mt-16 w-9/12 mx-auto px-5 md:px-0">
       <Heading title="ABOUT ME" />
-      <div className="grid grid-cols-1 gap-10 mx-auto lg:w-9/12 md:grid-cols-2 pt-10">
-        <div className="w-full h-full flex justify-center col-span-1">
-          <img
-            src={aboutImage}
-            alt="Pablo Carvalho"
-            className="max-h-[110vh] object-cover rounded-lg"
-          />
+      <div id="gallery" className="w-full flex">
+        <div className="left w-1/2">
+          <div className="detailsWrapper w-10/12 m-auto">
+            {aboutData.map((data) => (
+              <div
+                key={data.title}
+                className="details h-svh flex flex-col justify-center"
+              >
+                <h3 className="h-16 w-full text-6xl font-extrabold">
+                  {data.title}
+                </h3>
+                <p className="mt-8 text-4xl">{data.content}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="w-full h-full col-span-1 flex flex-col gap-5 mt-5 md:mt-0">
-          <h3 className="text-accent text-4xl md:text-6xl font-extrabold">
-            A short overview <span className="block">of who I am</span>
-          </h3>
-          <p className="text-body md:text-2xl font-medium font-grotesk">
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quis
-            itaque cum modi quibusdam in quae sint vero rem ipsa, velit hic
-            laudantium voluptatum a tenetur, vitae, et eligendi sequi. Rerum.
-          </p>
-          <p className="text-body md:text-2xl font-medium font-grotesk">
-            Lorem ipsum dolor, sit amet consectetur adipisicing elit. Eius et
-            modi officia, veritatis tempora voluptates recusandae perferendis!
-            Praesentium, dignissimos. Repellendus praesentium perspiciatis
-            tenetur illo totam laboriosam, rem laborum qui fugiat.
-          </p>
-          <p className="text-body md:text-2xl font-medium font-grotesk">
-            Lorem ipsum dolor, sit amet consectetur adipisicing elit. Error,
-            consequuntur fuga! Porro veritatis quo, expedita eligendi laboriosam
-            fugit repudiandae, fugiat autem alias eos ut consequatur magni
-            pariatur quas recusandae itaque!
-          </p>
+        <div id="right" className=" h-svh w-[1/2] flex flex-col justify-center">
+          <div className="about-photos w-[35svw] aspect-square rounded-xl relative overflow-hidden shadow-2xl">
+            {aboutData.map((data, index) => (
+              <img
+                key={data.title}
+                src={data.img.path}
+                alt={data.img.alt}
+                className={`absolute w-full h-full ${
+                  index > 0 && "stacked-img"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>

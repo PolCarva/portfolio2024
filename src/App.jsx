@@ -1,5 +1,5 @@
 import gsap from "gsap";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import NavBar from "./components/homepage/NavBar";
@@ -10,12 +10,20 @@ import About from "./components/homepage/About";
 import Skills from "./components/homepage/Skills";
 import Contact from "./components/homepage/Contact";
 import Footer from "./components/homepage/Footer";
+import Lenis from "@studio-freight/lenis";
 
 gsap.registerPlugin(ScrollTrigger);
 
 function App() {
-  const comp = useRef(null);
-
+  const comp = useRef();
+  useEffect(() => {
+    const lenis = new Lenis();
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+  });
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
       gsap.from("#hero-pattern", {
@@ -89,6 +97,42 @@ function App() {
           x: -20,
           ease: "power-out",
         }),
+      });
+
+      const headings = gsap.utils.toArray(".heading");
+      headings.forEach((heading) => {
+        ScrollTrigger.create({
+          trigger: heading,
+          start: "bottom 90%",
+          animation: gsap.from(heading.children[0], {
+            opacity: 0,
+            duration: 0.8,
+            yPercent: 100,
+            ease: "power-out",
+          }),
+        });
+      });
+      const photos = gsap.utils.toArray(".stacked-img");
+      gsap.set(photos, { yPercent: 101 });
+
+      ScrollTrigger.create({
+        trigger: "#gallery",
+        start: "top top",
+        end: "bottom bottom",
+        pin: "#right",
+      });
+
+      const details = gsap.utils.toArray(".details");
+
+      details.forEach((detail, index) => {
+        let headline = detail.querySelector("h3");
+        ScrollTrigger.create({
+          trigger: headline,
+          start: "top 80%",
+          end: "top 40%",
+          animation: gsap.to(photos[index - 1], { yPercent: 0 }),
+          scrub: true,
+        });
       });
     }, comp);
 
