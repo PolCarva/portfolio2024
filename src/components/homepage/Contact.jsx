@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Heading from "../ui/Heading";
 
 import { FaLinkedin, FaGithub } from "react-icons/fa";
 import { MdArticle } from "react-icons/md";
 
 const Contact = () => {
+  const [date, setDate] = useState("");
+
+  setInterval(() => {
+    const currentDate = new Date();
+    const options = { timeZone: "America/Argentina/Buenos_Aires" }; // UTC-3
+    const localTime = currentDate.toLocaleTimeString("en-US", options);
+
+    setDate(localTime);
+  }, 1000);
+
   return (
     <section id="contact" className="mt-16 px-5 md:px-0">
       <Heading title="Contact me" />
@@ -95,6 +105,13 @@ const Contact = () => {
                   Blog
                 </a>
               </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            <h3 className="text-3xl md:text-4xl font-extrabold">Location</h3>
+            <div className="flex flex-col gap-2">
+              <p className="text-xl">Montevideo, Uruguay</p>
+              <span className="text-2xl">{date} (GMT-3)</span>
             </div>
           </div>
         </div>
