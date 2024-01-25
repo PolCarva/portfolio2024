@@ -43,9 +43,9 @@ const Skills = () => {
     setAccordeonOpen(name);
   };
   return (
-    <section id="skills">
+    <section id="skills" className="mt-16 px-5 md:px-0">
       <Heading title="Skills" />
-      <div className="grid grid-cols-1 md:w-9/12 mx-auto md:grid-cols-2 gap-10 p-10">
+      <div className="grid grid-cols-1 md:w-9/12 mx-auto md:grid-cols-2 gap-10 pt-10">
         <div className="h-full w-full flex flex-col gap-5">
           <h3 className="text-4xl md:text-6xl">
             my tech <span className="font-extrabold">stack.</span>

@@ -4,9 +4,9 @@ import aboutImage from "../../assets/images/about/aboutimg.png";
 
 const About = () => {
   return (
-    <section id="about" className="p-10">
+    <section id="about" className="mt-16 px-5 md:px-0">
       <Heading title="ABOUT ME" />
-      <div className="grid grid-cols-1 gap-10 mx-auto lg:w-9/12 md:grid-cols-2 mt-10">
+      <div className="grid grid-cols-1 gap-10 mx-auto lg:w-9/12 md:grid-cols-2 pt-10">
         <div className="w-full h-full flex justify-center col-span-1">
           <img
             src={aboutImage}
