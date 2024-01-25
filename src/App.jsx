@@ -66,6 +66,19 @@ function App() {
         delay: 1.5,
         stagger: 0.2,
       });
+
+      ScrollTrigger.create({
+        trigger: "#top-section",
+        start: "top top",
+        end: "bottom top",
+        scrub: 0.5,
+        pin: true,
+        pinSpacing: false,
+        animation: gsap.to("#top-section", {
+          opacity: 0,
+          ease: "power-out",
+        }),
+      });
     }, comp);
 
     return () => ctx.revert();
@@ -76,8 +89,10 @@ function App() {
       ref={comp}
       className="bg-primary text-accent noise min-h-svh font-general"
     >
-      <NavBar />
-      <Hero />
+      <div id="top-section">
+        <NavBar />
+        <Hero />
+      </div>
       <div className="z-10 relative">
         <FraseSection />
         <Works />

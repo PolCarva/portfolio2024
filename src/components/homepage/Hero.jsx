@@ -1,5 +1,5 @@
 import React from "react";
-import cvPdf from "../../assets/documents/cv_en.pdf";
+import cvPdf from "../../assets/documents/Pablo_Carvalho_EN.pdf";
 import { MdOutlineFileDownload } from "react-icons/md";
 
 import patternImg from "../../assets/images/pattern.png";
@@ -21,29 +21,32 @@ const Hero = () => {
         style={{ backgroundImage: `url(${patternImg})` }}
       />
       <div className="flex z-10 flex-col gap-3 md:gap-7 h-full md:h-auto justify-end p-5">
-        <h1 className="w-full hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto order-1">
-          {heroTextArray.map((letter, index) => (
-            <span
-              key={index}
-              className={`letter inline-block ${letter === " " && "w-[.3em]"}`}
-            >
-              {letter}
-            </span>
-          ))}
-        </h1>
-        <h1 className="w-full block md:ml-12 hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto order-1">
-          {heroTextArray2.map((letter, index) => (
-            <span
-              key={index}
-              className={`letter-2 inline-block ${
-                letter === " " && "w-[.3em]"
-              }`}
-            >
-              {letter}
-            </span>
-          ))}
-        </h1>
-
+        <div className="order-1">
+          <h1 className="w-full hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto">
+            {heroTextArray.map((letter, index) => (
+              <span
+                key={index}
+                className={`letter inline-block ${
+                  letter === " " && "w-[.3em]"
+                }`}
+              >
+                {letter}
+              </span>
+            ))}
+          </h1>
+          <h1 className="w-full md:ml-12 hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto">
+            {heroTextArray2.map((letter, index) => (
+              <span
+                key={index}
+                className={`letter-2 inline-block ${
+                  letter === " " && "w-[.3em]"
+                }`}
+              >
+                {letter}
+              </span>
+            ))}
+          </h1>
+        </div>
         <p
           id="hero-desc"
           className="pr-5 md:text-center font-grotesk font-bold text-lg md:text-4xl md:w-2/3 md:m-auto text-secondary-600 order-2"
@@ -55,7 +58,7 @@ const Hero = () => {
           <a
             className="px-6 py-2 cursor-pointer rounded-full font-grotesk md:text-2xl bg-accent-400 text-primary"
             href={cvPdf}
-            download="Pablo_Carvalho_CV_EN.pdf"
+            download="Pablo_Carvalho_EN.pdf"
             id="download-cv"
           >
             <span>resume</span>
