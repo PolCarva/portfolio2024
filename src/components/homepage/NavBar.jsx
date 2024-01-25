@@ -21,20 +21,9 @@ const navItems = [
 ];
 
 const NavBar = () => {
-  const navRef = useRef();
-
-  useEffect(() => {
-    gsap.from(navRef.current, {
-      y: -100,
-      opacity: 0,
-      duration: 1,
-      ease: "power3.out",
-    });
-  }, []);
 
   return (
     <header
-      ref={navRef}
       id="nav"
       className="z-50 absolute top-0 flex w-full items-baseline justify-between p-5 md:px-10"
     >

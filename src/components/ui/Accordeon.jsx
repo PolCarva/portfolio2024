@@ -11,7 +11,7 @@ const Accordeon = ({ name, tools = [], text, isOpen, handleOpenAccordeon }) => {
         <i className="relative w-12 h-12">
           <svg
             className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${
-              isOpen && "-rotate-90"
+              isOpen && "rotate-90"
             } transition !duration-700`}
             width="2"
             height="25"
@@ -22,8 +22,8 @@ const Accordeon = ({ name, tools = [], text, isOpen, handleOpenAccordeon }) => {
             <line x1="0.5" y1="0.5" x2="0.5" y2="25" stroke="#4D4A46" />
           </svg>
           <svg
-            className={`rotate-90 !duration-700 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${
-              isOpen && "-rotate-90"
+            className={`-rotate-90 !duration-700 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${
+              isOpen && "rotate-90"
             } transition`}
             width="2"
             height="25"
@@ -38,9 +38,7 @@ const Accordeon = ({ name, tools = [], text, isOpen, handleOpenAccordeon }) => {
 
       <div
         className={`flex flex-col gap-3 overflow-hidden transition-all duration-1000 ease-in-out ${
-          isOpen
-            ? "opacity-100 max-h-[250px] mt-5"
-            : "max-h-0 opacity-0"
+          isOpen ? "opacity-100 max-h-[250px] mt-5" : "max-h-0 opacity-0"
         }`}
       >
         {tools && (
