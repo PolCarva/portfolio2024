@@ -11,6 +11,7 @@ import Skills from "./components/homepage/Skills";
 import Contact from "./components/homepage/Contact";
 import Footer from "./components/homepage/Footer";
 import Lenis from "@studio-freight/lenis";
+import Menu from "./components/homepage/Menu";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,6 +25,7 @@ function App() {
     }
     requestAnimationFrame(raf);
   });
+
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
       gsap.from("#hero-pattern", {
@@ -164,6 +166,7 @@ function App() {
       ref={comp}
       className="bg-primary text-accent noise min-h-svh font-general"
     >
+      <Menu />
       <div id="top-section">
         <NavBar />
         <Hero />
