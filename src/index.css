@@ -47,3 +47,21 @@ html, body {
     background-repeat: repeat;
     background-position: center;
 }
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-primary;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-secondary rounded-full
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-secondary-500
+}
+
