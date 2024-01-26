@@ -1,3 +1,4 @@
+import { useState } from "react";
 import defaultBg from "../../assets/images/default-bg-img.png";
 import defaultProyectImg from "../../assets/images/default-project-img.png";
 
@@ -10,7 +11,16 @@ const Project = ({
   tools = ["Development"],
   inactive = false,
 }) => {
-  const displayedTools = tools.slice(0, 5);
+  const [displayedTools, setDisplayedTools] = useState(tools.slice(0, 5));
+  const [startIndex, setStartIndex] = useState(0);
+
+  const handleDotsClick = () => {
+    const newStartIndex = startIndex + 5;
+    const newDisplayedTools = tools.slice(newStartIndex, newStartIndex + 5);
+
+    setStartIndex(newStartIndex);
+    setDisplayedTools(newDisplayedTools);
+  };
 
   return (
     <div className={`w-full`}>
@@ -27,7 +37,9 @@ const Project = ({
           />
           <div className="absolute w-full h-full bg-white bg-opacity-20 backdrop-blur-md"></div>
           <img
-            className={`w-full select-none object-cover ${inactive && "grayscale blur-md"}`}
+            className={`w-full select-none object-cover ${
+              inactive && "grayscale blur-md"
+            }`}
             src={bg}
             alt={`${name} background image`}
             onError={(e) => {
@@ -48,6 +60,24 @@ const Project = ({
         </div>
         <div className="2xl:space-y-3">
           <div className="flex gap-2 flex-wrap content-start">
+            {startIndex > 0 && (
+              <span
+                onClick={() => {
+                  const newStartIndex = startIndex - 5;
+                  const newDisplayedTools = tools.slice(
+                    newStartIndex,
+                    newStartIndex + 5
+                  );
+
+                  setStartIndex(newStartIndex);
+                  setDisplayedTools(newDisplayedTools);
+                }}
+                className="hover:bg-secondary-600 hover:text-primary cursor-pointer transition rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-md md:text-xl"
+              >
+                ...
+              </span>
+            )}
+
             {displayedTools.map((tool, index) => (
               <p
                 key={index}
@@ -56,12 +86,14 @@ const Project = ({
                 {tool}
               </p>
             ))}
-            {tools.length > 5 && (
-              <p
-                className="rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-xl cursor-pointer"
+
+            {tools.length > startIndex + 5 && (
+              <span
+                onClick={handleDotsClick}
+                className="hover:bg-secondary-600 hover:text-primary cursor-pointer transition rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-md md:text-xl"
               >
                 ...
-              </p>
+              </span>
             )}
           </div>
         </div>
