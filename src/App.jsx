@@ -112,7 +112,7 @@ function App() {
           }),
         });
       });
-      const photos = gsap.utils.toArray(".stacked-img");
+      const photos = gsap.utils.toArray(".stacked-img") || [];
       gsap.set(photos, { yPercent: 101 });
 
       ScrollTrigger.create({
@@ -122,18 +122,19 @@ function App() {
         pin: "#right",
       });
 
-      const details = gsap.utils.toArray(".details");
+      const details = gsap.utils.toArray(".details") || [];
 
-      details.forEach((detail, index) => {
-        let headline = detail.querySelector("h3");
-        ScrollTrigger.create({
-          trigger: headline,
-          start: "top 80%",
-          end: "top 40%",
-          animation: gsap.to(photos[index - 1], { yPercent: 0 }),
-          scrub: true,
+      details &&
+        details.forEach((detail, index) => {
+          let headline = detail.querySelector("h3");
+          ScrollTrigger.create({
+            trigger: headline,
+            start: "top 80%",
+            end: "top 40%",
+            animation: gsap.to(photos[index - 1], { yPercent: 0 }),
+            scrub: true,
+          });
         });
-      });
     }, comp);
 
     return () => ctx.revert();
