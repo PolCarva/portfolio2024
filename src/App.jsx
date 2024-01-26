@@ -90,6 +90,20 @@ function App() {
         }),
       });
 
+      gsap.set("#menu-btn", { scale: 0, opacity: 0 });
+
+      ScrollTrigger.create({
+        trigger: "#frase-section",
+        start: "top top",
+        toggleActions: "play reverse play reverse",
+        animation: gsap.to("#menu-btn", {
+          scale: 1,
+          opacity: 1,
+          duration: 0.8,
+          ease: "back.out",
+        }),
+      });
+
       ScrollTrigger.create({
         trigger: "#frase",
         start: "90% bottom",

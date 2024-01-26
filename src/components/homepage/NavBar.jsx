@@ -1,24 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap/gsap-core";
 
-const navItems = [
-  {
-    name: "projects",
-    href: "#projects",
-  },
-  {
-    name: "about",
-    href: "#about",
-  },
-  {
-    name: "skills",
-    href: "#skills",
-  },
-  {
-    name: "contact",
-    href: "#contact",
-  },
-];
+import { navItems } from "../../data/navItems";
 
 const NavBar = () => {
 
