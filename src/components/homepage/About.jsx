@@ -29,8 +29,12 @@ const About = () => {
       <Heading title="ABOUT ME" />
       {/* Mobile */}
       <div className="w-full flex gap-5 flex-col lg:hidden mt-5">
-        {aboutData.map(({ title, content, img }) => (
-          <div className="w-full flex-col">
+        {aboutData.map(({ title, content, img }, index) => (
+          <div
+            key={`mobile-${title}`}
+            className="w-full flex-col mobile-about"
+            style={{ zIndex: index }}
+          >
             <img
               src={img.path}
               alt={img.alt}

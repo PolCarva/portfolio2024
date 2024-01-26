@@ -57,15 +57,15 @@ function App() {
       gsap.from(".letter", {
         yPercent: 100,
         duration: 0.5,
-        stagger: 0.02,
-        delay: 0.5,
+        stagger: 0.05,
+        delay: 1.5,
         ease: "ease.out",
       });
       gsap.from(".letter-2", {
         yPercent: 100,
         duration: 0.5,
-        stagger: 0.02,
-        delay: 0.6,
+        stagger: 0.05,
+        delay: 2,
         ease: "ease.out",
       });
       gsap.from(["#hero-desc", "#download-cv"], {
@@ -133,6 +133,24 @@ function App() {
             end: "top 40%",
             animation: gsap.to(photos[index - 1], { yPercent: 0 }),
             scrub: true,
+          });
+        });
+
+      const mobileAbout = gsap.utils.toArray(".mobile-about") || [];
+      mobileAbout &&
+        mobileAbout.forEach((mobile, index) => {
+          if (index === mobileAbout.length - 1) return;
+          ScrollTrigger.create({
+            trigger: mobile,
+            start: "-10% top",
+            end: "bottom top",
+            scrub: 0.5,
+            pin: true,
+            pinSpacing: false,
+            animation: gsap.to(mobile, {
+              opacity: 0,
+              ease: "power4.out",
+            }),
           });
         });
     }, comp);

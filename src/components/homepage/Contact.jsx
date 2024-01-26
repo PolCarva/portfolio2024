@@ -60,11 +60,11 @@ const Contact = () => {
             <div className="flex flex-col gap-2">
               <a
                 href="mailto:pablocarvalhogimenez@gmail.com"
-                className="text-xl"
+                className="text-lg md:text-xl"
               >
                 pablocarvalhogimenez@gmail.com
               </a>
-              <a href="phone:+598094375127" className="text-xl">
+              <a href="phone:+598094375127" className="text-lg md:text-xl">
                 (+598) 094 375 127
               </a>
             </div>
@@ -79,7 +79,7 @@ const Contact = () => {
                 <a
                   href="https://www.linkedin.com/in/pablo-carvalho-gimenez"
                   target="_blank"
-                  className="text-xl"
+                  className="text-lg md:text-xl"
                 >
                   LinkedIn
                 </a>
@@ -90,7 +90,7 @@ const Contact = () => {
                 <a
                   href="https://github.com/PolCarva"
                   target="_blank"
-                  className="text-xl"
+                  className="text-lg md:text-xl"
                 >
                   Github
                 </a>
@@ -100,7 +100,7 @@ const Contact = () => {
                 <a
                   href="https://github.com/PolCarva"
                   target="_blank"
-                  className="text-xl"
+                  className="text-lg md:text-xl"
                 >
                   Blog
                 </a>
@@ -110,10 +110,10 @@ const Contact = () => {
           <div className="flex flex-col gap-3 col-span-4">
             <h3 className="text-3xl md:text-4xl font-extrabold">Location</h3>
             <div className="flex flex-col gap-2">
-              <p className="text-xl">Montevideo, Uruguay</p>
+              <p className="text-lg md:text-xl">Montevideo, Uruguay</p>
               <p className="flex flex-col md:flex-row gap-2">
-                <span className="text-2xl">{date}</span>
-                <span className="text-2xl">(GMT-3)</span>
+                <span className="text-xl md:text-2xl">{date}</span>
+                <span className="text-xl md:text-2xl">(GMT-3)</span>
               </p>
             </div>
           </div>
