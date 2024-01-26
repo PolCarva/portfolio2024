@@ -99,7 +99,7 @@ function App() {
         animation: gsap.to("#menu-btn", {
           scale: 1,
           opacity: 1,
-          duration: 0.8,
+          duration: 0.5,
           ease: "back.out",
         }),
       });
