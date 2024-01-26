@@ -142,7 +142,7 @@ function Geometry({ r, position, geometry, soundEffects, materials }) {
       ScrollTrigger.create({
         trigger: "#shapes",
         start: "top 50%",
-        toggleActions: "play reverse play reverse", // Reproduce la animación al subir y revertir al bajar
+        toggleActions: "play reverse play reverse", 
         animation: gsap.from(meshRef.current.scale, {
           x: 0,
           y: 0,

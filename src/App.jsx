@@ -71,7 +71,7 @@ function App() {
       gsap.from(["#hero-desc", "#download-cv"], {
         opacity: 0,
         duration: 1,
-        delay: 1.5,
+        delay: 2.1,
         stagger: 0.2,
       });
 
@@ -90,12 +90,13 @@ function App() {
 
       ScrollTrigger.create({
         trigger: "#frase",
-        start: "center bottom",
+        start: "90% bottom",
+        toggleActions: "play reverse play reverse",
         animation: gsap.from("#frase", {
           opacity: 0,
           duration: 1.5,
-          x: -20,
-          ease: "power-out",
+          x: -50,
+          ease: "power2.inout",
         }),
       });
 
@@ -103,7 +104,7 @@ function App() {
       headings.forEach((heading) => {
         ScrollTrigger.create({
           trigger: heading,
-          start: "bottom 90%",
+          start: "bottom 85%",
           animation: gsap.from(heading.children[0], {
             opacity: 0,
             duration: 0.8,
