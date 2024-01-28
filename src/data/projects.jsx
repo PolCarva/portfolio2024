@@ -1,12 +1,12 @@
 import { BG_IMG } from "../constants/backgrounds";
 
-import comingSoonImg from "../assets/images/proyects/comingsoon.png";
-import darioImg from "../assets/images/proyects/dariospain.png";
-import hotelAndTravelImg from "../assets/images/proyects/hotelandtravel.png";
-import dropperImg from "../assets/images/proyects/dropper.png";
-import triviaChallengeImg from "../assets/images/proyects/triviachallenge.png";
-import twitterCloneImg from "../assets/images/proyects/twitterclone.png";
-import oldPortfolioImg from "../assets/images/proyects/oldportfolio.png";
+import comingSoonImg from "../assets/images/projects/comingsoon.png";
+import darioImg from "../assets/images/projects/dariospain.png";
+import hotelAndTravelImg from "../assets/images/projects/hotelandtravel.png";
+import dropperImg from "../assets/images/projects/dropper.png";
+import triviaChallengeImg from "../assets/images/projects/triviachallenge.png";
+import twitterCloneImg from "../assets/images/projects/twitterclone.png";
+import oldPortfolioImg from "../assets/images/projects/oldportfolio.png";
 
 export const projects = [
   {

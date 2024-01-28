@@ -91,11 +91,14 @@ function App() {
       });
 
       gsap.set("#menu-btn", { scale: 0, opacity: 0 });
+      const bodyHeigth = document.body.clientHeight;
+      const hearoHeigth = document.getElementById("top-section").clientHeight;
 
       ScrollTrigger.create({
         trigger: "#frase-section",
         start: "top top",
         toggleActions: "play reverse play reverse",
+        end: `${bodyHeigth - hearoHeigth}px`,
         animation: gsap.to("#menu-btn", {
           scale: 1,
           opacity: 1,
@@ -137,6 +140,7 @@ function App() {
         start: "top top",
         end: "bottom bottom",
         pin: "#right",
+        pinSpacing: false,
       });
 
       const details = gsap.utils.toArray(".details") || [];
@@ -153,23 +157,21 @@ function App() {
           });
         });
 
-      const mobileAbout = gsap.utils.toArray(".mobile-about") || [];
-      mobileAbout &&
-        mobileAbout.forEach((mobile, index) => {
-          if (index === mobileAbout.length - 1) return;
-          ScrollTrigger.create({
-            trigger: mobile,
-            start: "-10% top",
-            end: "bottom top",
-            scrub: 0.5,
-            pin: true,
-            pinSpacing: false,
-            animation: gsap.to(mobile, {
-              opacity: 0,
-              ease: "power4.out",
-            }),
-          });
+      const mobileAbout = gsap.utils.toArray(".mobile-about");
+      mobileAbout.forEach((mobile, index) => {
+        if (index === mobileAbout.length - 1) return;
+        ScrollTrigger.create({
+          trigger: mobile,
+          start: "top top",
+          end: "bottom top",
+          scrub: 0.5,
+          pin: true,
+          animation: gsap.to(mobile, {
+            opacity: 0,
+            ease: "power4.out",
+          }),
         });
+      });
     }, comp);
 
     return () => ctx.revert();

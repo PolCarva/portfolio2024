@@ -29,7 +29,7 @@ const Project = ({
           <img
             className="absolute select-none group-hover:scale-100 scale-95 transition z-50 shadow-mdobject-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
             src={img}
-            alt={`${name} proyect image`}
+            alt={`${name} project image`}
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = defaultProyectImg;
