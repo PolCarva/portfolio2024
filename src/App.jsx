@@ -17,6 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 function App() {
   const comp = useRef();
+
   useEffect(() => {
     const lenis = new Lenis();
     function raf(time) {
