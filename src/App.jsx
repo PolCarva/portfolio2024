@@ -91,14 +91,12 @@ function App() {
       });
 
       gsap.set("#menu-btn", { scale: 0, opacity: 0 });
-      const bodyHeigth = document.body.clientHeight;
-      const hearoHeigth = document.getElementById("top-section").clientHeight;
 
       ScrollTrigger.create({
-        trigger: "#frase-section",
+        trigger: "#menu-section",
         start: "top top",
+        end: "bottom top",
         toggleActions: "play reverse play reverse",
-        end: `${bodyHeigth - hearoHeigth}px`,
         animation: gsap.to("#menu-btn", {
           scale: 1,
           opacity: 1,
@@ -187,7 +185,7 @@ function App() {
         <NavBar />
         <Hero />
       </div>
-      <div className="z-10 relative">
+      <div id="menu-section" className="z-10 relative">
         <FraseSection />
         <Works />
         <About />

@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import MenuBtn from "../ui/MenuBtn";
+import cvPdf from "../../assets/documents/Pablo_Carvalho_EN.pdf";
 
 import { navItems } from "../../data/navItems";
+import { MdArticle, MdOutlineFileDownload } from "react-icons/md";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 const Menu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -39,6 +42,40 @@ const Menu = () => {
                 </a>
               </div>
             ))}
+          </div>
+          <div className="absolute w-full justify-between md:justify-end flex gap-5 text-sm md:text-lg text-primary bottom-0 md:right-0 p-5">
+            <a
+              href="https://www.linkedin.com/in/pablo-carvalho-gimenez"
+              target="_blank"
+              className="flex items-center gap-2"
+            >
+              <FaLinkedin className="text-xl md:text-xl" />
+              <span>LinkedIn</span>
+            </a>
+            <a
+              href="https://github.com/PolCarva"
+              target="_blank"
+              className="flex items-center gap-2"
+            >
+              <FaGithub className="text-xl md:text-xl" />
+              <span>Github</span>
+            </a>
+            <a
+              href="https://multimediasocialmedia.vercel.app/"
+              target="_blank"
+              className="flex items-center gap-2"
+            >
+              <MdArticle className="text-xl md:text-xl" />
+              <span>Blog</span>
+            </a>
+            <a
+              href={cvPdf}
+              download="Pablo_Carvalho_EN.pdf"
+              className="flex items-center gap-2"
+            >
+              <span>Resume</span>
+              <MdOutlineFileDownload className="text-xl md:text-xl" />
+            </a>
           </div>
         </div>
       </div>

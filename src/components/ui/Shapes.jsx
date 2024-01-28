@@ -11,7 +11,7 @@ export function Shapes() {
   return (
     <div className="w-full lg:w-1/2 h-full" id="shapes">
       <Canvas
-        className="z-0 aspect-square"
+        className="z-0 aspect-square bg-transparent"
         shadows
         gl={{ antialias: false }}
         dpr={[1, 1.5]}
@@ -142,7 +142,7 @@ function Geometry({ r, position, geometry, soundEffects, materials }) {
       ScrollTrigger.create({
         trigger: "#shapes",
         start: "top 50%",
-        toggleActions: "play reverse play reverse", 
+        toggleActions: "play reverse play reverse",
         animation: gsap.from(meshRef.current.scale, {
           x: 0,
           y: 0,

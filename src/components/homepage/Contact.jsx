@@ -98,7 +98,7 @@ const Contact = () => {
               <div className="flex gap-2 items-center">
                 <MdArticle className="text-2xl" />
                 <a
-                  href="https://github.com/PolCarva"
+                  href="https://multimediasocialmedia.vercel.app/"
                   target="_blank"
                   className="text-lg md:text-xl"
                 >
