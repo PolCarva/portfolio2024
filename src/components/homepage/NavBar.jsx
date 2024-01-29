@@ -8,7 +8,7 @@ const NavBar = () => {
   return (
     <header
       id="nav"
-      className="z-50 absolute top-0 flex w-full items-baseline justify-between p-5 md:px-10"
+      className="z-40 absolute top-0 flex w-full items-baseline justify-between p-5 md:px-10"
     >
       {/* Logo */}
       <a href="#hero" id="logo">
@@ -26,7 +26,7 @@ const NavBar = () => {
           <a
             key={item.href}
             href={item.href}
-            className="nav-link flex flex-col w-fit cursor-pointer h-7 overflow-hidden group"
+            className="nav-link flex flex-col w-fit h-7 overflow-hidden group"
           >
             <span className="group-hover:-translate-y-full transition">
               {item.name}

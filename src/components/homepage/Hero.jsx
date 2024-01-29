@@ -56,7 +56,7 @@ const Hero = () => {
         {/* download doc */}
         <div className="w-fit hover:scale-95 transition order-0 md:order-2 self-end md:self-center">
           <a
-            className="px-6 py-2 cursor-pointer rounded-full font-grotesk md:text-2xl bg-accent-400 text-primary"
+            className="px-6 py-2 rounded-full font-grotesk md:text-2xl bg-accent-400 text-primary"
             href={cvPdf}
             download="Pablo_Carvalho_EN.pdf"
             id="download-cv"

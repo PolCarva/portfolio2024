@@ -13,6 +13,8 @@ import Footer from "./components/homepage/Footer";
 import Lenis from "@studio-freight/lenis";
 import Menu from "./components/homepage/Menu";
 
+import Cursor from "./components/ui/Cursor";
+
 gsap.registerPlugin(ScrollTrigger);
 
 function App() {
@@ -182,8 +184,9 @@ function App() {
   return (
     <div
       ref={comp}
-      className="bg-primary text-accent noise min-h-svh font-general"
+      className="bg-primary text-accent noise min-h-svh font-general cursor-none"
     >
+      <Cursor />
       <Menu />
       <div id="top-section">
         <NavBar />

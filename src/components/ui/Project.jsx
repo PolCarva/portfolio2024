@@ -25,9 +25,9 @@ const Project = ({
   return (
     <div className={`w-full`}>
       <a href={link} target="_blank">
-        <div className="relative group overflow-hidden rounded-md hover:rounded-3xl transition">
+        <div className="relative image group overflow-hidden rounded-md hover:rounded-3xl transition">
           <img
-            className="absolute select-none group-hover:scale-100 scale-95 transition z-50 shadow-mdobject-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="absolute select-none group-hover:scale-100 scale-95 transition z-20 shadow-mdobject-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
             src={img}
             alt={`${name} project image`}
             onError={(e) => {
@@ -72,7 +72,7 @@ const Project = ({
                   setStartIndex(newStartIndex);
                   setDisplayedTools(newDisplayedTools);
                 }}
-                className="hover:bg-secondary-600 hover:text-primary cursor-pointer transition rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-md md:text-xl"
+                className="hover:bg-secondary-600 hover:text-primary  transition rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-md md:text-xl"
               >
                 ...
               </span>
@@ -90,7 +90,7 @@ const Project = ({
             {tools.length > startIndex + 5 && (
               <span
                 onClick={handleDotsClick}
-                className="hover:bg-secondary-600 hover:text-primary cursor-pointer transition rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-md md:text-xl"
+                className="hover:bg-secondary-600 hover:text-primary  transition rounded-full h-fit bg-transparent border border-secondary-600 flex justify-center items-center px-4 py-1 text-secondary-600 text-md md:text-xl"
               >
                 ...
               </span>

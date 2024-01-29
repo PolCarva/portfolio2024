@@ -17,6 +17,10 @@
     font-style: normal;
 }
 
+* {
+    cursor: none !important;
+}
+
 html {
     scroll-behavior: initial !important;
 }

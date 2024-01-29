@@ -1,7 +1,7 @@
 const Accordeon = ({ name, tools = [], text, isOpen, handleOpenAccordeon }) => {
   return (
     <div
-      className="w-full border-b border-secondary cursor-pointer group flex flex-col py-5 select-none"
+      className="w-full border-b border-secondary  group flex flex-col py-5 select-none"
       onClick={() => handleOpenAccordeon(name)}
     >
       <div className="flex justify-between items-center">

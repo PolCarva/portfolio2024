@@ -142,7 +142,6 @@ function Geometry({ r, position, geometry, soundEffects, materials }) {
       ScrollTrigger.create({
         trigger: "#shapes",
         start: "center center",
-        markers: true,
         toggleActions: "play reverse play reverse",
         animation: gsap.from(meshRef.current.scale, {
           x: 0,

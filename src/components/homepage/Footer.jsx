@@ -45,7 +45,7 @@ const Footer = () => {
             <a
               key={item.href}
               href={item.href}
-              className="flex flex-col w-fit cursor-pointer h-7 overflow-hidden group"
+              className="flex flex-col w-fit h-7 overflow-hidden group"
             >
               <span className="group-hover:-translate-y-full transition">
                 {item.name}
@@ -64,7 +64,7 @@ const Footer = () => {
             <a
               key={item.href}
               href={item.href}
-              className="flex flex-col w-fit cursor-pointer h-7 overflow-hidden group"
+              className="flex flex-col w-fit  h-7 overflow-hidden group"
             >
               <span className="group-hover:-translate-y-full transition">
                 {item.name}

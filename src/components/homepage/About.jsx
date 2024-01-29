@@ -1,27 +1,6 @@
 import React from "react";
 import Heading from "../ui/Heading";
-import aboutImage1 from "../../assets/images/about/aboutimg.png";
-
-const aboutData = [
-  {
-    title: "Who am I?",
-    content:
-      "I am a web developer with a passion for creating beautiful and functional websites. I am a self-taught developer and I am always looking for new challenges and opportunities to learn more.",
-    img: { path: aboutImage1, alt: "Pablo's picture" },
-  },
-  {
-    title: "My values.",
-    content:
-      "I am a web developer with a passion for creating beautiful and functional websites. I am a self-taught developer and I am always looking for new challenges and opportunities to learn more.",
-    img: { path: "https://picsum.photos/200/300", alt: "Lorem 1" },
-  },
-  {
-    title: "My hobbies.",
-    content:
-      "I am a web developer with a passion for creating beautiful and functional websites. I am a self-taught developer and I am always looking for new challenges and opportunities to learn more.",
-    img: { path: "https://picsum.photos/300/300", alt: "Lorem 2" },
-  },
-];
+import { aboutData } from "../../data/aboutData";
 
 const About = () => {
   return (
