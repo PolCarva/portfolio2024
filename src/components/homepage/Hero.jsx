@@ -13,7 +13,7 @@ const Hero = () => {
   return (
     <section
       id="hero"
-      className="w-full h-svh flex items-center justify-center pt-10"
+      className="w-full h-svh flex overflow-x-hidden items-center justify-center pt-10"
     >
       <div
         id="hero-pattern"
@@ -21,8 +21,8 @@ const Hero = () => {
         style={{ backgroundImage: `url(${patternImg})` }}
       />
       <div className="flex z-10 flex-col gap-3 md:gap-7 h-full md:h-auto justify-end p-5">
-        <div className="order-1">
-          <h1 className="w-full max-h-[1em] hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto">
+        <div className="order-1 mx-auto">
+          <h1 className="w-full max-h-[1em] md:max-h-max hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[4rem] lg:leading-[8rem] md:mx-auto">
             {heroTextArray.map((letter, index) => (
               <span
                 key={index}
@@ -34,7 +34,7 @@ const Hero = () => {
               </span>
             ))}
           </h1>
-          <h1 className="w-full md:ml-12 max-h-[1em] hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[8rem] md:mx-auto">
+          <h1 className="w-full md:ml-12 max-h-[1em] md:max-h-max hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[4rem] lg:leading-[8rem] md:mx-auto">
             {heroTextArray2.map((letter, index) => (
               <span
                 key={index}

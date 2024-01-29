@@ -1,10 +1,7 @@
-import React, { useEffect, useRef } from "react";
-import { gsap } from "gsap/gsap-core";
-
+import { config } from "../../config/config";
 import { navItems } from "../../data/navItems";
 
 const NavBar = () => {
-
   return (
     <header
       id="nav"
@@ -16,8 +13,18 @@ const NavBar = () => {
       </a>
 
       {/* Available */}
-      <p id="availability" className="hidden md:block font-extrabold md:text-center text-secondary">
-        AVAILABLE FOR WORK
+      <p
+        id="availability"
+        className="hidden md:block font-extrabold uppercase md:text-center text-secondary"
+      >
+        {config.availabilitie
+          ? `AVAILABLE FOR WORK`
+          : `CURRENTLY ${
+              config.company ? `WORKING AT ${config.company}` : "NOT AVAILABLE"
+            }`}
+        {config.availabilitie && (
+          <span className="block">{config.timeAvailable}</span>
+        )}
       </p>
 
       {/* Menu */}

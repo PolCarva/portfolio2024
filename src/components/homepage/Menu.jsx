@@ -5,6 +5,7 @@ import cvPdf from "../../assets/documents/Pablo_Carvalho_EN.pdf";
 import { navItems } from "../../data/navItems";
 import { MdArticle, MdOutlineFileDownload } from "react-icons/md";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { config } from "../../config/config";
 
 const Menu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,7 +26,7 @@ const Menu = () => {
       <div
         className={`${
           isMenuOpen ? "translate-x-0" : "-translate-x-full opacity-0"
-        } transition noise md:rounded-lg !duration-500 overflow-hidden w-full h-full md:w-1/3 z-[998] fixed bg-accent-400 md:h-[calc(100%-2em)] md:top-1/2 md:left-5 md:-translate-y-1/2`}
+        } transition noise md:rounded-lg !duration-500 overflow-hidden w-full h-full md:w-[calc(100%-2em)] lg:w-1/3 z-[998] fixed bg-accent-400 md:h-[calc(100%-2em)] md:top-1/2 md:left-5 md:-translate-y-1/2`}
       >
         <div className="relative w-full h-full flex flex-col justify-center items-center">
           <div className="absolute w-9/12 md:w-2/3 aspect-square rounded-full -top-1/2 right-0 translate-x-[50%] translate-y-[70%] bg-secondary-500 opacity-80"></div>
@@ -45,7 +46,7 @@ const Menu = () => {
           </div>
           <div className="absolute w-full justify-between md:justify-end flex gap-5 text-sm md:text-lg text-primary bottom-0 md:right-0 p-5">
             <a
-              href="https://www.linkedin.com/in/pablo-carvalho-gimenez"
+              href={config.linkedin}
               target="_blank"
               className="flex items-center gap-2"
             >

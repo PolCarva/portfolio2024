@@ -7,7 +7,7 @@ const About = () => {
     <section id="about" className="mt-16 w-full md:w-9/12 mx-auto px-5 md:px-0">
       <Heading title="ABOUT ME" />
       {/* Mobile */}
-      <div className="w-full flex gap-5 flex-col lg:hidden mt-5">
+      <div className="w-full flex gap-20 md:gap-16 flex-col lg:hidden mt-20">
         {aboutData.map(({ title, content, img }, index) => (
           <div
             key={`mobile-${title}`}
@@ -17,11 +17,11 @@ const About = () => {
             <img
               src={img.path}
               alt={img.alt}
-              className="w-full aspect-square object-cover object-center rounded-lg"
+              className="w-full md:w-3/4 md:mx-auto aspect-square object-cover object-center rounded-lg"
             />
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 md:w-3/4 md:mx-auto">
               <h3 className="mt-5 w-full text-4xl font-extrabold">{title}</h3>
-              <p className="text-body">{content}</p>
+              <p className="text-body md:text-2xl">{content}</p>
             </div>
           </div>
         ))}

@@ -13,7 +13,10 @@ export const aboutData = [
     title: "My values.",
     content:
       "I emphasize integrity, collaboration, and continuous learning, principles that guide my approach to both life and web development.",
-    img: { path: aboutImage2, alt: "An image representing teamwork and collaboration in a more abstract and less literal way. This could be a depiction of different geometric shapes or puzzle pieces coming together to form a larger, cohesive image, symbolizing different elements or individuals working in harmony to achieve a common goal. The composition should be modern and sleek, using a balanced color palette to convey a sense of unity and collective effort without being overly sentimental." },
+    img: {
+      path: aboutImage2,
+      alt: "An image representing teamwork and collaboration in a more abstract and less literal way. This could be a depiction of different geometric shapes or puzzle pieces coming together to form a larger, cohesive image, symbolizing different elements or individuals working in harmony to achieve a common goal. The composition should be modern and sleek, using a balanced color palette to convey a sense of unity and collective effort without being overly sentimental.",
+    },
   },
   {
     title: "My strengths.",

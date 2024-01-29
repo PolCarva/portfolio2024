@@ -1,4 +1,6 @@
 import React from "react";
+import { config } from "../../config/config";
+
 const navigationItems = [
   {
     name: "Home",
@@ -21,15 +23,15 @@ const navigationItems = [
 const socialItems = [
   {
     name: "Linkedin",
-    href: "https://www.linkedin.com/in/pablo-carvalho-gimenez",
+    href: config.linkedin,
   },
   {
     name: "Github",
-    href: "https://github.com/PolCarva",
+    href: config.github,
   },
   {
     name: "Blog",
-    href: "https://multimediasocialmedia.vercel.app/",
+    href: config.blog,
   },
 ];
 
@@ -75,7 +77,12 @@ const Footer = () => {
             </a>
           ))}
         </div>
-        <p className="col-span-2 flex flex-col md:flex-row md:gap-2 md:col-span-6 self-end md:justify-center lg:justify-end items-baseline md:text-end">© Copyright 2024<span className="font-extrabold uppercase text-xl">Pablo Carvalho</span></p>
+        <p className="col-span-2 flex flex-col md:flex-row md:gap-2 md:col-span-6 self-end md:justify-center lg:justify-end items-baseline md:text-end">
+          © Copyright 2024
+          <span className="font-extrabold uppercase text-xl">
+            Pablo Carvalho
+          </span>
+        </p>
       </div>
     </footer>
   );

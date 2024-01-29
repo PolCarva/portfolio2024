@@ -38,7 +38,7 @@ const Accordeon = ({ name, tools = [], text, isOpen, handleOpenAccordeon }) => {
 
       <div
         className={`flex flex-col gap-3 overflow-hidden transition-all duration-1000 ease-in-out ${
-          isOpen ? "opacity-100 max-h-[250px] mt-5" : "max-h-0 opacity-0"
+          isOpen ? "opacity-100 md:max-h-[750px] mt-5" : "max-h-0 opacity-0"
         }`}
       >
         {tools && (
