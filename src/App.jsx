@@ -19,7 +19,10 @@ function App() {
   const comp = useRef();
 
   useEffect(() => {
-    const lenis = new Lenis();
+    const lenis = new Lenis({
+      duration: 0.5,
+      ease: "ease.out",
+    });
     function raf(time) {
       lenis.raf(time);
       requestAnimationFrame(raf);

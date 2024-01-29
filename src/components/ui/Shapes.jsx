@@ -141,14 +141,15 @@ function Geometry({ r, position, geometry, soundEffects, materials }) {
       setVisible(true);
       ScrollTrigger.create({
         trigger: "#shapes",
-        start: "top 50%",
+        start: "center center",
+        markers: true,
         toggleActions: "play reverse play reverse",
         animation: gsap.from(meshRef.current.scale, {
           x: 0,
           y: 0,
           z: 0,
           duration: gsap.utils.random(0.8, 1.2),
-          ease: "elastic.out(1,0.3)",
+          ease: "elastic.out",
           delay: gsap.utils.random(0, 0.5),
         }),
       });
