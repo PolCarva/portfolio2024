@@ -21,7 +21,7 @@ const Hero = () => {
         style={{ backgroundImage: `url(${patternImg})` }}
       />
       <div className="flex z-10 flex-col gap-3 md:gap-7 h-full md:h-auto justify-end p-5">
-        <div className="order-1 mx-auto">
+        <div className="order-1 mx-0 md:mx-auto">
           <h1 className="w-full max-h-[1em] md:max-h-max hero-text overflow-hidden text-4xl md:text-title font-extrabold md:leading-[4rem] lg:leading-[8rem] md:mx-auto">
             {heroTextArray.map((letter, index) => (
               <span
