@@ -3,6 +3,7 @@ import Heading from "../ui/Heading";
 
 import { FaLinkedin, FaGithub } from "react-icons/fa";
 import { MdArticle } from "react-icons/md";
+import ContactForm from "../ui/ContactForm";
 
 const Contact = () => {
   const [date, setDate] = useState("");
@@ -26,31 +27,7 @@ const Contact = () => {
           <p className="font-grotesk text-2xl md:text-4xl">
             I am currently available for working part-time.
           </p>
-          <form>
-            <div className="flex flex-col gap-5">
-              <input
-                type="text"
-                placeholder="your name"
-                className="w-full h-14 border-b-secondary border-b px-5 bg-transparent text-body font-grotesk text-xl placeholder:text-secondary-500"
-              />
-              <input
-                type="email"
-                placeholder="your email"
-                className="w-full h-14 border-b-secondary border-b px-5 bg-transparent text-body font-grotesk text-xl placeholder:text-secondary-500"
-              />
-              <textarea
-                placeholder="your message"
-                className="w-full min-h-[4.5rem] max-h-52 border-b-secondary border-b p-5 bg-transparent text-body font-grotesk text-xl placeholder:text-secondary-500"
-              ></textarea>
-
-              <button
-                type="submit"
-                className="w-full md:w-4/12 h-14 bg-secondary text-primary rounded-full font-medium uppercase hover:scale-95 transition text-xl"
-              >
-                Send message
-              </button>
-            </div>
-          </form>
+          <ContactForm />
         </div>
         <div className="w-full h-full col-span-2 md:order-1 flex flex-col md:grid lg:flex grid-cols-4 gap-10">
           <div className="flex flex-col gap-3 col-span-3">
