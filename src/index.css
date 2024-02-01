@@ -39,6 +39,28 @@ html, body {
 
 }
 
+.social-link {
+    @apply transition duration-300 ease-in-out;
+    position: relative;
+    display: inline-block;
+    border-radius: 0.5rem;
+    transition: all 0.3s;
+}
+
+.social-link:before {
+    @apply bg-accent transition rounded-full;
+    content: "";
+    position: absolute;
+    width: 0%;
+    height: 2px;
+    border-radius: 10px;
+    bottom: -2px;
+
+}
+
+.social-link:hover:before {
+    width: 100%;
+}
 
 .transition {
     @apply transition-all duration-300 ease-in-out

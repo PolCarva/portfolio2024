@@ -66,7 +66,7 @@ const Contact = () => {
                 <a
                   href={config.linkedin}
                   target="_blank"
-                  className="text-lg md:text-xl"
+                  className="text-lg md:text-xl social-link"
                 >
                   LinkedIn
                 </a>
@@ -77,7 +77,7 @@ const Contact = () => {
                 <a
                   href={config.github}
                   target="_blank"
-                  className="text-lg md:text-xl"
+                  className="text-lg md:text-xl social-link"
                 >
                   Github
                 </a>
@@ -87,7 +87,7 @@ const Contact = () => {
                 <a
                   href={config.blog}
                   target="_blank"
-                  className="text-lg md:text-xl"
+                  className="text-lg md:text-xl social-link"
                 >
                   Blog
                 </a>

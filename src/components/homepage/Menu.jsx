@@ -48,7 +48,7 @@ const Menu = () => {
             <a
               href={config.linkedin}
               target="_blank"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:text-secondary-400 transition"
             >
               <FaLinkedin className="text-xl md:text-xl" />
               <span>LinkedIn</span>
@@ -56,7 +56,7 @@ const Menu = () => {
             <a
               href="https://github.com/PolCarva"
               target="_blank"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:text-secondary-400 transition"
             >
               <FaGithub className="text-xl md:text-xl" />
               <span>Github</span>
@@ -64,7 +64,7 @@ const Menu = () => {
             <a
               href="https://multimediasocialmedia.vercel.app/"
               target="_blank"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:text-secondary-400 transition"
             >
               <MdArticle className="text-xl md:text-xl" />
               <span>Blog</span>
@@ -72,7 +72,7 @@ const Menu = () => {
             <a
               href={cvPdf}
               download="Pablo_Carvalho_EN.pdf"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:text-secondary-400 transition"
             >
               <span>Resume</span>
               <MdOutlineFileDownload className="text-xl md:text-xl" />
