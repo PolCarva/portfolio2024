@@ -58,6 +58,10 @@ html, body {
 
 }
 
+::selection {
+    @apply bg-secondary text-white;
+}
+
 .social-link:hover:before {
     width: 100%;
 }
