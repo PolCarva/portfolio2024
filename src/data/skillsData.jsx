@@ -7,8 +7,11 @@ export const accordeonData = [
     text: "Expertise in crafting responsive and interactive user interfaces that are visually appealing and user-friendly, utilizing modern frameworks like React.",
     tools: [
       "React",
-      "TailwindCSS",
+      "Redux",
+      "React Query",
+      "Tailwind",
       "SCSS",
+      "Zustand",
       "APIs",
       "Flutter",
       "HTML",

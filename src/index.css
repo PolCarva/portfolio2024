@@ -42,7 +42,6 @@ html, body {
 .social-link {
     @apply transition duration-300 ease-in-out;
     position: relative;
-    display: inline-block;
     border-radius: 0.5rem;
     transition: all 0.3s;
 }
