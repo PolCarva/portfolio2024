@@ -18,7 +18,7 @@ const NavBar = () => {
         className="hidden md:block font-extrabold uppercase md:text-center text-secondary"
       >
         {config.availabilitie
-          ? `AVAILABLE FOR WORK`
+          ? `AVAILABLE FOR WORKING`
           : `CURRENTLY ${
               config.company ? `WORKING AT ${config.company}` : "NOT AVAILABLE"
             }`}
