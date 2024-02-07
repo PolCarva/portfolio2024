@@ -54,7 +54,7 @@ const Project = ({
           <h3 className="flex-grow text-works-title 2xl:text-5xl font-medium uppercase text-primary-400">
             {name}
           </h3>
-          <p className="rounded-full h-fit bg-transparent md:bg-secondary-600 flex justify-center items-center px-4 py-1 text-primary-400 text-body-4 2xl:text-3xl">
+          <p className="rounded-full font-bold h-fit bg-transparent md:bg-secondary-600 flex justify-center items-center px-4 py-1 text-primary-400 text-body-4 2xl:text-3xl">
             {year}
           </p>
         </div>
