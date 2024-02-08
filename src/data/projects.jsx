@@ -17,26 +17,7 @@ export const projects = [
     link: "https://multimediasocialmedia.vercel.app/",
     year: 2024,
     tools: ["Backend", "MongoDB", "Node", "React", "Redux", "Tailwind"],
-    size: "big",
     inactive: true,
-  },
-  {
-    name: "AI Person Detection",
-    bg: BG_IMG.bg_2,
-    img: aipersondetection,
-    link: "https://person-detection-ia.vercel.app/",
-    year: 2024,
-    tools: ["AI", "Next.js", "Typescript", "Tailwind"],
-    size: "small",
-  },
-  {
-    name: "Darío Spain",
-    bg: BG_IMG.bg_3,
-    img: darioImg,
-    link: "https://dariospain.netlify.app/",
-    year: 2023,
-    tools: ["React", "Tailwind", "Figma", "Team Work", "Real Client"],
-    size: "small",
   },
   {
     name: "Hotel & Travel",
@@ -45,7 +26,14 @@ export const projects = [
     link: "https://hotelandtravel.vercel.app/",
     year: 2023,
     tools: ["APIs", "React", "Tailwind", "Zustand"],
-    size: "big",
+  },
+  {
+    name: "Darío Spain",
+    bg: BG_IMG.bg_3,
+    img: darioImg,
+    link: "https://dariospain.netlify.app/",
+    year: 2023,
+    tools: ["React", "Tailwind", "Figma", "Team Work", "Real Client"],
   },
   {
     name: "Dropper",
@@ -54,7 +42,6 @@ export const projects = [
     link: "https://droppershop.netlify.app/",
     year: 2023,
     tools: ["Firebase", "Stock", "Shopping Cart", "React", "CSS"],
-    size: "big",
   },
   {
     name: "Trivia Challenge",
@@ -63,16 +50,23 @@ export const projects = [
     link: "https://triviachallenge.vercel.app/",
     year: 2023,
     tools: ["APIs", "Game", "React", "Tailwind", "Zustand"],
-    size: "small",
   },
 
-   /*  {
+     {
     name: "Portfolio 2023",
     bg: BG_IMG.bg_5,
     img: oldPortfolioImg,
     link: "https://pablo-carvalho.web.app/",
     year: 2023,
     tools: ["Javascript", "HTML", "CSS", "GSAP"],
-    size: "small",
-  }, */
+  },
+ /*     {
+    name: "AI Person Detection",
+    bg: BG_IMG.bg_2,
+    img: aipersondetection,
+    link: "https://person-detection-ia.vercel.app/",
+    year: 2024,
+    tools: ["not working on iOS","AI", "Next.js", "Typescript", "Tailwind"],
+    inactive: true,
+  },  */
 ];
