@@ -1,6 +1,6 @@
 const config = {
   availabilitie: true,
-  company: "",
+  company: "Ns Group",
   timeAvailable: "part-time",
   cellPhone: "598094375127",
   formattedCellPhone: "(+598) 094 375 127",
