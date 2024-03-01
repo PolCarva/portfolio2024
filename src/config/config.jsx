@@ -1,5 +1,5 @@
 const config = {
-  availabilitie: true,
+  availabilitie: false,
   company: "Ns Group",
   timeAvailable: "part-time",
   cellPhone: "598094375127",
