@@ -1,23 +1,24 @@
 import { BG_IMG } from "../constants/backgrounds";
 
-import comingSoonImg from "../assets/images/projects/comingsoon.png";
-import aipersondetection from "../assets/images/projects/aipersondetection.png";
+//import comingSoonImg from "../assets/images/projects/comingsoon.png";
+//import aipersondetection from "../assets/images/projects/aipersondetection.png";
 import darioImg from "../assets/images/projects/dariospain.png";
 import hotelAndTravelImg from "../assets/images/projects/hotelandtravel.png";
 import dropperImg from "../assets/images/projects/dropper.png";
 import triviaChallengeImg from "../assets/images/projects/triviachallenge.png";
-import twitterCloneImg from "../assets/images/projects/twitterclone.png";
+//import twitterCloneImg from "../assets/images/projects/twitterclone.png";
+import msmImg from "../assets/images/projects/msm.png";
 import oldPortfolioImg from "../assets/images/projects/oldportfolio.png";
 
 export const projects = [
   {
     name: "Multimedia Social Media",
     bg: BG_IMG.bg_1,
-    img: comingSoonImg,
+    img: msmImg,
     link: "https://multimediasocialmedia.vercel.app/",
     year: 2024,
-    tools: ["Backend", "MongoDB", "Node", "React", "Redux", "Tailwind"],
-    inactive: true,
+    tools: ["Backend", "MongoDB", "Node", "React", "Redux", "React Query", "Tailwind"],
+    inactive: false,
   },
   {
     name: "Hotel & Travel",
