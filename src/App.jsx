@@ -1,5 +1,5 @@
 import gsap from "gsap";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import NavBar from "./components/homepage/NavBar";
@@ -13,13 +13,14 @@ import Footer from "./components/homepage/Footer";
 import Menu from "./components/homepage/Menu";
 
 import Cursor from "./components/ui/Cursor";
+import Lenis from "@studio-freight/lenis";
 
 gsap.registerPlugin(ScrollTrigger);
 
 function App() {
   const comp = useRef();
 
- /*  useEffect(() => {
+  useEffect(() => {
     const lenis = new Lenis({
       duration: 0.5,
       ease: "ease.out",
@@ -29,7 +30,7 @@ function App() {
       requestAnimationFrame(raf);
     }
     requestAnimationFrame(raf);
-  }); */
+  });
 
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
