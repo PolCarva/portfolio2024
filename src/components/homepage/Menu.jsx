@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import MenuBtn from "../ui/MenuBtn";
-import cvPdf from "../../assets/documents/Pablo_Carvalho_EN.pdf";
+import cvPdf from "../../assets/documents/Pablo_Carvalho_EN-small.pdf";
 
 import { navItems } from "../../data/navItems";
 import { MdArticle, MdOutlineFileDownload } from "react-icons/md";
