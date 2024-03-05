@@ -1,5 +1,4 @@
-import React from "react";
-import cvPdf from "../../assets/documents/Pablo_Carvalho_EN.pdf";
+import cvPdf from "../../assets/documents/Pablo_Carvalho_EN-small.pdf";
 import { MdOutlineFileDownload } from "react-icons/md";
 
 import patternImg from "../../assets/images/pattern.png";
