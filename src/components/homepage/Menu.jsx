@@ -48,6 +48,7 @@ const Menu = () => {
             <a
               href={config.linkedin}
               target="_blank"
+              rel="noreferrer"
               className="flex items-center gap-2 hover:text-secondary-400 transition"
             >
               <FaLinkedin className="text-xl md:text-xl" />
@@ -56,6 +57,7 @@ const Menu = () => {
             <a
               href="https://github.com/PolCarva"
               target="_blank"
+              rel="noreferrer"
               className="flex items-center gap-2 hover:text-secondary-400 transition"
             >
               <FaGithub className="text-xl md:text-xl" />
@@ -64,6 +66,7 @@ const Menu = () => {
             <a
               href="https://multimediasocialmedia.vercel.app/"
               target="_blank"
+              rel="noreferrer"
               className="flex items-center gap-2 hover:text-secondary-400 transition"
             >
               <MdArticle className="text-xl md:text-xl" />
