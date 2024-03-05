@@ -20,7 +20,7 @@ gsap.registerPlugin(ScrollTrigger);
 function App() {
   const comp = useRef();
 
-  useEffect(() => {
+ /*  useEffect(() => {
     const lenis = new Lenis({
       duration: 0.5,
       ease: "ease.out",
@@ -30,7 +30,7 @@ function App() {
       requestAnimationFrame(raf);
     }
     requestAnimationFrame(raf);
-  });
+  }); */
 
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
