@@ -1,5 +1,5 @@
 import gsap from "gsap";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import NavBar from "./components/homepage/NavBar";
@@ -10,7 +10,6 @@ import About from "./components/homepage/About";
 import Skills from "./components/homepage/Skills";
 import Contact from "./components/homepage/Contact";
 import Footer from "./components/homepage/Footer";
-import Lenis from "@studio-freight/lenis";
 import Menu from "./components/homepage/Menu";
 
 import Cursor from "./components/ui/Cursor";
