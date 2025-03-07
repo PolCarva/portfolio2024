@@ -22,33 +22,42 @@ const Project = ({
     setDisplayedTools(newDisplayedTools);
   };
 
+  // Componente de imagen del proyecto que se reutiliza
+  const ProjectImage = () => (
+    <div className={`relative image group overflow-hidden rounded-md hover:rounded-3xl transition ${link === "#" ? "no-cursor" : ""}`}>
+      <img
+        className="absolute select-none group-hover:scale-100 scale-95 transition z-20 shadow-mdobject-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        src={img}
+        alt={`${name} project image`}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = defaultProyectImg;
+        }}
+      />
+      <div className="absolute w-full h-full bg-white bg-opacity-20 backdrop-blur-md"></div>
+      <img
+        className={`w-full select-none object-cover ${
+          inactive && "grayscale blur-md"
+        }`}
+        src={bg}
+        alt={`${name} background image`}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = defaultBg;
+        }}
+      />
+    </div>
+  );
+
   return (
     <div className={`w-full`}>
-      <a href={link} target="_blank">
-        <div className="relative image group overflow-hidden rounded-md hover:rounded-3xl transition">
-          <img
-            className="absolute select-none group-hover:scale-100 scale-95 transition z-20 shadow-mdobject-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-            src={img}
-            alt={`${name} project image`}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = defaultProyectImg;
-            }}
-          />
-          <div className="absolute w-full h-full bg-white bg-opacity-20 backdrop-blur-md"></div>
-          <img
-            className={`w-full select-none object-cover ${
-              inactive && "grayscale blur-md"
-            }`}
-            src={bg}
-            alt={`${name} background image`}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = defaultBg;
-            }}
-          />
-        </div>
-      </a>
+      {link === "#" ? (
+        <ProjectImage />
+      ) : (
+        <a href={link} target="_blank">
+          <ProjectImage />
+        </a>
+      )}
       <div className="mt-4">
         <div className="flex space-x-2 mb-3">
           <h3 className="flex-grow text-works-title 2xl:text-5xl font-medium uppercase text-primary-400">

@@ -161,7 +161,7 @@ function App() {
           });
         });
 
-      const mobileAbout = gsap.utils.toArray(".mobile-about");
+      /* const mobileAbout = gsap.utils.toArray(".mobile-about");
       mobileAbout.forEach((mobile, index) => {
         if (index === mobileAbout.length - 1) return;
         ScrollTrigger.create({
@@ -175,7 +175,7 @@ function App() {
             ease: "power4.out",
           }),
         });
-      });
+      }); */
     }, comp);
 
     return () => ctx.revert();

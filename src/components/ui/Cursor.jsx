@@ -7,7 +7,7 @@ const Cursor = () => {
   const svg = useRef(null);
 
   useEffect(() => {
-    const images = document.querySelectorAll(".image");
+    const images = document.querySelectorAll(".image:not(.no-cursor)");
 
     const tl = gsap.timeline({ paused: true });
 

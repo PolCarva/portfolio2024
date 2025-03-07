@@ -1,6 +1,6 @@
 const config = {
   availabilitie: false,
-  company: "Ns Group",
+  company: "Dango Digital",
   timeAvailable: "part-time",
   cellPhone: "598094375127",
   formattedCellPhone: "(+598) 094 375 127",
