@@ -29,10 +29,10 @@ const socialItems = [
     name: "Github",
     href: config.github,
   },
-  {
+  /* {
     name: "Blog",
     href: config.blog,
-  },
+  }, */
 ];
 
 const Footer = () => {

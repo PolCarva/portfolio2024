@@ -82,16 +82,18 @@ const Contact = () => {
                   Github
                 </a>
               </div>
-              <div className="flex gap-2 items-center">
-                <MdArticle className="text-2xl" />
-                <a
-                  href={config.blog}
-                  target="_blank"
-                  className="text-lg md:text-xl social-link"
-                >
-                  Blog
-                </a>
-              </div>
+              {config.blog && (
+                <div className="flex gap-2 items-center">
+                  <MdArticle className="text-2xl" />
+                  <a
+                    href={config.blog}
+                    target="_blank"
+                    className="text-lg md:text-xl social-link"
+                  >
+                    Blog
+                  </a>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex flex-col gap-3 col-span-4">

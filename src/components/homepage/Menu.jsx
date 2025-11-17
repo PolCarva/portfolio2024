@@ -63,6 +63,7 @@ const Menu = () => {
               <FaGithub className="text-xl md:text-xl" />
               <span>Github</span>
             </a>
+            {config.blog && (
             <a
               href="https://multimediasocialmedia.vercel.app/"
               target="_blank"
@@ -72,6 +73,7 @@ const Menu = () => {
               <MdArticle className="text-xl md:text-xl" />
               <span>Blog</span>
             </a>
+            )}
             <a
               href={cvPdf}
               download="Pablo_Carvalho_EN.pdf"
