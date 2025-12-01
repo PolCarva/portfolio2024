@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ar.com.jazminchebar.app",
+      "sha256_cert_fingerprints": ["E5:57:AB:0B:FA:CF:F2:FA:B2:17:5E:90:0E:DF:57:3A:91:AC:2D:D7:0D:DC:E4:61:64:7D:F8:B6:71:CB:82:28"]
+    }
+  }
+]
