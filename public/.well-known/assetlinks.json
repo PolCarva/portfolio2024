@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "ar.com.jazminchebar.app",
-      "sha256_cert_fingerprints": ["E5:57:AB:0B:FA:CF:F2:FA:B2:17:5E:90:0E:DF:57:3A:91:AC:2D:D7:0D:DC:E4:61:64:7D:F8:B6:71:CB:82:28"]
+      "sha256_cert_fingerprints": ["6F:A2:82:10:20:93:88:20:D9:C9:24:C0:2C:17:BA:B2:1D:1B:F2:44:85:3E:92:EF:AD:77:E6:92:44:4C:ED:E7"]
     }
   }
 ]
