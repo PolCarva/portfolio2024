@@ -49,8 +49,16 @@ export const projects = [
     tools: ["Next", "Typescript", "MongoDB", "Node", "WebSocket", "Express", "Tailwind", "Shadcn"],
     inactive: false,
   },
-  
-
+  {
+    name: "El Impostor",
+    bg: BG_IMG.bg_3,
+    img: "https://impostor.gratis/og.png",
+    link: "https://impostor.gratis/",
+    year: 2025,
+    tools: ["Next", "Typescript", "Tailwind", "WebSocket", "Party Game"],
+    inactive: false,
+    macOverlay: true,
+  },
   {
     name: "Resumidas Cuentas",
     bg: BG_IMG.bg_1,

@@ -10,6 +10,7 @@ const Project = ({
   year = 2024,
   tools = ["Development"],
   inactive = false,
+  macOverlay = false,
 }) => {
   const [displayedTools, setDisplayedTools] = useState(tools.slice(0, 5));
   const [startIndex, setStartIndex] = useState(0);
@@ -25,27 +26,62 @@ const Project = ({
   // Componente de imagen del proyecto que se reutiliza
   const ProjectImage = () => (
     <div className={`relative image group overflow-hidden rounded-md hover:rounded-3xl transition ${link === "#" ? "no-cursor" : ""}`}>
-      <img
-        className="absolute select-none group-hover:scale-100 scale-95 transition z-20 shadow-mdobject-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        src={img}
-        alt={`${name} project image`}
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = defaultProyectImg;
-        }}
-      />
-      <div className="absolute w-full h-full bg-white bg-opacity-20 backdrop-blur-md"></div>
-      <img
-        className={`w-full select-none object-cover ${
-          inactive && "grayscale blur-md"
-        }`}
-        src={bg}
-        alt={`${name} background image`}
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = defaultBg;
-        }}
-      />
+      {macOverlay ? (
+        <>
+          <img
+            className={`w-full select-none object-cover ${inactive && "grayscale blur-md"}`}
+            src={bg}
+            alt=""
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = defaultBg;
+            }}
+          />
+          <div className="absolute w-full h-full bg-white bg-opacity-20 backdrop-blur-md" />
+          <div className="absolute inset-0 flex items-center justify-center p-2">
+            <div className="relative w-full max-w-full rounded-lg border-2 border-neutral-700/90 bg-neutral-800/95 shadow-xl overflow-hidden scale-95 group-hover:scale-100 transition">
+              <div className="flex items-center gap-2 px-3 py-2 bg-neutral-800 border-b border-neutral-700/80">
+                <span className="w-3 h-3 rounded-full bg-[#ff5f57]" aria-hidden />
+                <span className="w-3 h-3 rounded-full bg-[#febc2e]" aria-hidden />
+                <span className="w-3 h-3 rounded-full bg-[#28c840]" aria-hidden />
+              </div>
+              <div className="relative overflow-hidden rounded-b-md bg-neutral-900">
+                <img
+                  className="w-full select-none object-cover"
+                  src={img}
+                  alt={`${name} project image`}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = defaultProyectImg;
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <img
+            className="absolute select-none group-hover:scale-100 scale-95 transition z-20 shadow-md object-cover top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            src={img}
+            alt={`${name} project image`}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = defaultProyectImg;
+            }}
+          />
+          <div className="absolute w-full h-full bg-white bg-opacity-20 backdrop-blur-md" />
+          <img
+            className={`w-full select-none object-cover ${inactive && "grayscale blur-md"}`}
+            src={bg}
+            alt={`${name} background image`}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = defaultBg;
+            }}
+          />
+        </>
+      )}
     </div>
   );
 
