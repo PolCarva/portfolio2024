@@ -29,12 +29,12 @@ const About = () => {
 
       {/* Desktop */}
       <div id="gallery" className="w-full hidden lg:flex">
-        <div className="left w-1/2">
+        <div className="left w-1/2 min-h-[300svh]">
           <div className="detailsWrapper w-10/12 m-auto">
             {aboutData.map(({ title, content, img }) => (
               <div
                 key={title}
-                className="details h-svh flex-col justify-center flex"
+                className="details min-h-svh h-svh flex-col justify-center flex"
               >
                 <h3 className="h-16 w-full text-6xl font-extrabold">{title}</h3>
                 <p className="mt-8 text-4xl">{content}</p>
@@ -42,8 +42,8 @@ const About = () => {
             ))}
           </div>
         </div>
-        <div id="right" className=" h-svh w-[1/2] flex flex-col justify-center">
-          <div className="about-photos w-[35svw] aspect-square rounded-xl relative overflow-hidden shadow-2xl">
+        <div id="right" className="h-svh w-1/2 flex flex-col justify-center items-center shrink-0">
+          <div className="about-photos w-[35svw] max-h-[85svh] aspect-square rounded-xl relative overflow-hidden shadow-2xl">
             {aboutData.map(({ title, img }, index) => (
               <img
                 key={title}
