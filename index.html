@@ -1,100 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2f0e9" />
     <link rel="icon" type="image/svg+xml" href="/img/icon.svg" />
-
-    <link rel="preload" as="image" href="/src/assets/images/pattern.png" />
-    <link rel="preload" as="image" href="/src/assets/images/noise.png" />
     <link
       rel="preload"
-      as="image"
-      href="/src/assets/images/about/aboutimg.png"
+      href="/fonts/cabinet.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
     <link
       rel="preload"
       as="image"
-      href="/src/assets/images/projects/comingsoon.png"
+      href="/images/pablo-800.webp"
+      imagesrcset="/images/pablo-480.webp 480w, /images/pablo-800.webp 800w"
+      imagesizes="(max-width: 700px) 76vw, 32vw"
+      fetchpriority="high"
     />
-    <link
-      rel="preload"
-      as="image"
-      href="/src/assets/images/projects/dariospain.png"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href="/src/assets/images/projects/dropper.png"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href="/src/assets/images/projects/hotelandtravel.png"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href="/src/assets/images/projects/oldportfolio.png"
-    />
-
-    <link
-      rel="preload"
-      as="image"
-      href="/src/assets/images/projects/triviachallenge.png"
-    />
-
-    <link rel="preload" as="image" href="/src/assets/images/bgs/bg-1.png" />
-    <link rel="preload" as="image" href="/src/assets/images/bgs/bg-2.png" />
-    <link rel="preload" as="image" href="/src/assets/images/bgs/bg-3.png" />
-    <link rel="preload" as="image" href="/src/assets/images/bgs/bg-4.png" />
-    <link rel="preload" as="image" href="/src/assets/images/bgs/bg-5.png" />
-    <link rel="preload" as="image" href="/src/assets/images/bgs/bg-6.png" />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- HTML Meta Tags -->
-    <title>Pablo Carvalho | Fullstack Developer & Web Designer</title>
+    <!-- SEO_START -->
+    <title>Pablo Carvalho — Full Stack & Creative Technology</title>
     <meta
       name="description"
-      content="I develop distinctive digital experiences, forging a powerful connection between the product and the consumer."
+      content="Full stack developer, Multimedia Design graduate and lecturer. Web and mobile products, applied AI and interactive experiments from Montevideo, Uruguay."
     />
-
-    <!-- Facebook Meta Tags -->
-    <meta property="og:url" content="https://www.pablocarvalho.dev/" />
-    <meta property="og:type" content="website" />
+    <link rel="canonical" href="https://www.pablocarvalho.dev/" />
     <meta
       property="og:title"
-      content="Pablo Carvalho | Fullstack Developer & Web Designer"
+      content="Pablo Carvalho — Full Stack & Creative Technology"
     />
     <meta
       property="og:description"
-      content="I develop distinctive digital experiences, forging a powerful connection between the product and the consumer."
+      content="Useful digital products. Unexpected ideas. Code, design and applied AI."
     />
-
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.pablocarvalho.dev/" />
     <meta
       property="og:image"
-      content="https://opengraph.b-cdn.net/production/documents/2a9f453c-fc66-4867-833e-81e3e69eb2bf.png?token=cBLFlTC9klIINmxefqpgT4g82NITSdwJRo18NqZP8oc&height=877&width=1200&expires=33242479685"
+      content="https://www.pablocarvalho.dev/og/portfolio-v2.png"
     />
-
-    <!-- Twitter Meta Tags -->
+    <meta
+      property="og:image:secure_url"
+      content="https://www.pablocarvalho.dev/og/portfolio-v2.png"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Pablo Carvalho — Creative technology and useful digital products"
+    />
+    <meta property="og:site_name" content="Pablo Carvalho" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta property="twitter:domain" content="pablocarvalho.vercel.app" />
-    <meta property="twitter:url" content="https://pablocarvalho.vercel.app/" />
     <meta
       name="twitter:title"
-      content="Pablo Carvalho | Fullstack Developer & Web Designer"
+      content="Pablo Carvalho — Full Stack & Creative Technology"
     />
     <meta
       name="twitter:description"
-      content="I develop distinctive digital experiences, forging a powerful connection between the product and the consumer."
+      content="Useful digital products. Unexpected ideas. Code, design and applied AI."
     />
-
     <meta
       name="twitter:image"
-      content="https://opengraph.b-cdn.net/production/documents/2a9f453c-fc66-4867-833e-81e3e69eb2bf.png?token=cBLFlTC9klIINmxefqpgT4g82NITSdwJRo18NqZP8oc&height=877&width=1200&expires=33242479685"
+      content="https://www.pablocarvalho.dev/og/portfolio-v2.png"
     />
+    <meta
+      name="twitter:image:alt"
+      content="Pablo Carvalho — Creative technology and useful digital products"
+    />
+    <!-- SEO_END -->
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--app-html--></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

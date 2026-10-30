@@ -1,0 +1,352 @@
+export const links = {
+  email: "pablocarvalhogimenez@gmail.com",
+  linkedin: "https://www.linkedin.com/in/pablo-carvalho-gimenez/",
+  github: "https://github.com/PolCarva",
+  whatsapp: "https://wa.me/59894375127",
+  tv: "https://www.linkedin.com/feed/update/urn:li:activity:7521309877177241601/",
+  youtube:
+    "https://www.linkedin.com/feed/update/urn:li:activity:7477082823158403072/",
+};
+
+export const copy = {
+  en: {
+    nav: ["Work", "About", "Experience", "Contact"],
+    menu: "Menu",
+    skip: "Skip to content",
+    role: "FULL STACK DEVELOPER / CREATIVE TECHNOLOGY",
+    hero: ["Useful products.", "Unexpected ideas."],
+    intro:
+      "I connect code, design and applied AI to build digital products. Sometimes that means software for international clients. Sometimes, a game inside a YouTube video.",
+    explore: "Explore my work",
+    scroll: "SCROLL TO EXPLORE",
+    resume: "Download CV",
+    portrait:
+      "Pablo Carvalho, full stack developer and Multimedia Design graduate",
+    location: "Based in Montevideo, Uruguay",
+    portraitNote: "Code × design × curiosity",
+    strip: [
+      "Digital products",
+      "Applied AI",
+      "Interactive experiences",
+      "Teaching & sharing",
+    ],
+    workLabel: "01 / SELECTED WORK",
+    workTitle: "Curiosity, shipped.",
+    workIntro:
+      "Independent products and experiments. Different starting points, the same impulse: find something worth making.",
+    visit: "Explore project",
+    watch: "Watch the demo",
+    imageNote: "Interaction sketch",
+    clientLabel: "ALSO BUILT FOR THE WEB",
+    clientTitle: "Selected client work",
+    clientVisit: "Visit website",
+    aboutLabel: "02 / A LITTLE CONTEXT",
+    aboutTitle: ["A developer’s mind.", "A designer’s eye."],
+    about:
+      "I’m Pablo, a full stack developer, Multimedia Design graduate and lecturer at Universidad ORT Uruguay. My work sits where software, interaction and product meet.",
+    aboutMore:
+      "At GoPersonal, I build mobile applications, business tools and AI integrations for international clients. Outside that work, I make games, try unusual interfaces and share what I learn. Teaching Programming 2 and Interactive Design keeps that exchange going.",
+    capabilityTitle: "What I bring to a project",
+    capabilities: [
+      [
+        "01",
+        "From idea to working product",
+        "Full stack development with attention to the problem, the interface and the system behind it.",
+      ],
+      [
+        "02",
+        "AI with a practical purpose",
+        "Integrating AI services and using tools like Claude Code to turn an everyday friction into a useful experiment.",
+      ],
+      [
+        "03",
+        "Interaction worth thinking about",
+        "A design background that helps connect technical decisions with the experience of the person using the product.",
+      ],
+      [
+        "04",
+        "Learning, made shareable",
+        "University teaching and public experiments that make technical ideas easier to understand and build on.",
+      ],
+    ],
+    toolkitLabel: "TOOLS IN SERVICE OF THE IDEA",
+    toolkit:
+      "React · Next.js · TypeScript · Node.js · Express · MongoDB · SQL · Tailwind CSS · Figma · Git",
+    experienceLabel: "03 / EXPERIENCE",
+    experienceTitle: "Building. Teaching. Exploring.",
+    education: "Multimedia Design degree",
+    educationDetail: "Universidad ORT Uruguay · 2020–2025",
+    experience: [
+      {
+        company: "GoPersonal",
+        role: "Full Stack Developer",
+        date: "Apr 2025 — Present",
+        text: "Software for international clients: mobile applications, business management tools and AI service integrations.",
+      },
+      {
+        company: "Universidad ORT Uruguay",
+        role: "Lecturer & Teaching Assistant",
+        date: "Apr 2025 — Present",
+        text: "Interactive Design lecturer since Mar 2026; Programming 2 lecturer since Aug 2025. Previously, Programming 1 teaching assistant, Apr–Jul 2025.",
+      },
+      {
+        company: "NS Group",
+        role: "Full Stack Developer",
+        date: "Mar 2024 — Aug 2025",
+        text: "Full stack web development, connecting frontend interfaces and backend application logic.",
+      },
+      {
+        company: "Dango",
+        role: "Web Developer",
+        date: "Jul 2024 — Apr 2025",
+        text: "Web and e-commerce development with WordPress, Shopify, PHP and Tailwind CSS.",
+      },
+    ],
+    labLabel: "STILL ON THE WORKBENCH",
+    lab: "Resumidas Cuentas",
+    labText:
+      "An ongoing exploration of AI in a full stack web product. More soon.",
+    contactLabel: "04 / START A CONVERSATION",
+    contactTitle: ["Have a good", "problem?"],
+    contactText:
+      "An interesting product, a curious experiment, a thoughtful collaboration. Tell me what you have in mind.",
+    name: "Your name",
+    email: "Email address",
+    message: "What are you thinking about?",
+    send: "Send message",
+    sending: "Sending…",
+    sent: "Message received. Thanks for reaching out!",
+    error:
+      "The message could not be sent. Please try again, or email me directly.",
+    contactPrivacy: "Your message is sent to me through Formspree.",
+    footer: "Built with intention. From Montevideo.",
+    top: "Back to top",
+  },
+  es: {
+    nav: ["Proyectos", "Sobre mí", "Experiencia", "Contacto"],
+    menu: "Menú",
+    skip: "Ir al contenido",
+    role: "DESARROLLO FULL STACK / TECNOLOGÍA CREATIVA",
+    hero: ["Productos útiles.", "Ideas inesperadas."],
+    intro:
+      "Conecto código, diseño e IA aplicada para crear productos digitales. A veces, software para clientes internacionales. Otras, un juego dentro de un video de YouTube.",
+    explore: "Explorá mis proyectos",
+    scroll: "SEGUÍ EXPLORANDO",
+    resume: "Descargar CV",
+    portrait:
+      "Pablo Carvalho, desarrollador full stack y licenciado en Diseño Multimedia",
+    location: "Desde Montevideo, Uruguay",
+    portraitNote: "Código × diseño × curiosidad",
+    strip: [
+      "Productos digitales",
+      "IA aplicada",
+      "Experiencias interactivas",
+      "Docencia y divulgación",
+    ],
+    workLabel: "01 / PROYECTOS SELECCIONADOS",
+    workTitle: "Curiosidad en acción.",
+    workIntro:
+      "Productos propios y experimentos. Distintos puntos de partida, el mismo impulso: encontrar algo que valga la pena crear.",
+    visit: "Explorar proyecto",
+    watch: "Ver demostración",
+    imageNote: "Esquema de interacción",
+    clientLabel: "TAMBIÉN CONSTRUÍ PARA LA WEB",
+    clientTitle: "Trabajos para clientes",
+    clientVisit: "Visitar sitio",
+    aboutLabel: "02 / UN POCO DE CONTEXTO",
+    aboutTitle: ["Cabeza de developer.", "Mirada de diseñador."],
+    about:
+      "Soy Pablo, desarrollador full stack, licenciado en Diseño Multimedia y docente en la Universidad ORT Uruguay. Trabajo donde se encuentran el software, la interacción y el producto.",
+    aboutMore:
+      "En GoPersonal desarrollo aplicaciones móviles, herramientas de gestión e integraciones de IA para clientes internacionales. Por mi cuenta, creo juegos, pruebo interfaces poco habituales y comparto lo que aprendo. Enseñar Programación 2 y Diseño Interactivo mantiene vivo ese intercambio.",
+    capabilityTitle: "Qué aporto a un proyecto",
+    capabilities: [
+      [
+        "01",
+        "De la idea al producto funcional",
+        "Desarrollo full stack con atención al problema, la interfaz y el sistema que la hace funcionar.",
+      ],
+      [
+        "02",
+        "IA con un propósito concreto",
+        "Integración de servicios de IA y herramientas como Claude Code para convertir una fricción cotidiana en un experimento útil.",
+      ],
+      [
+        "03",
+        "Interacciones bien pensadas",
+        "Una base en diseño que conecta las decisiones técnicas con la experiencia de quien usa el producto.",
+      ],
+      [
+        "04",
+        "Aprender y compartir",
+        "Docencia universitaria y experimentos públicos que ayudan a entender ideas técnicas y construir a partir de ellas.",
+      ],
+    ],
+    toolkitLabel: "HERRAMIENTAS AL SERVICIO DE LA IDEA",
+    toolkit:
+      "React · Next.js · TypeScript · Node.js · Express · MongoDB · SQL · Tailwind CSS · Figma · Git",
+    experienceLabel: "03 / EXPERIENCIA",
+    experienceTitle: "Construir. Enseñar. Explorar.",
+    education: "Licenciatura en Diseño Multimedia",
+    educationDetail: "Universidad ORT Uruguay · 2020–2025",
+    experience: [
+      {
+        company: "GoPersonal",
+        role: "Desarrollador Full Stack",
+        date: "abr. 2025 — Actualidad",
+        text: "Software para clientes internacionales: aplicaciones móviles, herramientas de gestión e integración de servicios de IA.",
+      },
+      {
+        company: "Universidad ORT Uruguay",
+        role: "Docente y asistente docente",
+        date: "abr. 2025 — Actualidad",
+        text: "Profesor de Diseño Interactivo desde mar. 2026 y de Programación 2 desde ago. 2025. Antes, asistente de Programación 1, abr.–jul. 2025.",
+      },
+      {
+        company: "NS Group",
+        role: "Desarrollador Full Stack",
+        date: "mar. 2024 — ago. 2025",
+        text: "Desarrollo web full stack, conectando interfaces frontend y lógica de aplicación en el backend.",
+      },
+      {
+        company: "Dango",
+        role: "Desarrollador Web",
+        date: "jul. 2024 — abr. 2025",
+        text: "Desarrollo web y e-commerce con WordPress, Shopify, PHP y Tailwind CSS.",
+      },
+    ],
+    labLabel: "EN LA MESA DE TRABAJO",
+    lab: "Resumidas Cuentas",
+    labText:
+      "Una exploración de IA en un producto web full stack. Pronto, más.",
+    contactLabel: "04 / CONVERSEMOS",
+    contactTitle: ["¿Tenés una", "buena idea?"],
+    contactText:
+      "Un producto interesante, un experimento distinto, una colaboración con sentido. Contame qué tenés en mente.",
+    name: "Tu nombre",
+    email: "Correo electrónico",
+    message: "¿Qué tenés en mente?",
+    send: "Enviar mensaje",
+    sending: "Enviando…",
+    sent: "Mensaje recibido. ¡Gracias por escribir!",
+    error:
+      "No se pudo enviar el mensaje. Intentá de nuevo o escribime directamente por email.",
+    contactPrivacy: "Tu mensaje me llega a través de Formspree.",
+    footer: "Hecho con intención. Desde Montevideo.",
+    top: "Volver arriba",
+  },
+};
+
+export const projects = [
+  {
+    id: "impostor",
+    year: "2026",
+    kind: "image",
+    image: "/images/impostor.webp",
+    href: "https://impostor.gratis/",
+    tags: ["Next.js", "TypeScript", "Applied AI"],
+    tagsEs: ["Next.js", "TypeScript", "IA aplicada"],
+    en: {
+      title: "El Impostor",
+      label: "A GAME TO BRING PEOPLE TOGETHER",
+      text: "Social deduction, straight from the browser. A personal product connecting game logic, interaction design and AI exploration.",
+      alt: "El Impostor, a browser-based social deduction game",
+    },
+    es: {
+      title: "El Impostor",
+      label: "UN JUEGO PARA JUNTARSE",
+      text: "Deducción social desde el navegador. Un producto propio que conecta lógica de juego, diseño de interacción y exploración con IA.",
+      alt: "El Impostor, juego de deducción social para navegador",
+    },
+  },
+  {
+    id: "tv",
+    year: "2026",
+    kind: "tv",
+    href: links.tv,
+    tags: ["Claude Code", "Android TV", "UX"],
+    en: {
+      title: "A better way to type on TV",
+      label: "ONE EVERYDAY FRICTION, SOLVED",
+      text: "Typing with a remote is slow. I built an app with Claude Code to use a phone as an Android TV keyboard.",
+      alt: "Interaction sketch showing a phone sending text to an Android TV",
+    },
+    es: {
+      title: "Escribir en la tele, más fácil",
+      label: "UNA FRICCIÓN COTIDIANA, RESUELTA",
+      text: "Escribir con el control remoto lleva tiempo. Creé una app con Claude Code para usar el celular como teclado de Android TV.",
+      alt: "Esquema de un celular enviando texto a un Android TV",
+    },
+  },
+  {
+    id: "youtube",
+    year: "2026",
+    kind: "youtube",
+    href: links.youtube,
+    tags: ["Creative technology", "Interaction", "Experiment"],
+    tagsEs: ["Tecnología creativa", "Interacción", "Experimento"],
+    en: {
+      title: "A game inside a YouTube video",
+      label: "WHAT ELSE CAN A VIDEO BE?",
+      text: "Exploring the edges of a familiar platform and turning them into a playable experience. A technical experiment, documented in public.",
+      alt: "Graphic composition connecting a video play button with a game crosshair",
+    },
+    es: {
+      title: "Un juego dentro de YouTube",
+      label: "¿QUÉ MÁS PUEDE SER UN VIDEO?",
+      text: "Explorar los límites de una plataforma conocida y convertirlos en una experiencia jugable. Un experimento técnico documentado en público.",
+      alt: "Composición que conecta el botón de reproducir video con una mira de juego",
+    },
+  },
+  {
+    id: "wordle",
+    year: "2025",
+    kind: "image",
+    image: "/images/wordle.webp",
+    href: "https://wordleinfinito.com/",
+    tags: ["Full stack", "WebSocket", "Game logic"],
+    tagsEs: ["Full stack", "WebSocket", "Lógica de juego"],
+    en: {
+      title: "Wordle Infinito",
+      label: "A SMALL GAME, A LOT TO EXPLORE",
+      text: "A full stack word game with real-time interaction. Also a reason to explore opening-word strategies through code and data analysis.",
+      alt: "Screenshot of Wordle Infinito, a word game built by Pablo Carvalho",
+    },
+    es: {
+      title: "Wordle Infinito",
+      label: "UN JUEGO CHICO, MUCHO POR EXPLORAR",
+      text: "Un juego de palabras full stack con interacción en tiempo real. También, una excusa para explorar estrategias iniciales con código y análisis de datos.",
+      alt: "Captura de Wordle Infinito, juego creado por Pablo Carvalho",
+    },
+  },
+];
+
+export const clientProjects = [
+  {
+    name: "Jack & Jones",
+    year: "2025",
+    image: "/images/jack-jones.webp",
+    href: "https://jackjones.com.uy/",
+    tools: "Shopify · Liquid · Tailwind CSS",
+    en: "E-commerce development",
+    es: "Desarrollo de e-commerce",
+  },
+  {
+    name: "Luno",
+    year: "2025",
+    image: "/images/luno.webp",
+    href: "https://lunolife.com/",
+    tools: "Shopify · Liquid · Tailwind CSS",
+    en: "E-commerce development",
+    es: "Desarrollo de e-commerce",
+  },
+  {
+    name: "NSGCorp",
+    year: "2024",
+    image: "/images/nsgcorp.webp",
+    href: "https://www.nsgcorp.me/",
+    tools: "Next.js · Headless CMS · Figma · GSAP",
+    en: "Web development & interaction",
+    es: "Desarrollo web e interacción",
+  },
+];
