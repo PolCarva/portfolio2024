@@ -16,7 +16,7 @@ export const copy = {
     role: "FULL STACK DEVELOPER / CREATIVE TECHNOLOGY",
     hero: ["Useful products.", "Unexpected ideas."],
     intro:
-      "I connect code, design and applied AI to build digital products. Sometimes that means software for international clients. Sometimes, a game inside a YouTube video.",
+      "I connect code, design and applied AI to build web and mobile products. I combine software development for international clients with teaching and an ongoing practice of creative experimentation.",
     explore: "Explore my work",
     scroll: "SCROLL TO EXPLORE",
     resume: "Download CV",
@@ -33,7 +33,7 @@ export const copy = {
     workLabel: "01 / SELECTED WORK",
     workTitle: "Curiosity, shipped.",
     workIntro:
-      "Independent products and experiments. Different starting points, the same impulse: find something worth making.",
+      "A selection of independent products and experiments. Examples of how I approach technical problems, interaction and learning through making.",
     visit: "Explore project",
     watch: "Watch the demo",
     imageNote: "Interaction sketch",
@@ -56,7 +56,7 @@ export const copy = {
       [
         "02",
         "AI with a practical purpose",
-        "Integrating AI services and using tools like Claude Code to turn an everyday friction into a useful experiment.",
+        "Integrating AI services into applications and using AI-assisted development to prototype, test ideas and solve practical problems.",
       ],
       [
         "03",
@@ -102,10 +102,10 @@ export const copy = {
         text: "Web and e-commerce development with WordPress, Shopify, PHP and Tailwind CSS.",
       },
     ],
-    labLabel: "STILL ON THE WORKBENCH",
-    lab: "Resumidas Cuentas",
+    labLabel: "AN ONGOING PRACTICE",
+    lab: "Make. Test. Learn.",
     labText:
-      "An ongoing exploration of AI in a full stack web product. More soon.",
+      "I regularly build prototypes to investigate an idea, a technical challenge or an unfamiliar interface. Some become products; others remain experiments. That practice informs how I develop and teach.",
     contactLabel: "04 / START A CONVERSATION",
     contactTitle: ["Have a good", "problem?"],
     contactText:
@@ -129,7 +129,7 @@ export const copy = {
     role: "DESARROLLO FULL STACK / TECNOLOGÍA CREATIVA",
     hero: ["Productos útiles.", "Ideas inesperadas."],
     intro:
-      "Conecto código, diseño e IA aplicada para crear productos digitales. A veces, software para clientes internacionales. Otras, un juego dentro de un video de YouTube.",
+      "Conecto código, diseño e IA aplicada para crear productos web y móviles. Combino desarrollo de software para clientes internacionales, docencia y una práctica constante de experimentación creativa.",
     explore: "Explorá mis proyectos",
     scroll: "SEGUÍ EXPLORANDO",
     resume: "Descargar CV",
@@ -146,7 +146,7 @@ export const copy = {
     workLabel: "01 / PROYECTOS SELECCIONADOS",
     workTitle: "Curiosidad en acción.",
     workIntro:
-      "Productos propios y experimentos. Distintos puntos de partida, el mismo impulso: encontrar algo que valga la pena crear.",
+      "Una selección de productos propios y experimentos. Ejemplos de cómo abordo problemas técnicos, pienso la interacción y aprendo construyendo.",
     visit: "Explorar proyecto",
     watch: "Ver demostración",
     imageNote: "Esquema de interacción",
@@ -169,7 +169,7 @@ export const copy = {
       [
         "02",
         "IA con un propósito concreto",
-        "Integración de servicios de IA y herramientas como Claude Code para convertir una fricción cotidiana en un experimento útil.",
+        "Integración de servicios de IA en aplicaciones y desarrollo asistido por IA para prototipar, probar ideas y resolver problemas concretos.",
       ],
       [
         "03",
@@ -215,10 +215,10 @@ export const copy = {
         text: "Desarrollo web y e-commerce con WordPress, Shopify, PHP y Tailwind CSS.",
       },
     ],
-    labLabel: "EN LA MESA DE TRABAJO",
-    lab: "Resumidas Cuentas",
+    labLabel: "UNA PRÁCTICA CONSTANTE",
+    lab: "Crear. Probar. Aprender.",
     labText:
-      "Una exploración de IA en un producto web full stack. Pronto, más.",
+      "Desarrollo prototipos para investigar una idea, un desafío técnico o una interfaz poco habitual. Algunos se convierten en productos; otros quedan como experimentos. Esa práctica alimenta mi forma de desarrollar y enseñar.",
     contactLabel: "04 / CONVERSEMOS",
     contactTitle: ["¿Tenés una", "buena idea?"],
     contactText:
