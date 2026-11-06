@@ -43,3 +43,25 @@ The contact form retains the existing Formspree endpoint. It supports native val
 ## Deployment
 
 Push to the existing `main` branch to trigger the connected Vercel deployment. `vercel.json` preserves the Android app association header and sets cache policies for the versioned social image, fonts and replaceable CV files. Verify `/`, `/es/`, both CV links and `/og/portfolio-v2.png` after deployment.
+
+## Administrador del portfolio
+
+`/admin` permite editar proyectos, orden y visibilidad, textos completos en español e inglés, experiencia, capacidades, clientes, enlaces, foto y CV. Los archivos JPG/PNG/WebP/PDF se suben desde el editor (máximo 3 MB). Los APK se enlazan mediante su URL de descarga.
+
+Los datos se guardan en un Vercel Blob **privado** conectado al proyecto. `content/current.json` contiene la versión vigente y `content/history/` conserva la anterior antes de cada publicación. Cada guardado comprueba la revisión y el ETag para evitar sobrescribir cambios de otra sesión. El portfolio carga la versión guardada desde `/api/content` y conserva el HTML prerenderizado como respaldo si la red falla. Los cambios editoriales aparecen al cargar la página; el HTML estático se actualiza en los despliegues.
+
+### Configuración del servidor
+
+- `BLOB_READ_WRITE_TOKEN`: conexión al almacenamiento privado de Vercel.
+- `ADMIN_PASSWORD_HASH`: `salt:hash`, con hash scrypt de 64 bytes en hexadecimal.
+- `ADMIN_SESSION_SECRET`: secreto aleatorio de al menos 32 bytes para firmar sesiones.
+
+Los secretos se configuran en Vercel, nunca en variables `VITE_`, código ni Git. La sesión dura 8 horas, usa cookie HttpOnly/Secure/SameSite=Strict y se invalida al cambiar el hash de contraseña. Las escrituras verifican origen y formato JSON. El acceso limita a 8 intentos por IP por intervalos de 15 minutos, con contadores persistentes privados; requiere la cabecera de IP sobrescrita por Vercel. No alojar estas funciones detrás de un proxy que acepte esa cabecera sin reemplazarla.
+
+### Desarrollo y pruebas
+
+`npm test` prueba autenticación, CSRF, firmas de sesión, validación, guardado persistente, conflictos, archivos y limitación de intentos. Usa almacenamiento temporal aislado.
+
+Para desarrollo, crear `.generated/admin/local.env` con los dos secretos de administración y `PORTFOLIO_LOCAL_STORE=.generated/admin/local-store`. Ejecutar `npm run dev:api` y, en otra terminal, `npm run dev`: Vite redirige `/api` a `127.0.0.1:4317`. El almacenamiento local es solo para desarrollo, no para producción.
+
+Antes de cerrar el editor, guardar o exportar el borrador con **Exportar copia**. El backend guarda únicamente contenido público; las credenciales están separadas. Los archivos subidos son accesibles públicamente mediante su URL en `/api/media`; no subir documentos confidenciales. El servidor no acepta SVG, HTML ni JavaScript como archivos.

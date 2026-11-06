@@ -1,5 +1,13 @@
 {
+  "rewrites": [{ "source": "/admin", "destination": "/admin/index.html" }],
   "headers": [
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
     {
       "source": "/og/:path*",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]

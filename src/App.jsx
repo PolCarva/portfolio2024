@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { clientProjects, copy, links, projects } from "./content";
+import defaults from "./content";
 
 const sectionIds = ["work", "about", "experience", "contact"];
 function Arrow() {
@@ -9,25 +9,43 @@ function Arrow() {
     </svg>
   );
 }
-function Asterisk() {
+function OrbitMark() {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <path
-        d="M24 3v42M3 24h42M9.15 9.15l29.7 29.7M9.15 38.85l29.7-29.7"
+      <ellipse
+        cx="24"
+        cy="24"
+        rx="20"
+        ry="10"
+        transform="rotate(-35 24 24)"
         stroke="currentColor"
-        strokeWidth="5"
+        strokeWidth="2.5"
       />
+      <ellipse
+        cx="24"
+        cy="24"
+        rx="10"
+        ry="20"
+        transform="rotate(-35 24 24)"
+        stroke="currentColor"
+        strokeWidth="2.5"
+      />
+      <circle cx="24" cy="24" r="4" fill="currentColor" />
     </svg>
   );
 }
 
-function ProjectMedia({ project, language }) {
+function ProjectMedia({ project, language, imageNote }) {
   const p = project[language];
   if (project.kind === "image")
     return (
       <img
         src={project.image}
-        srcSet={`${project.image.replace(".webp", "-640.webp")} 640w, ${project.image} 1200w`}
+        srcSet={
+          /^\/images\/[^/]+\.webp$/.test(project.image)
+            ? `${project.image.replace(".webp", "-640.webp")} 640w, ${project.image} 1200w`
+            : undefined
+        }
         sizes="(max-width: 700px) 92vw, 44vw"
         width="1200"
         height="800"
@@ -70,7 +88,7 @@ function ProjectMedia({ project, language }) {
         </div>
         <span className="signal signal--one" />
         <span className="signal signal--two" />
-        <span className="art-note">{copy[language].imageNote} / 2026</span>
+        <span className="art-note">{imageNote} / 2026</span>
       </div>
     );
   return (
@@ -199,7 +217,22 @@ function ContactForm({ t }) {
   );
 }
 
-function App({ language = "en" }) {
+function App({ language = "en", initialContent = defaults }) {
+  const [content, setContent] = useState(initialContent);
+  const { copy, links, projects, clientProjects, media: assets } = content;
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/content", { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("Content unavailable");
+        return response.json();
+      })
+      .then((data) => {
+        if (data.content) setContent(data.content);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
   const lang = language === "es" ? "es" : "en";
   const t = copy[lang];
   const [menuOpen, setMenuOpen] = useState(false);
@@ -235,7 +268,7 @@ function App({ language = "en" }) {
       node.classList.remove("motion-ready");
       media.removeEventListener("change", stopMotion);
     };
-  }, []);
+  }, [content]);
   return (
     <div ref={root} className="portfolio" id="top">
       <a className="skip-link" href="#main">
@@ -331,7 +364,7 @@ function App({ language = "en" }) {
                 </a>
                 <a
                   className="text-link"
-                  href={`/cv/Pablo_Carvalho_${lang.toUpperCase()}.pdf`}
+                  href={lang === "es" ? assets.cvES : assets.cvEN}
                   download
                 >
                   {t.resume}
@@ -342,15 +375,19 @@ function App({ language = "en" }) {
             <figure className="portrait-composition">
               <div className="portrait-frame">
                 <img
-                  src="/images/pablo-800.webp"
-                  srcSet="/images/pablo-480.webp 480w, /images/pablo-800.webp 800w"
+                  src={assets.portrait}
+                  srcSet={
+                    assets.portrait === "/images/pablo-800.webp"
+                      ? "/images/pablo-480.webp 480w, /images/pablo-800.webp 800w"
+                      : undefined
+                  }
                   sizes="(max-width: 700px) 76vw, 32vw"
                   width="800"
                   height="800"
                   alt={t.portrait}
                 />
                 <span className="portrait-mark" aria-hidden="true">
-                  <Asterisk />
+                  <OrbitMark />
                 </span>
               </div>
               <figcaption>
@@ -369,7 +406,7 @@ function App({ language = "en" }) {
         <div className="discipline-strip" aria-hidden="true">
           {t.strip.map((item) => (
             <span key={item}>
-              <Asterisk />
+              <OrbitMark />
               {item}
             </span>
           ))}
@@ -387,60 +424,66 @@ function App({ language = "en" }) {
             </div>
           </div>
           <div className="project-grid">
-            {projects.map((project, index) => (
-              <article
-                id={project.anchor}
-                className={`project project--${project.id} reveal`}
-                key={project.id}
-              >
-                <a
-                  className="project-link"
-                  href={project.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`${project[lang].title} — ${project.kind === "image" ? t.visit : t.watch}`}
+            {projects
+              .filter((project) => !project.hidden)
+              .map((project, index) => (
+                <article
+                  id={project.anchor || project.id}
+                  className={`project project--${project.id} reveal`}
+                  key={project.id}
                 >
-                  <div className="project-media">
-                    <ProjectMedia project={project} language={lang} />
-                    <span className="project-number">
-                      0{index + 1} / {project.year}
-                    </span>
-                    <span className="project-open">
-                      <Arrow />
-                    </span>
-                  </div>
-                  <div className="project-caption">
-                    <p className="eyebrow">{project[lang].label}</p>
-                    <h3>{project[lang].title}</h3>
-                    <p>{project[lang].text}</p>
-                    <div className="project-tags">
-                      {(lang === "es" && project.tagsEs
-                        ? project.tagsEs
-                        : project.tags
-                      ).map((tag) => (
-                        <span key={tag}>{tag}</span>
+                  <a
+                    className="project-link"
+                    href={project.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`${project[lang].title} — ${project.kind === "image" ? t.visit : t.watch}`}
+                  >
+                    <div className="project-media">
+                      <ProjectMedia
+                        project={project}
+                        language={lang}
+                        imageNote={t.imageNote}
+                      />
+                      <span className="project-number">
+                        0{index + 1} / {project.year}
+                      </span>
+                      <span className="project-open">
+                        <Arrow />
+                      </span>
+                    </div>
+                    <div className="project-caption">
+                      <p className="eyebrow">{project[lang].label}</p>
+                      <h3>{project[lang].title}</h3>
+                      <p>{project[lang].text}</p>
+                      <div className="project-tags">
+                        {(lang === "es" && project.tagsEs
+                          ? project.tagsEs
+                          : project.tags
+                        ).map((tag) => (
+                          <span key={tag}>{tag}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </a>
+                  {project.downloads && (
+                    <div className="project-downloads">
+                      {project.downloads.map((download) => (
+                        <a
+                          className="button project-download"
+                          key={download.href}
+                          href={download.href}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {download[lang]}
+                          <Arrow />
+                        </a>
                       ))}
                     </div>
-                  </div>
-                </a>
-                {project.downloads && (
-                  <div className="project-downloads">
-                    {project.downloads.map((download) => (
-                      <a
-                        className="button project-download"
-                        key={download.href}
-                        href={download.href}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {download[lang]}
-                        <Arrow />
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </article>
-            ))}
+                  )}
+                </article>
+              ))}
           </div>
           <div className="client-work reveal">
             <div className="client-heading">
@@ -490,7 +533,7 @@ function App({ language = "en" }) {
               <em>{t.aboutTitle[1]}</em>
             </h2>
             <div className="about-body">
-              <Asterisk />
+              <OrbitMark />
               <div>
                 <p>{t.about}</p>
                 <p>{t.aboutMore}</p>
@@ -547,10 +590,10 @@ function App({ language = "en" }) {
               <p>{t.educationDetail}</p>
             </div>
             <div className="resume-links">
-              <a href="/cv/Pablo_Carvalho_EN.pdf" download>
+              <a href={assets.cvEN} download>
                 CV / EN <span>↓</span>
               </a>
-              <a href="/cv/Pablo_Carvalho_ES.pdf" download>
+              <a href={assets.cvES} download>
                 CV / ES <span>↓</span>
               </a>
             </div>

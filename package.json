@@ -8,11 +8,15 @@
     "build": "vite build && vite build --ssr src/entry-server.jsx --outDir .prerender && node scripts/prerender.mjs",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "check": "node scripts/verify-build.mjs"
+    "check": "node scripts/verify-build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "dev:api": "node --env-file=.generated/admin/local.env scripts/dev-api.mjs"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.2",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -26,5 +30,10 @@
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
     "vite": "^5.0.8"
+  },
+  "overrides": {
+    "@vercel/cli-config": {
+      "zod": "$zod"
+    }
   }
 }

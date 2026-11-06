@@ -74,5 +74,9 @@ for (const [language, data] of Object.entries(localized)) {
   await mkdir(dir, { recursive: true });
   await writeFile(`${dir}/index.html`, html);
 }
+await mkdir("dist/admin", { recursive: true });
+await writeFile("dist/admin/index.html", template
+  .replace(/<!-- SEO_START -->[\s\S]*?<!-- SEO_END -->/, '<title>Editar portfolio</title><meta name="robots" content="noindex,nofollow" />')
+  .replace("<!--app-html-->", ""));
 await rm(".prerender", { recursive: true });
 console.log("Prerendered English and Spanish pages.");
