@@ -531,6 +531,23 @@ section[id] {
   color: #929b87;
   margin-right: 10px;
 }
+.project-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+.project-download {
+  background: var(--peach);
+  color: var(--ink);
+  gap: 16px;
+}
+.project-download:hover {
+  background: #f4c9ad;
+}
+.project--tv {
+  scroll-margin-top: 96px;
+}
 .tv-art {
   position: relative;
   height: 100%;

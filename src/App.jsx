@@ -389,6 +389,7 @@ function App({ language = "en" }) {
           <div className="project-grid">
             {projects.map((project, index) => (
               <article
+                id={project.anchor}
                 className={`project project--${project.id} reveal`}
                 key={project.id}
               >
@@ -422,6 +423,22 @@ function App({ language = "en" }) {
                     </div>
                   </div>
                 </a>
+                {project.downloads && (
+                  <div className="project-downloads">
+                    {project.downloads.map((download) => (
+                      <a
+                        className="button project-download"
+                        key={download.href}
+                        href={download.href}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {download[lang]}
+                        <Arrow />
+                      </a>
+                    ))}
+                  </div>
+                )}
               </article>
             ))}
           </div>

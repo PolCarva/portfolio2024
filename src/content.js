@@ -4,6 +4,8 @@ export const links = {
   github: "https://github.com/PolCarva",
   whatsapp: "https://wa.me/59894375127",
   tv: "https://www.linkedin.com/feed/update/urn:li:activity:7521309877177241601/",
+  tvAppStore: "https://apps.apple.com/app/id6826423999",
+  tvApk: "https://github.com/PolCarva/tele-teclado/releases/latest/download/Teclado-TV.apk",
   youtube:
     "https://www.linkedin.com/feed/update/urn:li:activity:7477082823158403072/",
 };
@@ -261,18 +263,23 @@ export const projects = [
   },
   {
     id: "tv",
+    anchor: "teclado-tv",
     year: "2026",
     kind: "tv",
     href: links.tv,
+    downloads: [
+      { href: links.tvAppStore, en: "Get it on the App Store", es: "Ver en App Store" },
+      { href: links.tvApk, en: "Download Android APK", es: "Descargar APK para Android" },
+    ],
     tags: ["Claude Code", "Android TV", "UX"],
     en: {
-      title: "A better way to type on TV",
+      title: "Teclado TV",
       label: "ONE EVERYDAY FRICTION, SOLVED",
       text: "Typing with a remote is slow. I built an app with Claude Code to use a phone as an Android TV keyboard.",
       alt: "Interaction sketch showing a phone sending text to an Android TV",
     },
     es: {
-      title: "Escribir en la tele, más fácil",
+      title: "Teclado TV",
       label: "UNA FRICCIÓN COTIDIANA, RESUELTA",
       text: "Escribir con el control remoto lleva tiempo. Creé una app con Claude Code para usar el celular como teclado de Android TV.",
       alt: "Esquema de un celular enviando texto a un Android TV",
