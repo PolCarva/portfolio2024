@@ -414,9 +414,6 @@ section[id] {
   height: 14px;
   color: #a1866d;
 }
-.discipline-strip svg path {
-  stroke-width: 1.8;
-}
 .work-section {
   background: var(--dark);
   color: var(--paper);
