@@ -1,3 +1,4 @@
+import { isStorageConflict } from "./storage.mjs";
 export function json(res, status, data) {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -33,11 +34,7 @@ export function failure(res, error) {
         .map((i) => `${i.path.join(".")}: ${i.message}`)
         .slice(0, 12),
     });
-  if (
-    error.name === "BlobPreconditionFailedError" ||
-    error.name === "BlobAlreadyExistsError" ||
-    error.status === 409
-  )
+  if (isStorageConflict(error))
     return json(res, 409, {
       error:
         "El contenido cambió en otra sesión. Exportá tu borrador y recargá antes de guardar.",

@@ -1,8 +1,15 @@
-import { get, put } from "@vercel/blob";
+import { get, put, BlobPreconditionFailedError, BlobError } from "@vercel/blob";
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 const local = () => process.env.PORTFOLIO_LOCAL_STORE;
+// Blob GET may add a weak prefix for the compressed representation. Conditional
+// writes need the underlying object's strong ETag, as returned by Blob HEAD.
+export const storageEtag = (value) => value.replace(/^W\//, "");
+export const isStorageConflict = (error) =>
+  error.status === 409 ||
+  error instanceof BlobPreconditionFailedError ||
+  (error instanceof BlobError && /already exists/i.test(error.message));
 export async function readObject(path) {
   if (local()) {
     try {
@@ -17,7 +24,7 @@ export async function readObject(path) {
   return blob
     ? {
         bytes: Buffer.from(await new Response(blob.stream).arrayBuffer()),
-        etag: blob.blob.etag,
+        etag: storageEtag(blob.blob.etag),
         type: blob.blob.contentType,
       }
     : null;

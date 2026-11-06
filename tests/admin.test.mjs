@@ -180,3 +180,14 @@ test("logout clears cookie; persistent limiter blocks repeated login attempts", 
     status = (await call("/api/session", "POST", { password: "wrong" })).status;
   assert.equal(status, 429);
 });
+
+test("Blob compressed-read ETags remain usable for conditional writes", async () => {
+  const { storageEtag, isStorageConflict } = await import(
+    "../server/storage.mjs"
+  );
+  const { BlobPreconditionFailedError } = await import("@vercel/blob");
+  assert.equal(storageEtag('W/"object-version"'), '"object-version"');
+  assert.equal(storageEtag('"object-version"'), '"object-version"');
+  assert.equal(isStorageConflict(new BlobPreconditionFailedError()), true);
+  assert.equal(isStorageConflict(new Error("connection failed")), false);
+});

@@ -4,7 +4,7 @@ import {
   scryptSync,
   timingSafeEqual,
 } from "node:crypto";
-import { readObject, writeObject } from "./storage.mjs";
+import { readObject, writeObject, isStorageConflict } from "./storage.mjs";
 const cookie = "portfolio_admin";
 export function configured() {
   return (
@@ -101,12 +101,7 @@ export async function limitLogin(req) {
       });
       return;
     } catch (e) {
-      if (
-        e.name === "BlobPreconditionFailedError" ||
-        e.name === "BlobAlreadyExistsError" ||
-        e.status === 409
-      )
-        continue;
+      if (isStorageConflict(e)) continue;
       throw e;
     }
   }
