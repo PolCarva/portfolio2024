@@ -9,28 +9,16 @@ function Arrow() {
     </svg>
   );
 }
-function OrbitMark() {
+function BrandMark() {
   return (
-    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <ellipse
-        cx="24"
-        cy="24"
-        rx="20"
-        ry="10"
-        transform="rotate(-35 24 24)"
+    <svg viewBox="0 0 30 30" fill="none" aria-hidden="true">
+      <path
+        d="M5.66749 15.125C4.19428 15.125 3 16.3192 3 17.7925V24.5824C3 26.0557 4.19428 27.2499 5.66749 27.2499H12.5447C14.0179 27.2499 15.2121 26.0557 15.2121 24.5824V17.7925C15.2121 16.3192 16.4065 15.125 17.8796 15.125H24.5824C26.0556 15.125 27.2499 13.9307 27.2499 12.4575V5.66749C27.2499 4.19431 26.0556 3 24.5824 3H17.7052C16.232 3 15.0377 4.19431 15.0377 5.66749V12.4575C15.0377 13.9307 13.8435 15.125 12.3702 15.125H5.66749Z"
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <ellipse
-        cx="24"
-        cy="24"
-        rx="10"
-        ry="20"
-        transform="rotate(-35 24 24)"
-        stroke="currentColor"
-        strokeWidth="2.5"
-      />
-      <circle cx="24" cy="24" r="4" fill="currentColor" />
     </svg>
   );
 }
@@ -387,7 +375,7 @@ function App({ language = "en", initialContent = defaults }) {
                   alt={t.portrait}
                 />
                 <span className="portrait-mark" aria-hidden="true">
-                  <OrbitMark />
+                  <BrandMark />
                 </span>
               </div>
               <figcaption>
@@ -406,7 +394,7 @@ function App({ language = "en", initialContent = defaults }) {
         <div className="discipline-strip" aria-hidden="true">
           {t.strip.map((item) => (
             <span key={item}>
-              <OrbitMark />
+              <BrandMark />
               {item}
             </span>
           ))}
@@ -533,7 +521,7 @@ function App({ language = "en", initialContent = defaults }) {
               <em>{t.aboutTitle[1]}</em>
             </h2>
             <div className="about-body">
-              <OrbitMark />
+              <BrandMark />
               <div>
                 <p>{t.about}</p>
                 <p>{t.aboutMore}</p>

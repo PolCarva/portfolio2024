@@ -363,7 +363,6 @@ section[id] {
 .portrait-mark svg {
   width: 38px;
   height: 38px;
-  animation: slow-turn 35s linear infinite;
 }
 .portrait-composition figcaption {
   display: flex;
@@ -414,6 +413,9 @@ section[id] {
   width: 14px;
   height: 14px;
   color: #a1866d;
+}
+.discipline-strip svg path {
+  stroke-width: 1.8;
 }
 .work-section {
   background: var(--dark);
