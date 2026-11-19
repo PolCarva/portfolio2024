@@ -620,49 +620,6 @@
     font-size: 1.3cqw;
   }
 }
-/* Find the center first, then reveal Play. Both timelines start together. */
-@media (prefers-reduced-motion: no-preference) {
-  .is-visible .video-art .play-target {
-    animation: video-target-arrive 3.8s ease-in-out both;
-  }
-  .is-visible .video-art .play-triangle {
-    animation: video-play-reveal 3.8s ease-in-out both;
-  }
-}
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .project.is-visible .project-link:hover .play-target,
-  .project.is-visible .project-link:focus-visible .play-target {
-    animation: video-target-interact 3.8s ease-in-out both;
-  }
-  .project.is-visible .project-link:hover .play-triangle,
-  .project.is-visible .project-link:focus-visible .play-triangle {
-    animation: video-play-reveal-interact 3.8s ease-in-out both;
-  }
-}
-@keyframes video-target-arrive {
-  0% { transform: translateX(-23%); }
-  22% { transform: translateX(22%); }
-  43% { transform: translateX(-15%); }
-  63% { transform: translateX(10%); }
-  76%, 100% { transform: translateX(0); }
-}
-@keyframes video-target-interact {
-  0% { transform: translateX(-23%); }
-  22% { transform: translateX(22%); }
-  43% { transform: translateX(-15%); }
-  63% { transform: translateX(10%); }
-  76%, 100% { transform: translateX(0); }
-}
-@keyframes video-play-reveal {
-  0%, 76% { opacity: 0; transform: scale(.86); }
-  88% { opacity: 1; transform: scale(1.04); }
-  100% { opacity: 1; transform: scale(1); }
-}
-@keyframes video-play-reveal-interact {
-  0%, 76% { opacity: 0; transform: scale(.86); }
-  88% { opacity: 1; transform: scale(1.04); }
-  100% { opacity: 1; transform: scale(1); }
-}
 @media (prefers-reduced-motion: reduce) {
   .artwork-scene *,
   .client-art-scene *,

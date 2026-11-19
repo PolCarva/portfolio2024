@@ -5,6 +5,7 @@ import {
   WordleArtwork,
   PosterArtwork,
   ClientArtwork,
+  VideoArtwork,
 } from "./ProjectArtwork";
 
 const sectionIds = ["work", "about", "experience", "contact"];
@@ -87,29 +88,7 @@ function ProjectMedia({ project, language, imageNote }) {
         <span className="art-note">{imageNote} / 2026</span>
       </div>
     );
-  return (
-    <div className="video-art" role="img" aria-label={p.alt}>
-      <span className="art-corner">
-        {language === "es" ? "EXPERIMENTO N.º 02" : "EXPERIMENT NO. 02"}
-      </span>
-      <span className="video-art-word">
-        {language === "es" ? "DALE" : "PRESS"}
-        <br />
-        <em>PLAY.</em>
-      </span>
-      <span className="play-target">
-        <span className="play-triangle" />
-        <i />
-        <b />
-      </span>
-      <span className="video-art-caption">
-        {language === "es"
-          ? "Un video. Un juego. Otra forma de interactuar."
-          : "One video. One game. Another way to interact."}
-      </span>
-      <span className="art-note">YOUTUBE × INTERACTION</span>
-    </div>
-  );
+  return <VideoArtwork language={language} description={p.alt} />;
 }
 
 function ContactForm({ t }) {

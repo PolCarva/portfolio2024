@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import { videoAimMotion } from "./video-aim-motion";
 import "./project-artwork.css";
 
 function ArtworkFrame({ name, children, label, note, description }) {
@@ -219,6 +221,94 @@ export function ClientArtwork({ project, language }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+export function VideoArtwork({ language, description }) {
+  const root = useRef(null),
+    target = useRef(null),
+    play = useRef(null);
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const scene = root.current,
+      anchor = scene.closest("a");
+    let animations = [];
+    function run() {
+      if (
+        reduced.matches ||
+        !target.current?.animate ||
+        animations.some((a) => a.playState === "running")
+      )
+        return;
+      animations.forEach((a) => a.cancel());
+      animations = [
+        target.current.animate(videoAimMotion.target, {
+          duration: videoAimMotion.duration,
+          fill: "both",
+          easing: "linear",
+        }),
+        play.current.animate(videoAimMotion.play, {
+          duration: videoAimMotion.duration,
+          fill: "both",
+          easing: "ease-out",
+        }),
+      ];
+      const startTime = document.timeline.currentTime;
+      animations.forEach((animation) => {
+        animation.startTime = startTime;
+      });
+    }
+    const observer =
+      "IntersectionObserver" in window
+        ? new IntersectionObserver(
+            (entries) => {
+              if (entries.some((entry) => entry.isIntersecting)) {
+                run();
+                observer.disconnect();
+              }
+            },
+            { threshold: 0.35 },
+          )
+        : null;
+    if (observer) observer.observe(scene);
+    else run();
+    const stop = () => {
+      if (reduced.matches) animations.forEach((a) => a.cancel());
+    };
+    anchor?.addEventListener("pointerenter", run);
+    anchor?.addEventListener("focusin", run);
+    reduced.addEventListener("change", stop);
+    return () => {
+      observer?.disconnect();
+      animations.forEach((a) => a.cancel());
+      anchor?.removeEventListener("pointerenter", run);
+      anchor?.removeEventListener("focusin", run);
+      reduced.removeEventListener("change", stop);
+    };
+  }, []);
+  const es = language === "es";
+  return (
+    <div ref={root} className="video-art" role="img" aria-label={description}>
+      <span className="art-corner">
+        {es ? "EXPERIMENTO N.º 02" : "EXPERIMENT NO. 02"}
+      </span>
+      <span className="video-art-word">
+        {es ? "DALE" : "PRESS"}
+        <br />
+        <em>PLAY.</em>
+      </span>
+      <span ref={target} className="play-target">
+        <span ref={play} className="play-triangle" />
+        <i />
+        <b />
+      </span>
+      <span className="video-art-caption">
+        {es
+          ? "Un video. Un juego. Otra forma de interactuar."
+          : "One video. One game. Another way to interact."}
+      </span>
+      <span className="art-note">YOUTUBE × INTERACTION</span>
     </div>
   );
 }
