@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import defaults from "./content";
+import {
+  ImpostorArtwork,
+  WordleArtwork,
+  PosterArtwork,
+  ClientArtwork,
+} from "./ProjectArtwork";
 
 const sectionIds = ["work", "about", "experience", "contact"];
 function Arrow() {
@@ -22,6 +28,11 @@ function BrandMark() {
 
 function ProjectMedia({ project, language, imageNote }) {
   const p = project[language];
+  if (project.kind === "impostor")
+    return <ImpostorArtwork language={language} />;
+  if (project.kind === "wordle") return <WordleArtwork language={language} />;
+  if (project.kind === "poster")
+    return <PosterArtwork project={project} language={language} />;
   if (project.kind === "image")
     return (
       <img
@@ -422,7 +433,7 @@ function App({ language = "en", initialContent = defaults }) {
                     href={project.href}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label={`${project[lang].title} — ${project.kind === "image" ? t.visit : t.watch}`}
+                    aria-label={`${project[lang].title} — ${["tv", "youtube"].includes(project.kind) ? t.watch : t.visit}`}
                   >
                     <div className="project-media">
                       <ProjectMedia
@@ -484,14 +495,7 @@ function App({ language = "en", initialContent = defaults }) {
                 rel="noreferrer"
                 aria-label={`${project.name} — ${t.clientVisit}`}
               >
-                <img
-                  src={project.image}
-                  width="480"
-                  height="320"
-                  alt={`${project.name} — ${project[lang]}`}
-                  loading="lazy"
-                  decoding="async"
-                />
+                <ClientArtwork project={project} language={lang} />
                 <div>
                   <h4>{project.name}</h4>
                   <p>

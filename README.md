@@ -65,3 +65,9 @@ Los secretos se configuran en Vercel, nunca en variables `VITE_`, código ni Git
 Para desarrollo, crear `.generated/admin/local.env` con los dos secretos de administración y `PORTFOLIO_LOCAL_STORE=.generated/admin/local-store`. Ejecutar `npm run dev:api` y, en otra terminal, `npm run dev`: Vite redirige `/api` a `127.0.0.1:4317`. El almacenamiento local es solo para desarrollo, no para producción.
 
 Antes de cerrar el editor, guardar o exportar el borrador con **Exportar copia**. El backend guarda únicamente contenido público; las credenciales están separadas. Los archivos subidos son accesibles públicamente mediante su URL en `/api/media`; no subir documentos confidenciales. El servidor no acepta SVG, HTML ni JavaScript como archivos.
+
+### Ilustraciones de proyectos
+
+Las miniaturas se dibujan con HTML/CSS. En **Presentación** se puede elegir Teclado TV, video interactivo, El Impostor, Wordle o una composición editorial que toma el título, rótulo y tecnologías del proyecto. Los proyectos nuevos usan la composición editorial por defecto. La opción de imagen propia sigue disponible para casos que lo necesiten. Los trabajos para clientes ofrecen las variantes moda, descanso e interfaz web. Las escenas son ilustraciones conceptuales, no capturas de los productos.
+
+Las animaciones se activan brevemente al pasar el cursor o enfocar el enlace con el teclado. Se desactivan con `prefers-reduced-motion`; no hay dependencia de video, canvas ni imágenes raster para estas miniaturas.

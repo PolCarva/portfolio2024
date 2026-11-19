@@ -41,7 +41,7 @@ export const projectSchema = z
     id: key,
     anchor: key.optional(),
     year: z.string().max(20),
-    kind: z.enum(["image", "tv", "youtube"]),
+    kind: z.enum(["image", "tv", "youtube", "impostor", "wordle", "poster"]),
     image: z.union([url, z.literal("")]).optional(),
     href: url,
     tags: z.array(z.string().max(100)).max(20),
@@ -117,7 +117,11 @@ export const contentSchema = z
       }, "Hay anclas repetidas o reservadas."),
     clientProjects: z
       .array(
-        shape(defaults.clientProjects[0]).extend({ image: url, href: url }),
+        shape(defaults.clientProjects[0]).extend({
+          image: z.union([url, z.literal("")]).optional(),
+          href: url,
+          artwork: z.enum(["fashion", "sleep", "web"]).optional(),
+        }),
       )
       .max(60),
     media: z.object({ portrait: url, cvEN: url, cvES: url }).strict(),

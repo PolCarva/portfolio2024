@@ -191,3 +191,19 @@ test("Blob compressed-read ETags remain usable for conditional writes", async ()
   assert.equal(isStorageConflict(new BlobPreconditionFailedError()), true);
   assert.equal(isStorageConflict(new Error("connection failed")), false);
 });
+
+test("editor accepts generated artwork without image files and validates presets", () => {
+  const content = structuredClone(defaults);
+  content.projects[2].kind = "impostor";
+  content.projects[2].image = "";
+  content.projects[3].kind = "wordle";
+  content.projects[3].image = "";
+  content.clientProjects[0].artwork = "fashion";
+  content.clientProjects[0].image = "";
+  assert.doesNotThrow(() => validateContent(content));
+  content.projects[2].kind = "image";
+  assert.throws(() => validateContent(content));
+  content.projects[2].kind = "poster";
+  content.clientProjects[0].artwork = "untrusted-markup";
+  assert.throws(() => validateContent(content));
+});

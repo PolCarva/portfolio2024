@@ -17,6 +17,7 @@ const labels = {
   anchor: "Enlace directo (ancla)",
   year: "Año",
   kind: "Presentación",
+  artwork: "Ilustración",
   image: "Imagen",
   href: "Enlace",
   tags: "Tecnologías (inglés)",
@@ -67,7 +68,7 @@ const empty = (v) =>
 const newProject = () => ({
   id: "proyecto-" + Date.now().toString(36),
   year: String(new Date().getFullYear()),
-  kind: "image",
+  kind: "poster",
   image: "",
   href: "",
   tags: [],
@@ -104,11 +105,25 @@ function Editor({ value, onChange, name, path = "", onUpload }) {
       </label>
     );
   if (typeof value === "string") {
+    if (name === "artwork")
+      return (
+        <label className="admin-field">
+          {label}
+          <select value={value} onChange={(e) => onChange(e.target.value)}>
+            <option value="fashion">Moda · prendas</option>
+            <option value="sleep">Descanso · capas</option>
+            <option value="web">Web · interfaz</option>
+          </select>
+        </label>
+      );
     if (name === "kind")
       return (
         <label className="admin-field">
           {label}
           <select value={value} onChange={(e) => onChange(e.target.value)}>
+            <option value="poster">Composición editorial</option>
+            <option value="impostor">El Impostor · cartas</option>
+            <option value="wordle">Wordle · grilla de letras</option>
             <option value="image">Imagen propia</option>
             <option value="tv">Ilustración de Teclado TV</option>
             <option value="youtube">Ilustración de video interactivo</option>
@@ -196,6 +211,7 @@ function Editor({ value, onChange, name, path = "", onUpload }) {
           es: "",
           en: "",
         };
+      if (name === "clientProjects") next = { ...next, artwork: "web" };
       onChange([...value, next]);
     };
     const move = (i, d) => {
@@ -285,16 +301,25 @@ function Editor({ value, onChange, name, path = "", onUpload }) {
     <fieldset className="admin-object">
       {["es", "en"].includes(name) && <legend>{label}</legend>}
       <div className="admin-fields">
-        {Object.entries(value).map(([k, v]) => (
-          <Editor
-            key={k}
-            name={k}
-            path={`${path}.${k}`}
-            value={v}
-            onChange={(next) => onChange({ ...value, [k]: next })}
-            onUpload={onUpload}
-          />
-        ))}
+        {Object.entries(value)
+          .filter(
+            ([k]) =>
+              !(
+                k === "image" &&
+                (path.startsWith("clientProjects") ||
+                  (value.kind && value.kind !== "image"))
+              ),
+          )
+          .map(([k, v]) => (
+            <Editor
+              key={k}
+              name={k}
+              path={`${path}.${k}`}
+              value={v}
+              onChange={(next) => onChange({ ...value, [k]: next })}
+              onUpload={onUpload}
+            />
+          ))}
       </div>
     </fieldset>
   );

@@ -282,7 +282,7 @@
     {
       "id": "impostor",
       "year": "2026",
-      "kind": "image",
+      "kind": "impostor",
       "image": "/images/impostor.webp",
       "href": "https://impostor.gratis/",
       "tags": ["Next.js", "TypeScript", "Applied AI"],
@@ -306,7 +306,7 @@
     {
       "id": "wordle",
       "year": "2025",
-      "kind": "image",
+      "kind": "wordle",
       "image": "/images/wordle.webp",
       "href": "https://wordleinfinito.com/",
       "tags": ["Full stack", "WebSocket", "Game logic"],
@@ -336,7 +336,8 @@
       "href": "https://jackjones.com.uy/",
       "tools": "Shopify · Liquid · Tailwind CSS",
       "en": "E-commerce development",
-      "es": "Desarrollo de e-commerce"
+      "es": "Desarrollo de e-commerce",
+      "artwork": "fashion"
     },
     {
       "name": "Luno",
@@ -345,7 +346,8 @@
       "href": "https://lunolife.com/",
       "tools": "Shopify · Liquid · Tailwind CSS",
       "en": "E-commerce development",
-      "es": "Desarrollo de e-commerce"
+      "es": "Desarrollo de e-commerce",
+      "artwork": "sleep"
     },
     {
       "name": "NSGCorp",
@@ -354,7 +356,8 @@
       "href": "https://www.nsgcorp.me/",
       "tools": "Next.js · Headless CMS · Figma · GSAP",
       "en": "Web development & interaction",
-      "es": "Desarrollo web e interacción"
+      "es": "Desarrollo web e interacción",
+      "artwork": "web"
     }
   ],
   "media": {
