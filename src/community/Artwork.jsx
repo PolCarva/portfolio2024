@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Component, useEffect, useRef, useState } from "react";
 import { sceneColors, brushColors } from "../../shared/community-catalog.mjs";
 export function SceneNodes({ scene, zone }) {
   const colors = {
@@ -94,7 +94,7 @@ const colorLabels = {
     gold: "Gold",
   },
 };
-export default function CommunityCanvas({
+function CommunityCanvas({
   scene,
   zone,
   language = "es",
@@ -150,8 +150,9 @@ export default function CommunityCanvas({
   function start(e) {
     if (!drawing || e.button !== 0 || strokes.length >= 12) return;
     area.current.setPointerCapture(e.pointerId);
-    active.current = { points: [point(e)], color, width };
-    setStrokes((s) => [...s, active.current]);
+    const stroke = { points: [point(e)], color, width };
+    active.current = stroke;
+    setStrokes((s) => [...s, stroke]);
   }
   function move(e) {
     if (!drawing && area.current) {
@@ -169,16 +170,18 @@ export default function CommunityCanvas({
     let points = [...active.current.points, point(e)];
     if (points.length > 64)
       points = points.filter((_, i) => i % 2 === 0 || i === points.length - 1);
-    active.current = { ...active.current, points };
-    setStrokes((s) => [...s.slice(0, -1), active.current]);
+    const stroke = { ...active.current, points };
+    active.current = stroke;
+    setStrokes((s) => [...s.slice(0, -1), stroke]);
   }
   function end() {
     if (active.current?.points.length === 1) {
-      active.current = {
+      const stroke = {
         ...active.current,
         points: [...active.current.points, ...active.current.points],
       };
-      setStrokes((s) => [...s.slice(0, -1), active.current]);
+      active.current = stroke;
+      setStrokes((s) => [...s.slice(0, -1), stroke]);
     }
     active.current = null;
   }
@@ -304,5 +307,40 @@ export default function CommunityCanvas({
         </div>
       )}
     </aside>
+  );
+}
+
+class CanvasBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    if (this.state.failed)
+      return (
+        <aside className="community-canvas-error" role="alert">
+          <p>
+            {this.props.language === "es"
+              ? "El lienzo tuvo un problema. El resto del portfolio sigue disponible."
+              : "The canvas ran into a problem. The rest of the portfolio is still available."}
+          </p>
+          <button
+            type="button"
+            onClick={() => this.setState({ failed: false })}
+          >
+            {this.props.language === "es"
+              ? "Restablecer lienzo"
+              : "Reset canvas"}
+          </button>
+        </aside>
+      );
+    return this.props.children;
+  }
+}
+export default function ProtectedCommunityCanvas(props) {
+  return (
+    <CanvasBoundary language={props.language}>
+      <CommunityCanvas {...props} />
+    </CanvasBoundary>
   );
 }
