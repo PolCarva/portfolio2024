@@ -156,32 +156,11 @@ export async function renderReview(
           };
           await shot({ x: 0, y: 0, width, height: Math.ceil(size.height) });
           mark("full_screenshot_done");
-          for (const selector of [
-            ".hero",
-            "#about",
-            "#experience",
-            "#contact",
-          ]) {
-            const { nodeId } = await cdp.send("DOM.querySelector", {
-              nodeId: document.nodeId,
-              selector,
-            });
-            const { model } = await cdp.send("DOM.getBoxModel", { nodeId });
-            const xs = model.border.filter((_, i) => i % 2 === 0),
-              ys = model.border.filter((_, i) => i % 2 === 1);
-            await shot({
-              x: Math.max(0, Math.min(...xs)),
-              y: Math.max(0, Math.min(...ys)),
-              width: Math.min(width, Math.max(...xs) - Math.min(...xs)),
-              height: Math.min(height, Math.max(...ys) - Math.min(...ys)),
-            });
-          }
-
           const { frameTree } = await cdp.send("Page.getFrameTree");
           const { styleSheetId } = await cdp.send("CSS.createStyleSheet", {
             frameId: frameTree.frame.id,
           });
-          for (const phase of [0, 0.25, 0.5]) {
+          for (const phase of [0]) {
             await page.emulateMedia({ reducedMotion: "no-preference" });
             await cdp.send("CSS.setStyleSheetText", {
               styleSheetId,
@@ -214,7 +193,7 @@ export async function renderReview(
           }
         }
         if (
-          images.length > 28 ||
+          images.length > 8 ||
           images.reduce((n, b) => n + b.length, 0) > 16_000_000
         )
           throw new Error("Preview image limit");

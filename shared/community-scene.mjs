@@ -47,7 +47,38 @@ export const sceneSchema = z
   .object({
     version: z.literal(1),
     palette: z.enum(Object.keys(palettes)),
-    font: z.enum(["original", "editorial", "mono"]),
+    font: z.enum([
+      "original",
+      "editorial",
+      "mono",
+      "system",
+      "rounded",
+      "handwritten",
+    ]),
+    theme: z
+      .object({
+        paper: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        dark: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        ink: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+      })
+      .strict()
+      .nullable()
+      .default(null),
+    composition: z
+      .object({
+        hero: z.enum(["original", "centered", "portrait-first", "editorial"]),
+        columns: z.number().int().min(1).max(3),
+        align: z.enum(["left", "center"]),
+        gap: z.number().int().min(16).max(96),
+        sectionSpace: z.number().int().min(24).max(160),
+        mediaRatio: z.enum(["landscape", "square", "portrait"]),
+        button: z.enum(["solid", "outline", "pill"]),
+        borderWidth: z.number().int().min(0).max(4),
+      })
+      .strict()
+      .nullable()
+      .default(null),
     layout: z.enum(["original", "aligned", "gallery"]),
     spacing: z.enum(["original", "airy", "compact"]),
     corners: z.enum(["original", "rounded", "cut"]),

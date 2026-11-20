@@ -103,7 +103,7 @@ export default async function handler(req, res) {
             ? "Creá una sección donde los dibujos de todos queden guardados entre sesiones, con selector de color y tamaño de pincel."
             : data.test === "drawing"
               ? "Quiero sumar un dibujo geométrico azul al lienzo compartido."
-              : "Convertí el diseño en un jardín digital: paleta forest, tarjetas redondeadas y seis círculos flotantes en las bandas. Conservá toda la información.";
+              : "Transformá toda la estética: fondo violeta claro #e8e6ff, secciones oscuras #16113e, acento verde neón #a5ffbd, cabecera centrada, tres columnas, tipografía redondeada y seis figuras flotantes. Conservá la información.";
       const reservation = await reserve({
         id,
         owner: digest("admin-diagnostic"),
@@ -160,6 +160,9 @@ export default async function handler(req, res) {
           state.publicSnapshot = {
             scene: state.scene,
             revision: state.revision,
+            appliedRequestIds: Object.values(state.jobs)
+              .filter((j) => j.status === "published")
+              .map((j) => j.id),
           };
         state.paused = false;
         state.mode = data.action === "resume" ? "public" : "private";
@@ -178,6 +181,12 @@ export default async function handler(req, res) {
         state.history.push(old);
         state.history = state.history.slice(-100);
         state.revision = randomUUID();
+        if (state.mode === "private")
+          state.publicSnapshot = {
+            scene: state.scene,
+            revision: state.revision,
+            appliedRequestIds: [],
+          };
         state.paused = true;
       }
       // In-flight work can never publish across an administrative action.

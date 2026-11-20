@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { communityMarkPath } from "../../shared/community-catalog.mjs";
 const copy = {
   es: {
     badge: "Diseño intervenido por visitantes",
@@ -22,7 +23,9 @@ const copy = {
     limit:
       "Un prompt o un dibujo publicado por navegador. Los rechazos no gastan tu turno; hasta tres intentos de generación por día.",
     send: "Proponer y publicar",
-    busy: "Creando y revisando…",
+    busy: "Construyendo tu cambio…",
+    autoUpdate: "La página se actualiza sola al terminar.",
+    progress: "Ver progreso",
     close: "Cerrar",
     success:
       "Tu cambio ya forma parte del portfolio. Gracias por dejar tu huella.",
@@ -82,7 +85,9 @@ const copy = {
     limit:
       "One published prompt or drawing per browser. Rejections do not use your turn; up to three generation attempts a day.",
     send: "Propose and publish",
-    busy: "Creating and reviewing…",
+    busy: "Building your change…",
+    autoUpdate: "The page updates automatically when it is ready.",
+    progress: "View progress",
     close: "Close",
     success:
       "Your change is now part of the portfolio. Thanks for leaving your mark.",
@@ -186,7 +191,13 @@ export default function CommunityControls({
     [token, setToken] = useState(""),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
-    [reset, setReset] = useState(0);
+    [reset, setReset] = useState(0),
+    [toast, setToast] = useState(false);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(false), 9000);
+    return () => clearTimeout(timer);
+  }, [toast]);
   const dialog = useRef(null),
     opener = useRef(null),
     closed = useRef(false);
@@ -329,7 +340,11 @@ export default function CommunityControls({
         setPrompt("");
         setOriginal(false);
       }
-      await refresh();
+      if (result.status === "published") {
+        await refresh().catch(() => {});
+        setOpen(false);
+        setToast(true);
+      } else await refresh();
     } catch (e) {
       setNotice(t.reason[e.message] ? e.message : "unavailable");
     } finally {
@@ -341,6 +356,18 @@ export default function CommunityControls({
   if (!data) return null;
   return (
     <>
+      {toast && (
+        <div className="community-toast" role="status">
+          {t.success}
+          <button
+            type="button"
+            aria-label={t.close}
+            onClick={() => setToast(false)}
+          >
+            ×
+          </button>
+        </div>
+      )}
       <div
         className="community-bar"
         aria-label={
@@ -359,7 +386,7 @@ export default function CommunityControls({
           className="community-cta"
           onClick={() => setOpen(true)}
         >
-          {t.join} ↗
+          {busy ? t.progress : t.join} ↗
         </button>
       </div>
       {open && (
@@ -391,111 +418,140 @@ export default function CommunityControls({
                 {t.reason[data.reason] || t.reason.unavailable}
               </p>
             )}
-            <form onSubmit={submit}>
-              {drawingDraft && (
-                <p className="community-notice">
-                  {es
-                    ? `${drawingDraft.strokes.length} ${drawingDraft.strokes.length === 1 ? "trazo listo" : "trazos listos"} para revisar y guardar. Tu aporte se suma al lienzo compartido.`
-                    : `${drawingDraft.strokes.length} ${drawingDraft.strokes.length === 1 ? "stroke" : "strokes"} ready for review and saving. Your drawing joins the shared canvas.`}
-                </p>
-              )}
-              {drawingDraft && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    onDrawingComplete?.();
-                    setPrompt("");
-                  }}
+            <form onSubmit={submit} aria-busy={busy}>
+              {busy ? (
+                <div
+                  className="community-building"
+                  role="status"
+                  aria-live="polite"
                 >
-                  {es
-                    ? "Continuar solo con un prompt"
-                    : "Continue with a prompt only"}
-                </button>
-              )}
-              <label htmlFor="community-prompt">
-                {drawingDraft
-                  ? es
-                    ? "Describí tu dibujo"
-                    : "Describe your drawing"
-                  : t.label}
-              </label>
-              <textarea
-                id="community-prompt"
-                maxLength={500}
-                minLength={3}
-                required
-                rows={4}
-                placeholder={
-                  drawingDraft
-                    ? es
-                      ? "Describí lo que dibujaste…"
-                      : "Describe what you drew…"
-                    : t.placeholder
-                }
-                value={prompt}
-                disabled={busy}
-                onChange={(e) => setPrompt(e.target.value)}
-              />
-              <small>
-                {prompt.length}/500 {t.counter}
-              </small>
-              {!drawingDraft && (
-                <div className="community-example-row">
-                  {t.examples.map((example) => (
+                  <div className="community-building-icon" aria-hidden="true">
+                    <svg viewBox="0 0 30 30">
+                      <path d={communityMarkPath} />
+                    </svg>
+                  </div>
+                  <h3>{t.busy}</h3>
+                  <div className="community-building-lines" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <small>{t.autoUpdate}</small>
+                </div>
+              ) : (
+                <>
+                  {drawingDraft && (
+                    <p className="community-notice">
+                      {es
+                        ? `${drawingDraft.strokes.length} ${drawingDraft.strokes.length === 1 ? "trazo listo" : "trazos listos"} para revisar y guardar. Tu aporte se suma al lienzo compartido.`
+                        : `${drawingDraft.strokes.length} ${drawingDraft.strokes.length === 1 ? "stroke" : "strokes"} ready for review and saving. Your drawing joins the shared canvas.`}
+                    </p>
+                  )}
+                  {drawingDraft && (
                     <button
-                      key={example}
                       type="button"
                       disabled={busy}
-                      onClick={() => setPrompt(example)}
+                      onClick={() => {
+                        onDrawingComplete?.();
+                        setPrompt("");
+                      }}
                     >
-                      {example}
+                      {es
+                        ? "Continuar solo con un prompt"
+                        : "Continue with a prompt only"}
                     </button>
-                  ))}
-                </div>
-              )}
-              <small>{t.limit}</small>
-              <p>
-                <small>{t.privacy}</small>
-              </p>
-              {data.available && data.siteKey && (
-                <Turnstile
-                  siteKey={data.siteKey}
-                  onToken={setToken}
-                  reset={reset}
-                />
-              )}
-              <button
-                type="submit"
-                disabled={
-                  busy || !data.available || !token || prompt.trim().length < 3
-                }
-              >
-                {busy ? t.busy : t.send} ↗
-              </button>
-              {busy && <p role="status">{t.waiting}</p>}
-              {notice === "already_available" && data.scene?.drawing && (
-                <p>
-                  <a
-                    className="text-link"
-                    href="#community-canvas-hero"
-                    onClick={() => {
-                      setOriginal(false);
-                      onScene(data.scene);
-                      setOpen(false);
-                    }}
+                  )}
+                  <label htmlFor="community-prompt">
+                    {drawingDraft
+                      ? es
+                        ? "Describí tu dibujo"
+                        : "Describe your drawing"
+                      : t.label}
+                  </label>
+                  <textarea
+                    id="community-prompt"
+                    maxLength={500}
+                    minLength={3}
+                    required
+                    rows={4}
+                    placeholder={
+                      drawingDraft
+                        ? es
+                          ? "Describí lo que dibujaste…"
+                          : "Describe what you drew…"
+                        : t.placeholder
+                    }
+                    value={prompt}
+                    disabled={busy}
+                    onChange={(e) => setPrompt(e.target.value)}
+                  />
+                  <small>
+                    {prompt.length}/500 {t.counter}
+                  </small>
+                  {!drawingDraft && (
+                    <div className="community-example-row">
+                      {t.examples.map((example) => (
+                        <button
+                          key={example}
+                          type="button"
+                          disabled={busy}
+                          onClick={() => setPrompt(example)}
+                        >
+                          {example}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <small>{t.limit}</small>
+                  <p>
+                    <small>{t.privacy}</small>
+                  </p>
+                  {data.available && data.siteKey && (
+                    <Turnstile
+                      siteKey={data.siteKey}
+                      onToken={setToken}
+                      reset={reset}
+                    />
+                  )}
+                  <button
+                    type="submit"
+                    disabled={
+                      busy ||
+                      !data.available ||
+                      !token ||
+                      prompt.trim().length < 3
+                    }
                   >
-                    {es ? "Ir al lienzo compartido" : "Go to the shared canvas"}{" "}
-                    ↗
-                  </a>
-                </p>
-              )}
-              {notice && (
-                <p className="community-notice" role="status">
-                  {notice === "success"
-                    ? t.success
-                    : t.reason[notice || data.reason] || t.reason.unavailable}
-                </p>
+                    {busy ? t.busy : t.send} ↗
+                  </button>
+                  {busy && <p role="status">{t.waiting}</p>}
+                  {notice === "already_available" && data.scene?.drawing && (
+                    <p>
+                      <a
+                        className="text-link"
+                        href="#community-canvas-hero"
+                        onClick={() => {
+                          setOriginal(false);
+                          onScene(data.scene);
+                          setOpen(false);
+                        }}
+                      >
+                        {es
+                          ? "Ir al lienzo compartido"
+                          : "Go to the shared canvas"}{" "}
+                        ↗
+                      </a>
+                    </p>
+                  )}
+                  {notice && (
+                    <p className="community-notice" role="status">
+                      {notice === "success"
+                        ? t.success
+                        : t.reason[notice || data.reason] ||
+                          t.reason.unavailable}
+                    </p>
+                  )}
+                </>
               )}
             </form>
           </section>

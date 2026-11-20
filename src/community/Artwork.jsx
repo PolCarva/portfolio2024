@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { palettes, brushColors } from "../../shared/community-catalog.mjs";
+import { sceneColors, brushColors } from "../../shared/community-catalog.mjs";
 export function SceneNodes({ scene, zone }) {
   const colors = {
-    ...palettes[scene.palette],
+    ...sceneColors(scene),
     ...Object.fromEntries(Object.entries(brushColors).filter(([, v]) => v)),
   };
   return (
@@ -129,7 +129,7 @@ export default function CommunityCanvas({
   }, [scene, zone]);
   if (!scene) return null;
   const colors = {
-    ...palettes[scene.palette],
+    ...sceneColors(scene),
     ...Object.fromEntries(Object.entries(brushColors).filter(([, v]) => v)),
   };
   function point(e) {

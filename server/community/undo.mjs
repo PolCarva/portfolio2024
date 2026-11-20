@@ -31,9 +31,52 @@ export function undoRequest(state, id) {
       status: 409,
       code: "undo_unavailable",
     });
+  const result = inverseScene(state, job, state.scene);
+  if (state.mode === "private" && state.publicSnapshot) {
+    const snapshot = state.publicSnapshot;
+    const applied = snapshot.appliedRequestIds;
+    const revisions = [...state.history.map((h) => h.revision), state.revision];
+    const targetIndex = revisions.indexOf(job.revision);
+    const boundary = revisions.indexOf(snapshot.revision);
+    const wasPublic = applied
+      ? applied.includes(id)
+      : targetIndex >= 0 && boundary >= targetIndex;
+    if (wasPublic) {
+      snapshot.scene = inverseScene(state, job, snapshot.scene).scene;
+      snapshot.revision = randomUUID();
+      snapshot.appliedRequestIds = (
+        applied ||
+        Object.values(state.jobs)
+          .filter(
+            (j) =>
+              j.status === "published" &&
+              revisions.indexOf(j.revision) >= 0 &&
+              revisions.indexOf(j.revision) <= boundary,
+          )
+          .map((j) => j.id)
+      ).filter((key) => key !== id);
+    }
+  }
+  state.history.push({
+    revision: state.revision,
+    at: Date.now(),
+    scene: state.scene,
+  });
+  state.history = state.history.slice(-100);
+  state.scene = result.scene;
+  state.revision = randomUUID();
+  state.paused = true;
+  job.status = "reverted";
+  job.reason = "admin_reverted";
+  job.revertedAt = Date.now();
+  const { scene, ...report } = result;
+  void scene;
+  return report;
+}
+function inverseScene(state, job, currentScene) {
   const before = validateScene(sceneAt(state, job.base)),
     after = validateScene(sceneAt(state, job.revision)),
-    current = validateScene(state.scene),
+    current = validateScene(currentScene),
     next = structuredClone(current);
   const changed = [],
     skipped = [];
@@ -45,9 +88,11 @@ export function undoRequest(state, id) {
     "corners",
     "background",
     "drawing",
+    "theme",
+    "composition",
   ])
-    if (before[key] !== after[key]) {
-      if (current[key] === after[key]) {
+    if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) {
+      if (JSON.stringify(current[key]) === JSON.stringify(after[key])) {
         next[key] = before[key];
         changed.push(key);
       } else skipped.push(key);
@@ -83,19 +128,8 @@ export function undoRequest(state, id) {
   // Reassign identifiers before validation, retaining all independent later geometry.
   next.nodes = next.nodes.map((n, i) => ({ ...n, id: "n" + i }));
   const validated = validateScene(next);
-  state.history.push({
-    revision: state.revision,
-    at: Date.now(),
-    scene: state.scene,
-  });
-  state.history = state.history.slice(-100);
-  state.scene = validated;
-  state.revision = randomUUID();
-  state.paused = true;
-  job.status = "reverted";
-  job.reason = "admin_reverted";
-  job.revertedAt = Date.now();
   return {
+    scene: validated,
     changedFields: changed,
     skippedFields: skipped,
     removedNodes: removed,

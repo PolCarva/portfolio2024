@@ -965,3 +965,115 @@ test("selective undo preserves a later conflicting style and reports the skipped
   assert.equal(s.scene.font, "mono");
   assert.deepEqual(result.skippedFields, ["palette"]);
 });
+
+test("free visual colors and composition preserve readable text without accepting code", async () => {
+  const { sceneColors, contrast, sceneAttributes } = await import(
+    "../shared/community-catalog.mjs"
+  );
+  const composition = {
+    hero: "portrait-first",
+    columns: 3,
+    align: "center",
+    gap: 96,
+    sectionSpace: 160,
+    mediaRatio: "portrait",
+    button: "pill",
+    borderWidth: 4,
+  };
+  for (const paper of ["#000000", "#ffffff", "#777777", "#ff00cc", "#22ffff"]) {
+    const next = validateScene({
+      ...originalScene,
+      font: "rounded",
+      theme: { paper, dark: paper, accent: paper, ink: paper },
+      composition,
+    });
+    const colors = sceneColors(next);
+    assert(contrast(colors.ink, colors.paper) >= 4.5);
+    assert(contrast(colors.onDark, colors.dark) >= 4.5);
+    assert(contrast(colors.onAccent, colors.accent) >= 4.5);
+    assert.equal(sceneAttributes(next)["data-c-hero"], "portrait-first");
+    assert.equal(sceneAttributes(next).style["--community-columns"], 3);
+  }
+  assert.throws(() =>
+    validateScene({
+      ...originalScene,
+      theme: {
+        paper: "url(https://evil.test)",
+        dark: "#ffffff",
+        accent: "#ffffff",
+        ink: "#000000",
+      },
+    }),
+  );
+  assert.throws(() =>
+    validateScene({
+      ...originalScene,
+      composition: { ...composition, columns: 0 },
+    }),
+  );
+  assert.throws(() =>
+    validateScene({
+      ...originalScene,
+      composition: { ...composition, display: "none" },
+    }),
+  );
+  assert.throws(() =>
+    validateScene({ ...originalScene, biography: "replacement" }),
+  );
+});
+
+test("selective undo compares visual theme data by value", async () => {
+  const { undoRequest } = await import("../server/community/undo.mjs");
+  const s = freshState(),
+    theme = {
+      paper: "#111111",
+      dark: "#000000",
+      accent: "#ff00cc",
+      ink: "#ffffff",
+    };
+  const first = { ...originalScene, theme };
+  s.scene = structuredClone({ ...first, font: "mono" });
+  s.revision = "latest";
+  s.history = [
+    { revision: "original", scene: originalScene },
+    { revision: "first", scene: first },
+  ];
+  s.jobs.a = {
+    id: "a",
+    base: "original",
+    revision: "first",
+    status: "published",
+  };
+  undoRequest(s, "a");
+  assert.equal(s.scene.theme, null);
+  assert.equal(s.scene.font, "mono");
+});
+
+test("undo during private testing also removes the original public contribution", async () => {
+  const { undoRequest } = await import("../server/community/undo.mjs");
+  const s = freshState(),
+    publicScene = { ...originalScene, palette: "forest" };
+  s.mode = "private";
+  s.scene = { ...publicScene, font: "mono" };
+  s.revision = "private";
+  s.history = [
+    { revision: "original", scene: originalScene },
+    { revision: "public", scene: publicScene },
+  ];
+  s.publicSnapshot = {
+    scene: structuredClone(publicScene),
+    revision: "public",
+    appliedRequestIds: ["a"],
+  };
+  s.jobs.a = {
+    id: "a",
+    status: "published",
+    base: "original",
+    revision: "public",
+  };
+  undoRequest(s, "a");
+  assert.equal(s.publicSnapshot.scene.palette, "original");
+  assert.equal(s.publicSnapshot.scene.font, "original");
+  assert.equal(s.scene.font, "mono");
+  assert.equal(s.paused, true);
+});

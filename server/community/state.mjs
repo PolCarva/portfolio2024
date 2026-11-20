@@ -2,7 +2,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readObject, writeObject, isStorageConflict } from "../storage.mjs";
 import { originalScene, validateScene } from "../../shared/community-scene.mjs";
 export const MONTHLY_MICRODOLLARS = 10_000_000;
-export const RESERVATION = 300_000;
+export const RESERVATION = 50_000;
 export const LEASE_MS = 70_000;
 const path = "community/state.json";
 export const secret = () =>
@@ -155,7 +155,9 @@ export function publicState(state, id, admin = false) {
   return {
     revision: visible.revision,
     scene: validateScene(visible.scene),
-    modified: JSON.stringify(visible.scene) !== JSON.stringify(originalScene),
+    modified:
+      JSON.stringify(validateScene(visible.scene)) !==
+      JSON.stringify(validateScene(originalScene)),
     available:
       ready() &&
       !state.paused &&

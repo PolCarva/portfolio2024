@@ -16,7 +16,7 @@ Hacer un deploy después de configurar las variables. El estado inicial está **
 
 ## Experiencia
 
-Un pedido de 3–500 caracteres. El cliente explica el procesamiento con IA y la retención antes del envío. El visitante ve el resultado o una explicación localizada del rechazo. El texto original del pedido no se publica.
+Un pedido de 3–500 caracteres. El cliente explica el procesamiento con IA y la retención antes del envío. El visitante ve una animación durante la construcción. Al publicarse, se cierra la espera y el portfolio aplica el resultado automáticamente para recorrerlo; los rechazos muestran una explicación localizada. El texto original del pedido no se publica.
 
 Una participación exitosa por cookie firmada de navegador, no por identidad humana. Borrar cookies o cambiar de dispositivo puede eludir esta aproximación; IP derivada y Turnstile dificultan el abuso. Las cookies llevan HttpOnly, SameSite=Strict y Secure en producción.
 
@@ -29,14 +29,14 @@ Diseño, dibujos vectoriales y animaciones se interpretan mediante componentes p
 3. Reserva atómica con ETag de revisión base, turno temporal, token utilizado y presupuesto; tres generaciones por navegador/día y diez por IP/día.
 4. Generador `claude-haiku-5-5` con salida estructurada y sin herramientas; esquema estricto y validación semántica del motor.
 5. Chromium aislado sin JavaScript ni acceso a red externa renderiza el mismo App y CSS de producción. Solo sirve imágenes y fuentes locales y medios privados del propietario con identificadores validados. No usa cookies ni sesiones del navegador del usuario.
-6. Revisor `claude-sonnet-5-5` en una llamada y contexto separados: JSON, vistas completas y bandas decorativas en varias fases. Se cuentan los tokens de texto e imágenes antes de cada llamada, con un techo de 90.000 tokens más margen para el esquema; la legibilidad se limita también mediante paletas contrastadas y variantes CSS propias. Los muestreos y la IA no garantizan detectar todo contenido ofensivo.
+6. Revisor `claude-sonnet-5-5` en una llamada y contexto separados: comprobación básica de contenido claramente ofensivo, suplantación y datos privados, con ocho vistas estáticas de escritorio/móvil y las tres bandas decorativas. No se rechazan cambios por gusto o falta de pulido. Se cuentan los tokens antes de cada llamada, incluyendo margen conservador para el esquema: generador hasta 90.000 y revisor hasta 8.000. Los colores libres se corrigen automáticamente para mantener contraste y las composiciones usan variantes CSS propias. Los muestreos y la IA no garantizan detectar todo contenido ofensivo.
 7. Publicación condicional únicamente ante aprobación completa y revisión base vigente. Errores conservan el diseño anterior. Una pausa/restauración administrativa invalida trabajo en curso.
 
 ## Presupuesto y recuperación
 
-Se reservan **USD 0,30 por intento** antes de generar. El límite de USD 10 por mes UTC admite como máximo 33 intentos, incluso si cuestan menos. Esta reserva conservadora no se devuelve: incluye rechazos, revisiones y resultados de cobro incierto. Se muestra además el consumo medido con las tarifas documentadas de los dos modelos. Revisar esas tarifas antes de cambiar modelos o ampliar límites. Hosting, almacenamiento y verificaciones antibot no forman parte del techo de IA.
+Se reservan **USD 0,05 por intento** antes de generar. El límite de USD 10 por mes UTC admite como máximo 200 intentos con esta reserva, incluso si cuestan menos. Las reservas anteriores conservan su valor original. Esta reserva conservadora no se devuelve: incluye rechazos, revisiones y resultados de cobro incierto. Se muestra además el consumo medido con las tarifas documentadas de los dos modelos. Revisar esas tarifas antes de cambiar modelos o ampliar límites. Hosting, almacenamiento y verificaciones antibot no forman parte del techo de IA.
 
-La reserva asume los modelos fijos indicados, salidas máximas de 8.000/2.000 tokens, texto acotado y hasta 28 imágenes con tamaño acotado. No hay herramientas ni reintentos automáticos del proveedor. Las aportaciones de dibujo se renderizan primero; Haiku evalúa sus imágenes y Sonnet realiza una segunda revisión visual independiente. Solo entonces se agregan a la escena persistente. Cambiar estos límites requiere recalcular la reserva.
+La reserva asume los modelos fijos indicados, salidas máximas de 8.000/1.000 tokens, texto acotado y hasta 8 imágenes con tamaño acotado. No hay herramientas ni reintentos automáticos del proveedor. Las aportaciones de dibujo se renderizan primero; Haiku evalúa sus imágenes y Sonnet realiza una segunda revisión visual independiente. Solo entonces se agregan a la escena persistente. Cambiar estos límites requiere recalcular la reserva.
 
 Una sola generación global, con plazo máximo de 50 segundos y lease de 70 segundos. Un timeout nunca devuelve presupuesto ni concede participación. Repetir un ID devuelve la solicitud propia sin volver a generar. Los estados publicados consumen un turno de forma atómica con la nueva escena. Una respuesta perdida puede recuperarse mediante el estado privado por ID.
 
@@ -53,3 +53,5 @@ Los pedidos benignos se interpretan creativamente con las capacidades del motor;
 ## Administración de peticiones
 
 El admin ve el texto privado del pedido, tipo de aporte, fecha, estado y motivo. El texto desaparece por retención; las revisiones disponibles siguen permitiendo restauraciones. «Deshacer este cambio» aplica una reversión selectiva: restaura valores visuales solo si siguen siendo los de ese pedido y elimina/restaura su geometría por diferencia de contenido. Conserva los cambios posteriores independientes e informa cuando alguno impide una reversión completa. La operación pausa nuevas intervenciones y no devuelve presupuesto ni participaciones. El botón solo aparece cuando las revisiones necesarias siguen dentro del historial de hasta 100 versiones.
+
+El motor admite colores hexadecimales libres, seis familias tipográficas, cuatro composiciones de cabecera, hasta tres columnas, espaciados, proporciones de imágenes, botones y bordes. El contraste del texto se corrige en código; no se acepta CSS libre ni cambios del contenido profesional.
