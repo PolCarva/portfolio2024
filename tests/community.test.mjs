@@ -722,3 +722,9 @@ test("private mode hides draft designs and does not let visitors reach Turnstile
   assert.equal((await direct(h, request(), c)).status, 503);
   assert.equal(calls, 0);
 });
+
+test("generated labels cannot become arbitrary public text through visual identifiers", () => {
+  const input = scene();
+  input.nodes[0].id = "untrusted-label";
+  assert.equal(validateScene(input).nodes[0].id, "n0");
+});

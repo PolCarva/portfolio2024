@@ -54,5 +54,9 @@ export function validateScene(input) {
     throw new Error("Curves need four points");
   if (JSON.stringify(scene).length > 80000)
     throw new Error("Scene is too large");
-  return scene;
+  // Public identifiers are assigned here, never authored by the visitor/model.
+  return {
+    ...scene,
+    nodes: scene.nodes.map((node, index) => ({ ...node, id: "n" + index })),
+  };
 }
