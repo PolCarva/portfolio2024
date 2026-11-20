@@ -1674,11 +1674,15 @@ test("image-drawing requests cannot be satisfied by the existing bands-only canv
   const next = { ...base, drawing: false, drawingTargets: ["portrait"] };
   const result = scopedProposal(
     base,
-    { changedFields: ["drawing", "drawingTargets"], scene: next },
+    {
+      changedFields: ["drawing", "drawingTargets", "palette"],
+      scene: { ...next, palette: "cherry" },
+    },
     "dibujar solo en la foto del hero, que con el mouse se pueda y que todos vean los aportes",
   );
   assert.equal(result.drawing, false);
   assert.deepEqual(result.drawingTargets, ["portrait"]);
+  assert.equal(result.palette, base.palette);
 });
 
 test("pause cancels private staged artifacts and stale continuation tokens never execute AI", async () => {

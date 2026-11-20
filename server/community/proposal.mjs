@@ -28,8 +28,16 @@ export function scopedProposal(current, proposal, prompt) {
     /(paleta|fondo|background|tipograf|tarjeta|layout|column|rediseñ|estética|whole|theme)/i.test(
       prompt,
     );
+  const imageToolRequest =
+    drawingRequest &&
+    /perfil|profile|portrait|hero|im[aá]gen|image|foto|photo/i.test(prompt) &&
+    /se pued|permit|habilit|activ|enable|allow|can draw/i.test(prompt);
   const fields =
-    cursorRequest && !otherDesign ? ["program"] : proposal.changedFields;
+    cursorRequest && !otherDesign
+      ? ["program"]
+      : imageToolRequest && !otherDesign
+        ? ["drawing", "drawingTargets"]
+        : proposal.changedFields;
   const next = { ...base };
   for (const field of fields)
     if (visualFields.includes(field)) next[field] = generated[field];
