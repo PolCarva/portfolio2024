@@ -234,7 +234,9 @@ export async function renderReview(
                             3 && last.phase === "paused"
                         );
                       return (
-                        samples.some((s) => s.phase === "paused") &&
+                        samples.length >= 24 &&
+                        samples.filter((s) => s.phase === "paused").length >=
+                          3 &&
                         last?.phase === "moving" &&
                         samples.filter((s) => s.phase === "moving").length >= 14
                       );
