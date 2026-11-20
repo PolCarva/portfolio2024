@@ -36,7 +36,7 @@ Diseño, dibujos vectoriales y animaciones se interpretan mediante componentes p
 
 Se reservan **USD 0,30 por intento** antes de generar. El límite de USD 10 por mes UTC admite como máximo 33 intentos, incluso si cuestan menos. Esta reserva conservadora no se devuelve: incluye rechazos, revisiones y resultados de cobro incierto. Se muestra además el consumo medido con las tarifas documentadas de los dos modelos. Revisar esas tarifas antes de cambiar modelos o ampliar límites. Hosting, almacenamiento y verificaciones antibot no forman parte del techo de IA.
 
-La reserva asume los modelos fijos indicados, salidas máximas de 8.000/1.000 tokens, texto acotado y hasta 20 imágenes con tamaño acotado. No hay herramientas ni reintentos automáticos del proveedor. Cambiar estos límites requiere recalcular la reserva.
+La reserva asume los modelos fijos indicados, salidas máximas de 8.000/2.000 tokens, texto acotado y hasta 28 imágenes con tamaño acotado. No hay herramientas ni reintentos automáticos del proveedor. Cambiar estos límites requiere recalcular la reserva.
 
 Una sola generación global, con plazo máximo de 50 segundos y lease de 70 segundos. Un timeout nunca devuelve presupuesto ni concede participación. Repetir un ID devuelve la solicitud propia sin volver a generar. Los estados publicados consumen un turno de forma atómica con la nueva escena. Una respuesta perdida puede recuperarse mediante el estado privado por ID.
 

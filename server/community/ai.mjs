@@ -65,7 +65,10 @@ async function response(model, schema, system, user, deadline, maxOutput) {
       body: JSON.stringify({ model, system, messages }),
     },
   );
-  if (!counted.ok) throw new Error("Token counting unavailable");
+  if (!counted.ok) {
+    console.error("community_ai_error", "count_tokens", model, counted.status);
+    throw new Error("Token counting unavailable");
+  }
   const count = await counted.json();
   if (
     !Number.isSafeInteger(count.input_tokens) ||
@@ -88,10 +91,15 @@ async function response(model, schema, system, user, deadline, maxOutput) {
       },
     }),
   });
-  if (!r.ok) throw new Error("AI unavailable");
+  if (!r.ok) {
+    console.error("community_ai_error", "messages", model, r.status);
+    throw new Error("AI unavailable");
+  }
   const data = await r.json();
-  if (data.stop_reason !== "end_turn")
+  if (data.stop_reason !== "end_turn") {
+    console.error("community_ai_error", "incomplete", model, data.stop_reason);
     throw new Error("Incomplete AI response");
+  }
   const text = (data.content || [])
     .filter((x) => x.type === "text")
     .map((x) => x.text)
@@ -178,7 +186,7 @@ export function createEvaluator({
           })),
         ],
         deadline,
-        1000,
+        2000,
       );
       usage.push(reviewed.usage);
       const v = reviewed.value;

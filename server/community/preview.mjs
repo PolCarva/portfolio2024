@@ -145,7 +145,10 @@ export async function renderReview(
                 quality: 72,
                 fromSurface: true,
                 captureBeyondViewport: true,
-                clip: { ...clip, scale: 1 },
+                clip: {
+                  ...clip,
+                  scale: Math.min(1, 1568 / Math.max(clip.width, clip.height)),
+                },
               }),
               5000,
             );
@@ -153,6 +156,27 @@ export async function renderReview(
           };
           await shot({ x: 0, y: 0, width, height: Math.ceil(size.height) });
           mark("full_screenshot_done");
+          for (const selector of [
+            ".hero",
+            "#about",
+            "#experience",
+            "#contact",
+          ]) {
+            const { nodeId } = await cdp.send("DOM.querySelector", {
+              nodeId: document.nodeId,
+              selector,
+            });
+            const { model } = await cdp.send("DOM.getBoxModel", { nodeId });
+            const xs = model.border.filter((_, i) => i % 2 === 0),
+              ys = model.border.filter((_, i) => i % 2 === 1);
+            await shot({
+              x: Math.max(0, Math.min(...xs)),
+              y: Math.max(0, Math.min(...ys)),
+              width: Math.min(width, Math.max(...xs) - Math.min(...xs)),
+              height: Math.min(height, Math.max(...ys) - Math.min(...ys)),
+            });
+          }
+
           const { frameTree } = await cdp.send("Page.getFrameTree");
           const { styleSheetId } = await cdp.send("CSS.createStyleSheet", {
             frameId: frameTree.frame.id,
@@ -190,7 +214,7 @@ export async function renderReview(
           }
         }
         if (
-          images.length > 20 ||
+          images.length > 28 ||
           images.reduce((n, b) => n + b.length, 0) > 16_000_000
         )
           throw new Error("Preview image limit");
