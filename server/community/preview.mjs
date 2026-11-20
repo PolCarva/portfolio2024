@@ -113,7 +113,7 @@ export async function renderReview(
           });
           const markup = renderPreview(content, scene, "es");
           await page.setContent(
-            `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important} *:not(.community-node){animation:none!important;transition:none!important}</style></head><body>${markup}</body></html>`,
+            `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important} *:not(.community-node){animation:none!important;transition:none!important}.community-node{animation-play-state:paused!important}</style></head><body>${markup}</body></html>`,
             { waitUntil: "load", timeout: 10000 },
           );
           mark("html_ready");

@@ -194,11 +194,12 @@ export function createEvaluator({
       if (
         drawing ||
         checks.repairAttempts >= 1 ||
-        deadline - Date.now() < 18000
+        deadline - Date.now() < 35000
       )
         return false;
       if (!(await reserveRepair().catch(() => false))) return false;
       checks.repairAttempts++;
+      checks.qualityIssues = issues;
       feedback = {
         issues,
         instruction:
@@ -214,6 +215,7 @@ export function createEvaluator({
           candidate = applyDrawing(scene, drawing);
         } else {
           checks.generationAttempts++;
+          checks.stage = "generation";
           const generated = await respond(
             "claude-haiku-5-5",
             generation,
@@ -252,6 +254,7 @@ export function createEvaluator({
           )
             return done(false, "already_available");
         }
+        checks.stage = "runtime";
         previews = await render(candidate, { deadline, prompt });
         checks.temporalPassed =
           !candidate.program || previews.quality?.passed === true;
@@ -261,6 +264,11 @@ export function createEvaluator({
           previews.quality?.reports?.map((r) => r.viewport) || [];
         if (!checks.temporalPassed) {
           const issues = previews.quality?.issues || ["missing_motion_probe"];
+          checks.qualityIssues = issues;
+          console.info(
+            "community_quality",
+            JSON.stringify({ issues, reports: previews.quality?.reports }),
+          );
           if (await repair(issues, candidate)) continue;
           return done(false, "quality");
         }
@@ -299,6 +307,7 @@ export function createEvaluator({
               first.value.reason === "unsupported" ? "unsupported" : "unsafe",
             );
         }
+        checks.stage = "review";
         const reviewed = await respond(
           "claude-sonnet-5-5",
           verdict,
@@ -324,7 +333,7 @@ export function createEvaluator({
             })),
           ],
           deadline,
-          1500,
+          2000,
           16000,
           "medium",
         );
@@ -363,6 +372,10 @@ export function createEvaluator({
             continue;
           return done(false, "quality");
         }
+        if (approved) {
+          checks.stage = "complete";
+          checks.qualityIssues = [];
+        }
         return done(
           approved,
           approved
@@ -374,6 +387,7 @@ export function createEvaluator({
         );
       } catch (error) {
         if (error.code === "quality") {
+          checks.qualityIssues = error.issues || ["program_runtime_error"];
           if (
             await repair(error.issues || ["program_runtime_error"], candidate)
           )

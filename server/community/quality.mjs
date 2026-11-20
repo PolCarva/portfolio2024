@@ -23,7 +23,10 @@ export function assessProgramQuality(
       paused = samples.filter((s) => s.phase === "paused");
     if (samples.length < 20 || moving.length < 8 || paused.length < 2)
       issues.push(prefix + ":incomplete_motion_test");
-    const times = samples.map((s) => s.ms).sort((a, b) => a - b),
+    const times = samples
+        .slice(3)
+        .map((s) => s.ms)
+        .sort((a, b) => a - b),
       p95 = times[Math.floor(times.length * 0.95)] || 0;
     if (p95 > 150) issues.push(prefix + ":slow_frames");
     if (
@@ -51,7 +54,10 @@ export function assessProgramQuality(
     issues,
     reports: reports.map((r) => {
       const samples = r.samples || [],
-        times = samples.map((s) => s.ms).sort((a, b) => a - b);
+        times = samples
+          .slice(3)
+          .map((s) => s.ms)
+          .sort((a, b) => a - b);
       return {
         viewport: r.viewport,
         frames: r.frames,

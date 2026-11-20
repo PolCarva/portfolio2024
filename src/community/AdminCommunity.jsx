@@ -252,6 +252,9 @@ export default function AdminCommunity() {
                     {j.checks.repairAttempts} corrección automática.
                   </small>
                 )}
+                {j.checks?.qualityIssues?.length > 0 && (
+                  <small>{j.checks.qualityIssues.join(" · ")}</small>
+                )}
                 {j.canUndo && (
                   <button
                     type="button"
