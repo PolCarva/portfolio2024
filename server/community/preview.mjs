@@ -17,9 +17,9 @@ export async function renderReview(
   scene,
   { deadline = Date.now() + 45000 } = {},
 ) {
-  const started = Date.now();
-  const mark = (stage) =>
-    console.info("community_preview", stage, Date.now() - started);
+  const started = Date.now(),
+    mark = (stage) =>
+      console.info("community_preview", stage, Date.now() - started);
   mark("start");
   const { renderPreview } = await import(
     pathToFileURL(resolve(root, ".generated/community-preview.mjs")).href
@@ -44,12 +44,11 @@ export async function renderReview(
     args: chromium.args,
     executablePath,
     headless: true,
-    timeout: Math.min(25000, Math.max(1, deadline - Date.now())),
+    timeout: Math.min(15000, Math.max(1, deadline - Date.now())),
   });
-  const images = [];
   try {
     const browser = await browserType.connect(server.wsEndpoint(), {
-      timeout: 10000,
+      timeout: 8000,
     });
     mark("browser_ready");
     return await bounded(
@@ -78,68 +77,86 @@ export async function renderReview(
             }
             if (!/^\/(fonts|images|img)\/[a-zA-Z0-9_.-]+$/.test(url.pathname))
               return route.abort();
-            const bytes = await readFile(
-              resolve(root, "public" + url.pathname),
-            );
             return route.fulfill({
               status: 200,
               contentType:
                 mime[extname(url.pathname)] || "application/octet-stream",
-              body: bytes,
+              body: await readFile(resolve(root, "public" + url.pathname)),
             });
           } catch {
             return route.abort();
           }
         });
-        const page = await context.newPage();
-        page.setDefaultTimeout(12000);
+        const page = await context.newPage(),
+          cdp = await context.newCDPSession(page),
+          images = [];
         for (const [width, height] of [
           [1280, 900],
           [390, 844],
         ]) {
-          if (Date.now() > deadline) throw new Error("Preview deadline");
-          await page.setViewportSize({ width, height });
+          if (Date.now() > deadline) throw new Error("Preview timeout");
           mark("viewport_" + width);
+          await page.setViewportSize({ width, height });
+          await page.emulateMedia({ reducedMotion: "reduce" });
           const markup = renderPreview(content, scene, "es");
           await page.setContent(
             `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important} *:not(.community-node){animation:none!important;transition:none!important}</style></head><body>${markup}</body></html>`,
-            { waitUntil: "load", timeout: 15000 },
+            { waitUntil: "load", timeout: 10000 },
           );
           mark("html_ready");
           await bounded(
-            page.evaluate(() => document.fonts.ready),
-            5000,
+            page.evaluate(() => document.fonts.ready.then(() => true)),
+            3000,
           );
-          mark("fonts_ready");
-          const integrity = await page.evaluate(() => ({
-            heading: document.querySelectorAll("h1").length,
-            overflow: document.documentElement.scrollWidth > innerWidth + 2,
-            canvases: document.querySelectorAll(".community-canvas").length,
-            links: [...document.querySelectorAll("a")].filter((a) =>
-              a.getAttribute("href")?.startsWith("javascript:"),
-            ).length,
-          }));
+          // CDP inspection/capture needs no page-side scripts or actionability polling.
+          await cdp.send("DOM.enable");
+          await cdp.send("CSS.enable");
+          const { root: document } = await cdp.send("DOM.getDocument", {
+            depth: 1,
+          });
+          const heading = await cdp.send("DOM.querySelectorAll", {
+            nodeId: document.nodeId,
+            selector: "h1",
+          });
+          const bands = await cdp.send("DOM.querySelectorAll", {
+            nodeId: document.nodeId,
+            selector: ".community-canvas",
+          });
+          const metrics = await cdp.send("Page.getLayoutMetrics");
+          const size = metrics.cssContentSize;
+          mark("layout_ready");
           if (
-            integrity.heading !== 1 ||
-            integrity.overflow ||
-            integrity.canvases !== 3 ||
-            integrity.links
+            heading.nodeIds.length !== 1 ||
+            bands.nodeIds.length !== 3 ||
+            size.width > width + 2 ||
+            size.height > 26000
           )
             throw new Error("Preview integrity failed");
-          images.push(
-            await page.screenshot({
-              fullPage: true,
-              type: "jpeg",
-              quality: 70,
-              timeout: 15000,
-            }),
-          );
+          const shot = async (clip) => {
+            if (Date.now() > deadline) throw new Error("Preview timeout");
+            const { data } = await bounded(
+              cdp.send("Page.captureScreenshot", {
+                format: "jpeg",
+                quality: 72,
+                fromSurface: true,
+                captureBeyondViewport: true,
+                clip: { ...clip, scale: 1 },
+              }),
+              5000,
+            );
+            images.push(Buffer.from(data, "base64"));
+          };
+          await shot({ x: 0, y: 0, width, height: Math.ceil(size.height) });
           mark("full_screenshot_done");
-          // Sample fixed phases of the only three allowed motion functions. No user code executes.
+          const { frameTree } = await cdp.send("Page.getFrameTree");
+          const { styleSheetId } = await cdp.send("CSS.createStyleSheet", {
+            frameId: frameTree.frame.id,
+          });
           for (const phase of [0, 0.25, 0.5]) {
             await page.emulateMedia({ reducedMotion: "no-preference" });
-            await page.addStyleTag({
-              content: `.community-node{animation-play-state:paused!important}.community-motion-float{animation-delay:-${7 * phase}s!important}.community-motion-orbit{animation-delay:-${12 * phase}s!important}.community-motion-bounce{animation-delay:-${4 * phase}s!important}`,
+            await cdp.send("CSS.setStyleSheetText", {
+              styleSheetId,
+              text: `.community-node{animation-play-state:paused!important}.community-motion-float{animation-delay:-${7 * phase}s!important}.community-motion-orbit{animation-delay:-${12 * phase}s!important}.community-motion-bounce{animation-delay:-${4 * phase}s!important}`,
             });
             const zones =
               phase === 0
@@ -152,22 +169,24 @@ export async function renderReview(
                     ),
                   ];
             for (const zone of zones) {
-              mark("band_" + zone + "_" + phase);
-              if (Date.now() > deadline) throw new Error("Preview deadline");
-              const index = ["hero", "work", "contact"].indexOf(zone);
-              images.push(
-                await page
-                  .locator(".community-canvas")
-                  .nth(index)
-                  .screenshot({ type: "jpeg", quality: 75, timeout: 4000 }),
-              );
+              const { model } = await cdp.send("DOM.getBoxModel", {
+                nodeId:
+                  bands.nodeIds[["hero", "work", "contact"].indexOf(zone)],
+              });
+              const xs = model.border.filter((_, i) => i % 2 === 0),
+                ys = model.border.filter((_, i) => i % 2 === 1);
+              await shot({
+                x: Math.max(0, Math.min(...xs)),
+                y: Math.max(0, Math.min(...ys)),
+                width: Math.max(...xs) - Math.min(...xs),
+                height: Math.max(...ys) - Math.min(...ys),
+              });
             }
           }
-          await page.emulateMedia({ reducedMotion: "reduce" });
         }
         if (
           images.length > 20 ||
-          images.reduce((sum, b) => sum + b.length, 0) > 16_000_000
+          images.reduce((n, b) => n + b.length, 0) > 16_000_000
         )
           throw new Error("Preview image limit");
         mark("captured");
@@ -188,12 +207,11 @@ export async function renderReview(
     );
     throw error;
   } finally {
-    await bounded(server.close(), 2000).catch(() => {});
+    await bounded(server.close(), 1500).catch(() => {});
     if (server.process().exitCode === null) server.process().kill("SIGKILL");
     mark("closed");
   }
 }
-
 async function bounded(promise, ms) {
   let timer;
   try {

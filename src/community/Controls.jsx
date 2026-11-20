@@ -319,6 +319,11 @@ export default function CommunityControls({ language, onScene }) {
             <p className="eyebrow">PABLO × COMMUNITY / 01</p>
             <h2 id="community-title">{t.title}</h2>
             <p>{t.intro}</p>
+            {!data.available && (
+              <p className="community-notice" role="status">
+                {t.reason[data.reason] || t.reason.unavailable}
+              </p>
+            )}
             <form onSubmit={submit}>
               <label htmlFor="community-prompt">{t.label}</label>
               <textarea
@@ -329,7 +334,7 @@ export default function CommunityControls({ language, onScene }) {
                 rows={4}
                 placeholder={t.placeholder}
                 value={prompt}
-                disabled={busy || !data.available}
+                disabled={busy}
                 onChange={(e) => setPrompt(e.target.value)}
               />
               <small>
@@ -340,7 +345,7 @@ export default function CommunityControls({ language, onScene }) {
                   <button
                     key={example}
                     type="button"
-                    disabled={busy || !data.available}
+                    disabled={busy}
                     onClick={() => setPrompt(example)}
                   >
                     {example}
@@ -367,7 +372,7 @@ export default function CommunityControls({ language, onScene }) {
                 {busy ? t.busy : t.send} ↗
               </button>
               {busy && <p role="status">{t.waiting}</p>}
-              {(notice || !data.available) && (
+              {notice && (
                 <p className="community-notice" role="status">
                   {notice === "success"
                     ? t.success
