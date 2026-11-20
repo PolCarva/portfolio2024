@@ -1,0 +1,342 @@
+/* Every attribute and custom property is selected from a server-validated catalog. */
+.portfolio[data-community] {
+  background: var(--paper);
+  color: var(--ink);
+}
+.portfolio[data-community] .site-header,
+.portfolio[data-community] .about-section,
+.portfolio[data-community] .experience-section,
+.portfolio[data-community] .hero,
+.portfolio[data-community] .site-footer {
+  background: var(--paper);
+  color: var(--ink);
+}
+.portfolio[data-community] .work-section,
+.portfolio[data-community] .contact-section {
+  background: var(--dark);
+  color: var(--paper);
+}
+.portfolio[data-community] .project-caption > p:not(.eyebrow),
+.portfolio[data-community] .project-tags,
+.portfolio[data-community] .client-year,
+.portfolio[data-community] .contact-copy > p {
+  color: var(--paper);
+}
+.portfolio[data-community] .hero-location,
+.portfolio[data-community] .about-body p,
+.portfolio[data-community] .experience-date {
+  color: var(--muted);
+}
+.portfolio[data-community] .button {
+  background: var(--peach);
+  color: var(--ink);
+}
+.portfolio[data-community] :focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 5px;
+}
+.portfolio[data-c-font="editorial"] h1,
+.portfolio[data-c-font="editorial"] h2,
+.portfolio[data-c-font="editorial"] h3,
+.portfolio[data-c-font="editorial"] h4 {
+  font-family: Georgia, serif;
+}
+.portfolio[data-c-font="mono"] h1,
+.portfolio[data-c-font="mono"] h2,
+.portfolio[data-c-font="mono"] h3,
+.portfolio[data-c-font="mono"] h4 {
+  font-family: ui-monospace, monospace;
+  letter-spacing: -0.04em;
+}
+.portfolio[data-c-layout="aligned"] .project:nth-child(even),
+.portfolio[data-c-layout="gallery"] .project:nth-child(even) {
+  margin-top: 0;
+  padding-top: 0;
+  transform: none;
+}
+.portfolio[data-c-layout="gallery"] .project-grid {
+  gap: 64px;
+}
+.portfolio[data-c-spacing="airy"] .section-shell {
+  padding-top: 100px;
+  padding-bottom: 100px;
+}
+.portfolio[data-c-spacing="compact"] .section-shell {
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+.portfolio[data-c-spacing] .site-header,
+.portfolio[data-c-spacing] .site-footer {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+.portfolio[data-c-corners="rounded"] .project-media,
+.portfolio[data-c-corners="rounded"] .portrait-frame {
+  border-radius: 28px;
+  overflow: hidden;
+}
+.portfolio[data-c-corners="cut"] .project-media {
+  border-radius: 36px 0 36px 0;
+  overflow: hidden;
+  border: 2px solid var(--peach);
+}
+.community-canvas {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  border-block: 1px solid var(--line);
+  contain: layout paint;
+}
+.community-drawing-area {
+  position: relative;
+  height: clamp(120px, 24vw, 240px);
+  overflow: hidden;
+}
+.community-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.portfolio[data-c-background="grid"] .community-canvas {
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+.portfolio[data-c-background="dots"] .community-canvas {
+  background-image: radial-gradient(var(--muted) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.portfolio[data-c-background="stars"] .community-canvas {
+  background-image:
+    radial-gradient(var(--muted) 1px, transparent 2px),
+    radial-gradient(var(--ink) 1px, transparent 2px);
+  background-size:
+    61px 47px,
+    107px 89px;
+}
+.community-motion-float {
+  animation: community-float 7s ease-in-out infinite;
+}
+.community-motion-orbit {
+  animation: community-orbit 12s linear infinite;
+}
+.community-motion-bounce {
+  animation: community-bounce 4s ease-in-out infinite;
+}
+.community-motion-pointer {
+  transform: translate(var(--pointer-x, 0px), var(--pointer-y, 0px));
+  transition: transform 0.5s ease-out;
+}
+@keyframes community-float {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-4deg);
+  }
+  50% {
+    transform: translate(15px, -16px) rotate(4deg);
+  }
+}
+@keyframes community-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes community-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-18px) scale(0.9);
+  }
+}
+.community-draw-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--paper);
+  position: relative;
+}
+.community-draw-controls button {
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+.is-drawing .community-drawing-area {
+  touch-action: none;
+  cursor: crosshair;
+}
+.community-bar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #20231f;
+  color: #f2f0e9;
+  border: 1px solid #797e70;
+  border-radius: 16px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 30px #0003;
+  font-size: 12px;
+  max-width: calc(100% - 24px);
+  width: max-content;
+}
+.community-bar button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 7px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  white-space: nowrap;
+}
+.community-bar .community-cta {
+  background: #edb18e;
+  color: #262824;
+  text-decoration: none;
+  border-radius: 7px;
+  padding: 10px 13px;
+  font-weight: 700;
+}
+.community-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: #10150ed9;
+  padding: 16px;
+  overflow: auto;
+}
+.community-panel-content {
+  width: min(560px, 100%);
+  max-height: 90dvh;
+  overflow: auto;
+  background: #f2f0e9;
+  color: #262824;
+  padding: clamp(24px, 5vw, 40px);
+  border-radius: 18px;
+  box-shadow: 0 20px 70px #0006;
+}
+.community-panel h2 {
+  font-size: clamp(30px, 5vw, 42px);
+  line-height: 1.1;
+  margin: 14px 0;
+}
+.community-panel p {
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 12px 0;
+}
+.community-panel label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 20px 0 8px;
+}
+.community-panel textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+  padding: 14px;
+  color: #262824;
+  background: #fffdf8;
+  border: 1px solid #707268;
+  border-radius: 8px;
+}
+.community-panel button {
+  padding: 10px 14px;
+  background: #262824;
+  color: #f2f0e9;
+  border: 1px solid #262824;
+  border-radius: 7px;
+}
+.community-panel .community-close {
+  float: right;
+  background: transparent;
+  color: #262824;
+}
+.community-example-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 12px 0;
+}
+.community-example-row button {
+  font-size: 12px;
+  background: transparent;
+  color: #262824;
+}
+.community-panel small {
+  display: block;
+  line-height: 1.6;
+  font-size: 12px;
+}
+.community-panel .community-notice {
+  padding: 12px;
+  background: #e2e7d7;
+  border-radius: 7px;
+}
+.community-admin-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+.community-admin-row {
+  padding: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+.community-admin-row p {
+  font-size: 13px;
+  margin: 6px 0;
+}
+.community-admin-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+@media (max-width: 600px) {
+  .community-bar {
+    gap: 4px;
+    padding: 7px;
+  }
+  .community-bar > span {
+    display: none;
+  }
+  .community-bar button {
+    font-size: 11px;
+  }
+  .community-canvas .community-art {
+    min-width: 100%;
+  }
+  .portfolio[data-c-spacing="airy"] .section-shell {
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-node {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+.portfolio {
+  padding-bottom: 90px;
+}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import defaults from "./content";
 import {
   ImpostorArtwork,
@@ -7,6 +7,11 @@ import {
   ClientArtwork,
   VideoArtwork,
 } from "./ProjectArtwork";
+
+import CommunityCanvas from "./community/Artwork.jsx";
+import { sceneAttributes } from "../shared/community-catalog.mjs";
+import "./community/community.css";
+const CommunityControls = lazy(() => import("./community/Controls.jsx"));
 
 const sectionIds = ["work", "about", "experience", "contact"];
 function Arrow() {
@@ -192,8 +197,14 @@ function ContactForm({ t }) {
   );
 }
 
-function App({ language = "en", initialContent = defaults }) {
+function App({
+  language = "en",
+  initialContent = defaults,
+  communityScene = null,
+  communityPreview = false,
+}) {
   const [content, setContent] = useState(initialContent);
+  const [visualScene, setVisualScene] = useState(communityScene);
   const { copy, links, projects, clientProjects, media: assets } = content;
   useEffect(() => {
     const controller = new AbortController();
@@ -245,7 +256,17 @@ function App({ language = "en", initialContent = defaults }) {
     };
   }, [content]);
   return (
-    <div ref={root} className="portfolio" id="top">
+    <div
+      ref={root}
+      className="portfolio"
+      id="top"
+      {...(visualScene ? sceneAttributes(visualScene) : {})}
+    >
+      {!communityPreview && (
+        <Suspense fallback={null}>
+          <CommunityControls language={language} onScene={setVisualScene} />
+        </Suspense>
+      )}
       <a className="skip-link" href="#main">
         {t.skip}
       </a>
@@ -378,6 +399,12 @@ function App({ language = "en", initialContent = defaults }) {
             </a>
           </div>
         </section>
+        <CommunityCanvas
+          scene={visualScene}
+          zone="hero"
+          language={language}
+          preview={communityPreview}
+        />
         <div className="discipline-strip" aria-hidden="true">
           {t.strip.map((item) => (
             <span key={item}>
@@ -488,6 +515,12 @@ function App({ language = "en", initialContent = defaults }) {
             ))}
           </div>
         </section>
+        <CommunityCanvas
+          scene={visualScene}
+          zone="work"
+          language={language}
+          preview={communityPreview}
+        />
         <section
           id="about"
           className="about-section section-shell"
@@ -580,6 +613,12 @@ function App({ language = "en", initialContent = defaults }) {
             </span>
           </aside>
         </section>
+        <CommunityCanvas
+          scene={visualScene}
+          zone="contact"
+          language={language}
+          preview={communityPreview}
+        />
         <section
           id="contact"
           className="contact-section section-shell"

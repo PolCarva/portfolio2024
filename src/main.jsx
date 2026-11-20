@@ -3,7 +3,7 @@ import { createRoot, hydrateRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 const root = document.getElementById("root");
-const language = document.documentElement.lang === "es" ? "es" : "en";
+const language = /^\/es(?:\/|$)/.test(window.location.pathname) ? "es" : "en";
 const isAdmin = /^\/admin\/?$/.test(window.location.pathname);
 const app = (
   <StrictMode>

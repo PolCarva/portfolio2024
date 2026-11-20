@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { request, upload } from "./admin-api";
 import "./admin.css";
+import AdminCommunity from "./community/AdminCommunity.jsx";
 const labels = {
   projects: "Proyectos personales",
   clientProjects: "Trabajos para clientes",
@@ -341,6 +342,7 @@ export default function Admin() {
     ["en", "Textos · EN"],
     ["links", "Enlaces"],
     ["media", "Foto y CV"],
+    ["community", "Experimento comunitario"],
   ];
   useEffect(() => {
     const controller = new AbortController();
@@ -534,21 +536,27 @@ export default function Admin() {
               className="admin-content"
               aria-label={sections.find(([k]) => k === section)?.[1]}
             >
-              <p className="admin-hint">
-                {section === "projects"
-                  ? "El orden de esta lista es el orden del portfolio. Abrí cada proyecto para editar sus textos, imagen y botones."
-                  : section === "es" || section === "en"
-                    ? "Editá los textos de esta versión. Los cambios se aplican al guardar."
-                    : "Los cambios se publican al guardar."}
-              </p>
-              <Editor
-                key={section}
-                name={section}
-                value={value}
-                onChange={update}
-                path={section}
-                onUpload={setError}
-              />
+              {section === "community" ? (
+                <AdminCommunity />
+              ) : (
+                <>
+                  <p className="admin-hint">
+                    {section === "projects"
+                      ? "El orden de esta lista es el orden del portfolio. Abrí cada proyecto para editar sus textos, imagen y botones."
+                      : section === "es" || section === "en"
+                        ? "Editá los textos de esta versión. Los cambios se aplican al guardar."
+                        : "Los cambios se publican al guardar."}
+                  </p>
+                  <Editor
+                    key={section}
+                    name={section}
+                    value={value}
+                    onChange={update}
+                    path={section}
+                    onUpload={setError}
+                  />
+                </>
+              )}
             </section>
           </div>
         </>

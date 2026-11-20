@@ -1,16 +1,32 @@
 {
-  "rewrites": [{ "source": "/admin", "destination": "/admin/index.html" }],
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/admin/:path*",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
-        { "key": "Cache-Control", "value": "no-store" }
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
       ]
     },
     {
       "source": "/og/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800"
+        }
+      ]
     },
     {
       "source": "/cv/:path*",
@@ -23,7 +39,12 @@
     },
     {
       "source": "/fonts/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800"
+        }
+      ]
     },
     {
       "source": "/.well-known/assetlinks.json",
@@ -33,6 +54,22 @@
           "value": "application/json; charset=utf-8"
         }
       ]
+    }
+  ],
+  "functions": {
+    "api/community/changes.js": {
+      "maxDuration": 300,
+      "includeFiles": "{.generated/community-preview.mjs,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**}"
+    },
+    "api/community.js": {
+      "maxDuration": 300,
+      "includeFiles": "{.generated/community-preview.mjs,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**}"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/community/maintenance",
+      "schedule": "17 5 * * *"
     }
   ]
 }
