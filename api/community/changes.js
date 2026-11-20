@@ -5,6 +5,8 @@ import { body, json } from "../../server/http.mjs";
 import { communityFailure } from "../community.js";
 import {
   ready,
+  participationCount,
+  settingsFor,
   visitor,
   requestIP,
   digest,
@@ -63,7 +65,11 @@ export function createChangeHandler({
       await mutate((state) => {
         if (state.paused || (state.mode !== "public" && !validSession(req)))
           throw problem(503, "paused");
-        if (state.visitors[owner]) throw problem(409, "used");
+        if (
+          participationCount(state, owner) >=
+          settingsFor(state).publishedPerBrowser
+        )
+          throw problem(409, "used");
         if (data.drawing) {
           try {
             applyDrawing(state.scene, data.drawing);

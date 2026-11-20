@@ -57,6 +57,7 @@ export const palettes = {
   },
 };
 export const originalScene = {
+  program: null,
   theme: null,
   composition: null,
   version: 1,

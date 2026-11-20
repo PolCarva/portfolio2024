@@ -88,6 +88,7 @@ function inverseScene(state, job, currentScene) {
     "corners",
     "background",
     "drawing",
+    "program",
     "theme",
     "composition",
   ])

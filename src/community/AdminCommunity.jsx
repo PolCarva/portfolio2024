@@ -11,7 +11,7 @@ export default function AdminCommunity() {
   useEffect(() => {
     load().catch((e) => setError(e.message));
   }, []);
-  async function act(action, revision, test, requestId) {
+  async function act(action, revision, test, requestId, settings) {
     if (
       ["reset", "restore"].includes(action) &&
       !window.confirm(
@@ -33,6 +33,7 @@ export default function AdminCommunity() {
         method: "POST",
         body: JSON.stringify({
           action,
+          ...(settings ? { settings } : {}),
           ...(revision ? { revision } : {}),
           ...(test ? { test } : {}),
           ...(requestId ? { requestId } : {}),
@@ -128,6 +129,57 @@ export default function AdminCommunity() {
               Probar rechazo de ataque
             </button>
           </div>
+          <button
+            disabled={busy || !data.configured}
+            onClick={() => act("test-ai", null, "cursor")}
+          >
+            Probar código de cursor generado
+          </button>
+          <h3>Cupos por navegador</h3>
+          <form
+            key={JSON.stringify(data.settings)}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const fields = new FormData(event.currentTarget);
+              act("settings", null, null, null, {
+                publishedPerBrowser: Number(fields.get("publishedPerBrowser")),
+                attemptsPerDay: Number(fields.get("attemptsPerDay")),
+              });
+            }}
+          >
+            <label>
+              Intervenciones publicadas por navegador (1–100)
+              <input
+                name="publishedPerBrowser"
+                type="number"
+                min="1"
+                max="100"
+                required
+                defaultValue={data.settings.publishedPerBrowser}
+                disabled={busy}
+              />
+            </label>
+            <label>
+              Intentos de generación por navegador al día (3–50)
+              <input
+                name="attemptsPerDay"
+                type="number"
+                min="3"
+                max="50"
+                required
+                defaultValue={data.settings.attemptsPerDay}
+                disabled={busy}
+              />
+            </label>
+            <p>
+              Los aportes anteriores cuentan, incluso los revertidos. Aumentar
+              el cupo permite volver a participar; se mantiene el presupuesto
+              mensual.
+            </p>
+            <button type="submit" disabled={busy}>
+              Guardar cupos
+            </button>
+          </form>
           <h3>Presupuesto de IA · USD 10 / mes</h3>
           <p>
             El cupo se reserva antes de generar; los errores y rechazos también

@@ -86,6 +86,7 @@ function identity(c) {
 async function reset() {
   await mutate((s) => {
     Object.assign(s, freshState());
+    s.settings = { publishedPerBrowser: 1, attemptsPerDay: 3 };
     s.paused = false;
     s.mode = "public";
   });
@@ -498,12 +499,18 @@ test("review exceptions never publish or consume participation", async () => {
 
 test("independent review is mandatory and must pass every check after actual scene validation", async () => {
   const { createEvaluator } = await import("../server/community/ai.mjs");
-  const allowed = { accepted: true, reason: "ok", scene: scene() };
+  const allowed = {
+    accepted: true,
+    reason: "ok",
+    changedFields: ["palette", "nodes"],
+    scene: scene(),
+  };
   const good = {
     approved: true,
     identityIntact: true,
     readable: true,
     safeVisuals: true,
+    requestFulfilled: true,
     reason: "ok",
   };
   for (const verdict of [
@@ -653,12 +660,18 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
         assert(body.max_tokens <= 8000);
         const value =
           body.model === "claude-haiku-5-5"
-            ? { accepted: true, reason: "ok", scene: scene() }
+            ? {
+                accepted: true,
+                reason: "ok",
+                changedFields: ["palette", "nodes"],
+                scene: scene(),
+              }
             : {
                 approved: true,
                 identityIntact: true,
                 readable: true,
                 safeVisuals: true,
+                requestFulfilled: true,
                 reason: "ok",
               };
         return {
@@ -830,6 +843,7 @@ test("drawing images must pass two independent visual reviewers before saving", 
                   identityIntact: true,
                   readable: true,
                   safeVisuals: deny !== "second",
+                  requestFulfilled: true,
                   reason: deny === "second" ? "unsafe" : "ok",
                 },
           usage: { model, input: 10, output: 10 },
@@ -1076,4 +1090,190 @@ test("undo during private testing also removes the original public contribution"
   assert.equal(s.publicSnapshot.scene.font, "original");
   assert.equal(s.scene.font, "mono");
   assert.equal(s.paused, true);
+});
+
+test("admin configures publication and attempt limits, legacy participation counts once", async () => {
+  await reset();
+  const c = await cookie(),
+    owner = identity(c);
+  const settings = { publishedPerBrowser: 3, attemptsPerDay: 10 };
+  assert.equal(
+    (await call("/api/community", "POST", { action: "settings", settings }, c))
+      .status,
+    401,
+  );
+  assert.equal(
+    (
+      await call(
+        "/api/community",
+        "POST",
+        {
+          action: "settings",
+          settings: { ...settings, publishedPerBrowser: 0 },
+        },
+        adminCookie,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await call(
+        "/api/community",
+        "POST",
+        { action: "settings", settings },
+        adminCookie,
+      )
+    ).status,
+    200,
+  );
+  await mutate((s) => {
+    s.visitors[owner] = Date.now();
+  });
+  let d = await (await call("/api/community", "GET", null, c)).json();
+  assert.equal(d.available, true);
+  assert.deepEqual(d.participation, {
+    published: 1,
+    limit: 3,
+    remaining: 2,
+    attemptsPerDay: 10,
+  });
+  const handler = createChangeHandler({
+    verify: async () => {},
+    evaluate: async () => ({ approved: true, scene: scene() }),
+  });
+  const first = request();
+  await Promise.all([direct(handler, first, c), direct(handler, first, c)]);
+  assert.equal((await readState()).visitors[owner].count, 2);
+  assert.equal(
+    (await direct(handler, request(), c)).payload.status,
+    "published",
+  );
+  assert.equal((await direct(handler, request(), c)).payload.error, "used");
+  assert.equal((await readState()).visitors[owner].count, 3);
+  d = await (await call("/api/community", "GET", null, c)).json();
+  assert.equal(d.participation.remaining, 0);
+  assert.equal(d.available, false);
+  await call(
+    "/api/community",
+    "POST",
+    { action: "settings", settings: { ...settings, publishedPerBrowser: 5 } },
+    adminCookie,
+  );
+  assert.equal(
+    (await (await call("/api/community", "GET", null, c)).json()).available,
+    true,
+  );
+});
+
+test("cursor requests cannot recolor or rearrange the site and require the requested effect", async () => {
+  const { scopedProposal } = await import("../server/community/proposal.mjs");
+  const base = validateScene(scene());
+  const program = {
+    html: "",
+    css: "",
+    javascript:
+      "function render({ctx,pointer}){ctx.beginPath();ctx.arc(pointer.x,pointer.y,12,0,Math.PI*2);ctx.stroke();}",
+    layer: "foreground",
+  };
+  const proposal = {
+    changedFields: ["program", "palette", "nodes"],
+    scene: { ...base, palette: "cherry", nodes: [], program },
+  };
+  const result = scopedProposal(
+    base,
+    proposal,
+    "haz un cursor que cuando lo vas moviendo salen burbujas",
+  );
+  assert.deepEqual(result.program, program);
+  assert.equal(result.palette, base.palette);
+  assert.deepEqual(result.nodes, base.nodes);
+  assert.throws(
+    () =>
+      scopedProposal(
+        base,
+        { ...proposal, scene: { ...proposal.scene, program: null } },
+        "Un cursor de burbujas",
+      ),
+    (e) => e.code === "unsupported",
+  );
+  const narrow = scopedProposal(
+    base,
+    { ...proposal, changedFields: ["palette"] },
+    "Cambiá la paleta",
+  );
+  assert.equal(narrow.palette, "cherry");
+  assert.deepEqual(narrow.nodes, base.nodes);
+  assert.equal(narrow.program, null);
+  assert.throws(() =>
+    validateScene({
+      ...base,
+      program: { ...program, javascript: "x".repeat(24001) },
+    }),
+  );
+  const { validateProgram } = await import("../server/community/program.mjs");
+  assert.doesNotThrow(() => validateProgram(program));
+  assert.throws(() =>
+    validateProgram({ ...program, javascript: "function render( {" }),
+  );
+});
+
+test("program documents keep source inert in parent markup and use strict isolated capabilities", async () => {
+  const { programDocument } = await import("../shared/community-program.mjs");
+  const doc = programDocument({
+    html: "</script><script>alert(1)</script>",
+    css: "body{color:red}",
+    javascript: 'function render(){const data="</script>";}',
+    layer: "foreground",
+  });
+  assert.equal((doc.match(/<script /g) || []).length, 1);
+  assert.equal((doc.match(/<\/script>/g) || []).length, 1);
+  assert(doc.includes("connect-src 'none'"));
+  assert(doc.includes("frame-src 'none'"));
+  assert(doc.includes("worker?.terminate()"));
+  assert(doc.includes("data-status") || doc.includes("dataset.status"));
+  const { exclusionPath } = await import("../shared/community-protection.mjs");
+  const path = exclusionPath(
+    [
+      { left: 10, top: 10, right: 50, bottom: 30, width: 40, height: 20 },
+      { left: 30, top: 15, right: 70, bottom: 35, width: 40, height: 20 },
+    ],
+    100,
+    100,
+  );
+  assert.equal(
+    (path.match(/M/g) || []).length,
+    2,
+    "overlapping protected regions remain a single exclusion",
+  );
+});
+
+test("lowering the publication limit during generation prevents publication above the new limit", async () => {
+  await reset();
+  const c = await cookie(),
+    owner = identity(c);
+  await mutate((s) => {
+    s.settings = { publishedPerBrowser: 3, attemptsPerDay: 10 };
+    s.visitors[owner] = { count: 1, lastPublishedAt: Date.now() };
+  });
+  const r = await reserve({
+    id: randomUUID(),
+    owner,
+    ip: "quota-race",
+    prompt: "effect",
+    tokenHash: randomUUID(),
+  });
+  await call(
+    "/api/community",
+    "POST",
+    {
+      action: "settings",
+      settings: { publishedPerBrowser: 1, attemptsPerDay: 10 },
+    },
+    adminCookie,
+  );
+  const job = await finish(r.job.id, { approved: true, scene: scene() });
+  assert.equal(job.status, "rejected");
+  assert.equal(job.reason, "used");
+  assert.equal((await readState()).visitors[owner].count, 1);
 });

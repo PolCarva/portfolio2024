@@ -11,6 +11,7 @@ import {
 import CommunityCanvas from "./community/Artwork.jsx";
 import { sceneAttributes } from "../shared/community-catalog.mjs";
 import "./community/community.css";
+import CommunityProgram from "./community/ProgramLayer.jsx";
 const CommunityControls = lazy(() => import("./community/Controls.jsx"));
 
 const sectionIds = ["work", "about", "experience", "contact"];
@@ -274,6 +275,12 @@ function App({
             onDrawingComplete={() => setDrawingDraft(null)}
           />
         </Suspense>
+      )}
+      {visualScene?.program && (
+        <CommunityProgram
+          program={visualScene.program}
+          preview={communityPreview}
+        />
       )}
       <a className="skip-link" href="#main">
         {t.skip}

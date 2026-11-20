@@ -55,6 +55,20 @@ export const sceneSchema = z
       "rounded",
       "handwritten",
     ]),
+    program: z
+      .object({
+        html: z.string().max(12000),
+        css: z.string().max(12000),
+        javascript: z.string().max(24000),
+        layer: z.enum(["foreground", "background"]),
+      })
+      .strict()
+      .refine(
+        (p) => p.html.length + p.css.length + p.javascript.length <= 24000,
+        "Program source too large",
+      )
+      .nullable()
+      .default(null),
     theme: z
       .object({
         paper: z.string().regex(/^#[0-9a-fA-F]{6}$/),

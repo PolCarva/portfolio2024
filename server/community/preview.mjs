@@ -1,3 +1,7 @@
+import {
+  protectedVisualSelector,
+  exclusionPath,
+} from "../../shared/community-protection.mjs";
 import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -59,8 +63,8 @@ export async function renderReview(
     return await bounded(
       (async () => {
         const context = await browser.newContext({
-          javaScriptEnabled: false,
-          reducedMotion: "reduce",
+          javaScriptEnabled: Boolean(scene.program),
+          reducedMotion: scene.program ? "no-preference" : "reduce",
           deviceScaleFactor: 1,
         });
         await context.route("**/*", async (route) => {
@@ -102,13 +106,54 @@ export async function renderReview(
           if (Date.now() > deadline) throw new Error("Preview timeout");
           mark("viewport_" + width);
           await page.setViewportSize({ width, height });
-          await page.emulateMedia({ reducedMotion: "reduce" });
+          await page.emulateMedia({
+            reducedMotion: scene.program ? "no-preference" : "reduce",
+          });
           const markup = renderPreview(content, scene, "es");
           await page.setContent(
             `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important} *:not(.community-node){animation:none!important;transition:none!important}</style></head><body>${markup}</body></html>`,
             { waitUntil: "load", timeout: 10000 },
           );
           mark("html_ready");
+          if (scene.program) {
+            const frame = page.frames().find((frame) => frame.parentFrame());
+            if (!frame) throw new Error("Program frame missing");
+            await bounded(
+              frame.waitForSelector('html[data-status="ready"]', {
+                state: "attached",
+                timeout: 3000,
+              }),
+              3500,
+            );
+            await bounded(frame.waitForTimeout(450), 600);
+            if (
+              (await frame.locator("html").getAttribute("data-status")) !==
+              "ready"
+            )
+              throw new Error("Program runtime failed");
+            const rects = await page.evaluate(
+              (selector) =>
+                [...document.querySelectorAll(selector)].map((node) => {
+                  const r = node.getBoundingClientRect();
+                  return {
+                    width: r.width,
+                    height: r.height,
+                    left: r.left,
+                    top: r.top,
+                    right: r.right,
+                    bottom: r.bottom,
+                  };
+                }),
+              protectedVisualSelector,
+            );
+            await page.locator("iframe.community-program").evaluate(
+              (node, path) => {
+                node.style.clipPath = path;
+              },
+              exclusionPath(rects, width, height),
+            );
+          }
+
           await bounded(
             page.evaluate(() => document.fonts.ready.then(() => true)),
             3000,
@@ -156,6 +201,14 @@ export async function renderReview(
           };
           await shot({ x: 0, y: 0, width, height: Math.ceil(size.height) });
           mark("full_screenshot_done");
+          if (scene.program)
+            await shot({
+              x: Math.max(0, width / 2 - 300),
+              y: Math.min(180, height / 4),
+              width: Math.min(width, 600),
+              height: Math.min(height - 180, 400),
+            });
+
           const { frameTree } = await cdp.send("Page.getFrameTree");
           const { styleSheetId } = await cdp.send("CSS.createStyleSheet", {
             frameId: frameTree.frame.id,
@@ -193,7 +246,7 @@ export async function renderReview(
           }
         }
         if (
-          images.length > 8 ||
+          images.length > 10 ||
           images.reduce((n, b) => n + b.length, 0) > 16_000_000
         )
           throw new Error("Preview image limit");

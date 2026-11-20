@@ -298,8 +298,8 @@ export default function CommunityCanvas({
           <small>
             {strokes.length}/12{" "}
             {es
-              ? "trazos · Se guardan para todos después de la revisión con IA. Una publicación por navegador."
-              : "strokes · Saved for everyone after AI review. One publication per browser."}
+              ? "trazos · Se guardan para todos después de la revisión con IA. Consultá tu cupo en el formulario."
+              : "strokes · Saved for everyone after AI review. Check your allowance in the form."}
           </small>
         </div>
       )}

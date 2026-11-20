@@ -35,14 +35,14 @@ const copy = {
       already_available:
         "Eso ya está disponible. Podés dibujar en el lienzo y enviar tu aporte para guardarlo.",
       admin_reverted:
-        "El propietario revirtió tu aporte. Tu participación ya se había utilizado.",
+        "El propietario revirtió tu aporte. Esa intervención sigue contando en tu cupo.",
       capacity:
         "El lienzo alcanzó su capacidad. Probá con menos trazos o un cambio de estilo.",
       not_configured:
         "El experimento está en preparación. Pronto vas a poder participar.",
       paused:
         "Las intervenciones están pausadas. Podés seguir explorando el portfolio.",
-      used: "Ya dejaste tu cambio desde este navegador. ¡Gracias por participar!",
+      used: "Alcanzaste el cupo de intervenciones de este navegador. ¡Gracias por participar!",
       budget: "Se alcanzó el cupo de IA de este mes.",
       busy: "Otra persona está dejando su cambio. Volvé a intentar en unos minutos.",
       verification:
@@ -97,14 +97,14 @@ const copy = {
       already_available:
         "That feature is already available. You can draw on the canvas and submit your contribution to save it.",
       admin_reverted:
-        "The owner reverted your contribution. Your participation was already used.",
+        "The owner reverted your contribution. It still counts toward your allowance.",
       capacity:
         "The canvas reached its capacity. Try fewer strokes or a style change.",
       not_configured:
         "The experiment is being prepared. Participation will open soon.",
       paused:
         "Changes are currently paused. You can still explore the portfolio.",
-      used: "You already left your change from this browser. Thank you!",
+      used: "You reached the contribution limit for this browser. Thank you!",
       budget: "This month’s AI allowance has been reached.",
       busy: "Someone else is making a change. Please try again in a few minutes.",
       verification:
@@ -502,7 +502,13 @@ export default function CommunityControls({
                       ))}
                     </div>
                   )}
-                  <small>{t.limit}</small>
+                  <small>
+                    {data.participation
+                      ? es
+                        ? `${data.participation.remaining} de ${data.participation.limit} intervenciones disponibles en este navegador. Los rechazos no gastan el cupo; hasta ${data.participation.attemptsPerDay} intentos de generación al día.`
+                        : `${data.participation.remaining} of ${data.participation.limit} contributions available in this browser. Rejections do not use your allowance; up to ${data.participation.attemptsPerDay} generation attempts a day.`
+                      : t.limit}
+                  </small>
                   <p>
                     <small>{t.privacy}</small>
                   </p>

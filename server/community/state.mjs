@@ -2,7 +2,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readObject, writeObject, isStorageConflict } from "../storage.mjs";
 import { originalScene, validateScene } from "../../shared/community-scene.mjs";
 export const MONTHLY_MICRODOLLARS = 10_000_000;
-export const RESERVATION = 50_000;
+export const RESERVATION = 60_000;
 export const LEASE_MS = 70_000;
 const path = "community/state.json";
 export const secret = () =>
@@ -16,6 +16,16 @@ export const ready = () =>
       process.env.TURNSTILE_SITE_KEY &&
       secret(),
   );
+export function settingsFor(state) {
+  return {
+    publishedPerBrowser: state.settings?.publishedPerBrowser ?? 5,
+    attemptsPerDay: state.settings?.attemptsPerDay ?? 10,
+  };
+}
+export function participationCount(state, owner) {
+  const record = state.visitors[owner];
+  return record && typeof record === "object" ? record.count : record ? 1 : 0;
+}
 export const freshState = () => ({
   version: 1,
   paused: true,
@@ -147,7 +157,9 @@ export function takeRate(state, key, max, windowMs, now = Date.now()) {
 export function publicState(state, id, admin = false) {
   const month = new Date().toISOString().slice(0, 7),
     spent = state.budgets[month]?.reserved || 0;
-  const used = Boolean(id && state.visitors[id]);
+  const settings = settingsFor(state);
+  const published = id ? participationCount(state, id) : 0;
+  const used = published >= settings.publishedPerBrowser;
   const visible =
     state.mode !== "public" && !admin
       ? state.publicSnapshot || { revision: "original", scene: originalScene }
@@ -166,6 +178,12 @@ export function publicState(state, id, admin = false) {
       !state.active &&
       spent + RESERVATION <= MONTHLY_MICRODOLLARS,
     used,
+    participation: {
+      published,
+      limit: settings.publishedPerBrowser,
+      remaining: Math.max(0, settings.publishedPerBrowser - published),
+      attemptsPerDay: settings.attemptsPerDay,
+    },
     reason: !ready()
       ? "not_configured"
       : state.paused || (state.mode !== "public" && !admin)
@@ -201,7 +219,12 @@ export async function reserve({
       !diagnostic
     )
       throw problem(503, "paused");
-    if (state.visitors[owner] && !diagnostic) throw problem(409, "used");
+    const settings = settingsFor(state);
+    if (
+      participationCount(state, owner) >= settings.publishedPerBrowser &&
+      !diagnostic
+    )
+      throw problem(409, "used");
     if (state.active) throw problem(409, "busy");
     if (state.tokens[tokenHash]) throw problem(403, "verification");
     const month = new Date().toISOString().slice(0, 7);
@@ -209,8 +232,13 @@ export async function reserve({
     if (budget.reserved + RESERVATION > MONTHLY_MICRODOLLARS)
       throw problem(429, "budget");
     if (!diagnostic) {
-      takeRate(state, "visitor:" + owner, 3, 86400000);
-      takeRate(state, "generation-ip:" + ip, 10, 86400000);
+      takeRate(state, "visitor:" + owner, settings.attemptsPerDay, 86400000);
+      takeRate(
+        state,
+        "generation-ip:" + ip,
+        Math.max(10, settings.attemptsPerDay * 2),
+        86400000,
+      );
     }
     budget.reserved += RESERVATION;
     state.budgets[month] = budget;
@@ -258,6 +286,14 @@ export async function finish(id, result) {
     }
     if (
       result.approved &&
+      participationCount(state, job.owner) >=
+        settingsFor(state).publishedPerBrowser
+    ) {
+      result.approved = false;
+      result.reason = "used";
+    }
+    if (
+      result.approved &&
       (state.paused || state.active !== id || state.revision !== job.base)
     ) {
       result.approved = false;
@@ -275,7 +311,10 @@ export async function finish(id, result) {
       state.history = state.history.slice(-100);
       state.scene = scene;
       state.revision = revision;
-      state.visitors[job.owner] = Date.now();
+      state.visitors[job.owner] = {
+        count: participationCount(state, job.owner) + 1,
+        lastPublishedAt: Date.now(),
+      };
       job.status = "published";
       job.revision = revision;
     } else
