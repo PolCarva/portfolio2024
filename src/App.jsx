@@ -413,6 +413,11 @@ function App({
           language={language}
           preview={communityPreview}
           onPublish={setDrawingDraft}
+          onClear={(zone) =>
+            setDrawingDraft((current) =>
+              current?.zone === zone ? null : current,
+            )
+          }
         />
         <div className="discipline-strip" aria-hidden="true">
           {t.strip.map((item) => (
@@ -530,6 +535,11 @@ function App({
           language={language}
           preview={communityPreview}
           onPublish={setDrawingDraft}
+          onClear={(zone) =>
+            setDrawingDraft((current) =>
+              current?.zone === zone ? null : current,
+            )
+          }
         />
         <section
           id="about"
@@ -629,6 +639,11 @@ function App({
           language={language}
           preview={communityPreview}
           onPublish={setDrawingDraft}
+          onClear={(zone) =>
+            setDrawingDraft((current) =>
+              current?.zone === zone ? null : current,
+            )
+          }
         />
         <section
           id="contact"

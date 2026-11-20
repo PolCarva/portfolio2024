@@ -395,8 +395,8 @@ export default function CommunityControls({
               {drawingDraft && (
                 <p className="community-notice">
                   {es
-                    ? `${drawingDraft.strokes.length} trazos listos para revisar y guardar. Tu aporte se suma al lienzo compartido.`
-                    : `${drawingDraft.strokes.length} strokes ready for review and saving. Your drawing joins the shared canvas.`}
+                    ? `${drawingDraft.strokes.length} ${drawingDraft.strokes.length === 1 ? "trazo listo" : "trazos listos"} para revisar y guardar. Tu aporte se suma al lienzo compartido.`
+                    : `${drawingDraft.strokes.length} ${drawingDraft.strokes.length === 1 ? "stroke" : "strokes"} ready for review and saving. Your drawing joins the shared canvas.`}
                 </p>
               )}
               {drawingDraft && (
@@ -426,7 +426,13 @@ export default function CommunityControls({
                 minLength={3}
                 required
                 rows={4}
-                placeholder={t.placeholder}
+                placeholder={
+                  drawingDraft
+                    ? es
+                      ? "Describí lo que dibujaste…"
+                      : "Describe what you drew…"
+                    : t.placeholder
+                }
                 value={prompt}
                 disabled={busy}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -434,18 +440,20 @@ export default function CommunityControls({
               <small>
                 {prompt.length}/500 {t.counter}
               </small>
-              <div className="community-example-row">
-                {t.examples.map((example) => (
-                  <button
-                    key={example}
-                    type="button"
-                    disabled={busy}
-                    onClick={() => setPrompt(example)}
-                  >
-                    {example}
-                  </button>
-                ))}
-              </div>
+              {!drawingDraft && (
+                <div className="community-example-row">
+                  {t.examples.map((example) => (
+                    <button
+                      key={example}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setPrompt(example)}
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              )}
               <small>{t.limit}</small>
               <p>
                 <small>{t.privacy}</small>
@@ -466,6 +474,22 @@ export default function CommunityControls({
                 {busy ? t.busy : t.send} ↗
               </button>
               {busy && <p role="status">{t.waiting}</p>}
+              {notice === "already_available" && data.scene?.drawing && (
+                <p>
+                  <a
+                    className="text-link"
+                    href="#community-canvas-hero"
+                    onClick={() => {
+                      setOriginal(false);
+                      onScene(data.scene);
+                      setOpen(false);
+                    }}
+                  >
+                    {es ? "Ir al lienzo compartido" : "Go to the shared canvas"}{" "}
+                    ↗
+                  </a>
+                </p>
+              )}
               {notice && (
                 <p className="community-notice" role="status">
                   {notice === "success"

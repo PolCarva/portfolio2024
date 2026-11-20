@@ -395,3 +395,19 @@
   font-weight: 700;
   padding: 12px 0;
 }
+
+.community-canvas-hint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.is-drawing .community-drawing-area {
+  outline: 1px dashed var(--line);
+  outline-offset: -8px;
+}

@@ -100,6 +100,7 @@ export default function CommunityCanvas({
   language = "es",
   preview = false,
   onPublish,
+  onClear,
 }) {
   const [strokes, setStrokes] = useState([]),
     [drawing, setDrawing] = useState(false),
@@ -183,6 +184,7 @@ export default function CommunityCanvas({
   }
   return (
     <aside
+      id={`community-canvas-${zone}`}
       className={`community-canvas ${drawing ? "is-drawing" : ""}`}
       aria-label={es ? "Lienzo comunitario" : "Community canvas"}
     >
@@ -195,6 +197,13 @@ export default function CommunityCanvas({
         onPointerCancel={end}
       >
         <SceneNodes scene={scene} zone={zone} />
+        {scene.drawing &&
+          !strokes.length &&
+          !scene.nodes.some((n) => n.zone === zone) && (
+            <span className="community-canvas-hint" aria-hidden="true">
+              {es ? "Dejá tu trazo acá" : "Leave your mark here"}
+            </span>
+          )}
         {strokes.length > 0 && (
           <svg
             className="community-art community-strokes"
@@ -271,6 +280,7 @@ export default function CommunityCanvas({
             onClick={() => {
               setStrokes([]);
               active.current = null;
+              onClear?.(zone);
             }}
           >
             {es ? "Borrar borrador" : "Clear draft"}
