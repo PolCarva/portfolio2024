@@ -337,6 +337,7 @@ export function createEvaluator({
               ...done(false, null),
               pending: {
                 kind: "review",
+                drawing: Boolean(drawing),
                 candidate,
                 previews: {
                   ...previews,

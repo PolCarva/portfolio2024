@@ -95,7 +95,7 @@ export function createContinuationHandler({ evaluate = evaluateChange } = {}) {
         result = await evaluate({
           prompt: job.prompt,
           scene: claim.scene,
-          drawing: job.kind === "drawing" ? true : undefined,
+          drawing: pending.drawing || job.kind === "drawing" ? true : undefined,
           resume,
           deferStages: true,
           deadline: Date.now() + 50000,
