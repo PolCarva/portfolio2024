@@ -511,6 +511,8 @@ test("independent review is mandatory and must pass every check after actual sce
     readable: true,
     safeVisuals: true,
     requestFulfilled: true,
+    animationStable: true,
+    qualityIssues: [],
     reason: "ok",
   };
   for (const verdict of [
@@ -519,6 +521,7 @@ test("independent review is mandatory and must pass every check after actual sce
     { ...good, identityIntact: false },
     { ...good, readable: false },
     { ...good, safeVisuals: false },
+    { ...good, animationStable: false },
     { ...good, reason: "unsafe" },
   ]) {
     let calls = 0,
@@ -672,6 +675,8 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
                 readable: true,
                 safeVisuals: true,
                 requestFulfilled: true,
+                animationStable: true,
+                qualityIssues: [],
                 reason: "ok",
               };
         return {
@@ -844,6 +849,8 @@ test("drawing images must pass two independent visual reviewers before saving", 
                   readable: true,
                   safeVisuals: deny !== "second",
                   requestFulfilled: true,
+                  animationStable: true,
+                  qualityIssues: [],
                   reason: deny === "second" ? "unsafe" : "ok",
                 },
           usage: { model, input: 10, output: 10 },
@@ -1276,4 +1283,164 @@ test("lowering the publication limit during generation prevents publication abov
   assert.equal(job.status, "rejected");
   assert.equal(job.reason, "used");
   assert.equal((await readState()).visitors[owner].count, 1);
+});
+
+test("quality feedback gets one budgeted correction and a complete independent recheck", async () => {
+  const { createEvaluator } = await import("../server/community/ai.mjs");
+  let generations = 0,
+    renders = 0,
+    reviews = 0,
+    reservations = 0;
+  const evaluate = createEvaluator({
+    respond: async (
+      model,
+      schema,
+      system,
+      user,
+      deadline,
+      maxOutput,
+      maxInput,
+      effort,
+    ) => {
+      if (model === "claude-haiku-5-5") {
+        generations++;
+        assert.equal(effort, "high");
+        if (generations === 2) {
+          const input = JSON.parse(user);
+          assert.deepEqual(input.validationFeedback.issues, [
+            "intermittent_blank_frames",
+          ]);
+          assert(input.failedCandidate);
+        }
+        return {
+          value: {
+            accepted: true,
+            reason: "ok",
+            changedFields: ["palette", "nodes"],
+            scene: scene(),
+          },
+          usage: { model, input: 10, output: 10 },
+        };
+      }
+      reviews++;
+      assert.equal(effort, "medium");
+      return {
+        value: {
+          approved: true,
+          identityIntact: true,
+          readable: true,
+          safeVisuals: true,
+          requestFulfilled: true,
+          animationStable: true,
+          qualityIssues: [],
+          reason: "ok",
+        },
+        usage: { model, input: 10, output: 10 },
+      };
+    },
+    render: async () => {
+      renders++;
+      if (renders === 1)
+        throw Object.assign(new Error("motion"), {
+          code: "quality",
+          issues: ["intermittent_blank_frames"],
+        });
+      return { images: [], contentRevision: "initial" };
+    },
+    readContent: async () => null,
+  });
+  const result = await evaluate({
+    prompt: "estilo nuevo",
+    scene: originalScene,
+    deadline: Date.now() + 50000,
+    reserveRepair: async () => {
+      reservations++;
+      return true;
+    },
+  });
+  assert.equal(result.approved, true);
+  assert.equal(generations, 2);
+  assert.equal(renders, 2);
+  assert.equal(reviews, 1);
+  assert.equal(reservations, 1);
+  assert.equal(result.checks.repairAttempts, 1);
+});
+
+test("a failed second quality check never publishes and has no further correction", async () => {
+  const { createEvaluator } = await import("../server/community/ai.mjs");
+  let generated = 0,
+    repairs = 0;
+  const evaluate = createEvaluator({
+    respond: async (model) => {
+      generated++;
+      return {
+        value: {
+          accepted: true,
+          reason: "ok",
+          changedFields: ["palette"],
+          scene: scene(),
+        },
+        usage: { model, input: 1, output: 1 },
+      };
+    },
+    render: async () => {
+      throw Object.assign(new Error("runtime"), { code: "quality" });
+    },
+  });
+  const result = await evaluate({
+    prompt: "garden",
+    scene: originalScene,
+    deadline: Date.now() + 50000,
+    reserveRepair: async () => {
+      repairs++;
+      return true;
+    },
+  });
+  assert.equal(result.approved, false);
+  assert.equal(result.reason, "quality");
+  assert.equal(generated, 2);
+  assert.equal(repairs, 1);
+});
+
+test("repair budget reservations are atomic, idempotent and do not spend a second participation", async () => {
+  const { reserveRepair } = await import("../server/community/state.mjs");
+  await reset();
+  const c = await cookie(),
+    owner = identity(c),
+    r = await reserve({
+      id: randomUUID(),
+      owner,
+      ip: "repair",
+      prompt: "fix",
+      tokenHash: randomUUID(),
+    });
+  const results = await Promise.all([
+    reserveRepair(r.job.id),
+    reserveRepair(r.job.id),
+  ]);
+  assert(results.every(Boolean));
+  const s = await readState();
+  assert.equal(s.jobs[r.job.id].reserved, 2 * RESERVATION);
+  assert.equal(s.budgets[r.job.month].reserved, 2 * RESERVATION);
+  await finish(r.job.id, {
+    approved: true,
+    scene: scene(),
+    checks: { repairAttempts: 1 },
+  });
+  const final = await readState();
+  assert.equal(final.visitors[owner].count, 1);
+  assert.equal(final.jobs[r.job.id].checks.repairAttempts, 1);
+  assert.equal(await reserveRepair(r.job.id), false);
+  await reset();
+  const b = await reserve({
+    id: randomUUID(),
+    owner,
+    ip: "repair",
+    prompt: "fix",
+    tokenHash: randomUUID(),
+  });
+  await mutate((s) => {
+    s.budgets[b.job.month].reserved = MONTHLY_MICRODOLLARS;
+  });
+  assert.equal(await reserveRepair(b.job.id), false);
 });

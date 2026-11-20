@@ -39,7 +39,13 @@ export default function AdminCommunity() {
           ...(requestId ? { requestId } : {}),
         }),
       });
-      if (action === "verify") setError("Motor de capturas verificado.");
+      if (action === "verify")
+        setError(
+          result.ok
+            ? "Motor y comprobaciones de movimiento verificados."
+            : "La comprobación detectó un efecto inestable: " +
+                result.quality.issues.join(", "),
+        );
       if (action === "test-ai")
         setError(
           result.ok
@@ -231,12 +237,21 @@ export default function AdminCommunity() {
                         unsupported: "No se encontró una adaptación visual",
                         already_available:
                           "La capacidad solicitada ya estaba disponible",
+                        quality:
+                          "No superó la prueba de funcionamiento o estabilidad",
                         technical: "Error técnico",
                         timeout: "Tiempo de revisión agotado",
                         stale: "La versión cambió durante el proceso",
                         admin_reverted: "Deshecho por el administrador",
                       }[j.reason]}
                 </p>
+                {j.checks && (
+                  <small>
+                    Comprobaciones: {j.checks.framesTested} fotogramas ·{" "}
+                    {j.checks.viewports?.join(" / ") || "sin animación"} ·{" "}
+                    {j.checks.repairAttempts} corrección automática.
+                  </small>
+                )}
                 {j.canUndo && (
                   <button
                     type="button"

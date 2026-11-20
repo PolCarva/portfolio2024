@@ -2,7 +2,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readObject, writeObject, isStorageConflict } from "../storage.mjs";
 import { originalScene, validateScene } from "../../shared/community-scene.mjs";
 export const MONTHLY_MICRODOLLARS = 10_000_000;
-export const RESERVATION = 60_000;
+export const RESERVATION = 70_000;
 export const LEASE_MS = 70_000;
 const path = "community/state.json";
 export const secret = () =>
@@ -263,11 +263,31 @@ export async function reserve({
     return { duplicate: false, job, scene: state.scene };
   });
 }
+export async function reserveRepair(id) {
+  return mutate((state) => {
+    const job = state.jobs[id];
+    if (
+      !job ||
+      job.status !== "processing" ||
+      state.active !== id ||
+      (!job.diagnostic && (state.paused || state.revision !== job.base))
+    )
+      return false;
+    if (job.repairReserved) return true;
+    const budget = state.budgets[job.month];
+    if (budget.reserved + RESERVATION > MONTHLY_MICRODOLLARS) return false;
+    budget.reserved += RESERVATION;
+    job.reserved += RESERVATION;
+    job.repairReserved = true;
+    return true;
+  });
+}
 export async function finish(id, result) {
   return mutate((state) => {
     const job = state.jobs[id];
     if (!job || job.status !== "processing") return job;
     job.usage = result.usage || [];
+    job.checks = result.checks || null;
     state.budgets[job.month].measured += result.cost || 0;
     if (result.cost > job.reserved) {
       state.paused = true;

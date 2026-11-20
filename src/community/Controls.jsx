@@ -52,6 +52,8 @@ const copy = {
       rate_limited: "Alcanzaste el límite de intentos. Probá mañana.",
       unsafe:
         "La propuesta no superó los controles de seguridad. Probá con otra idea visual.",
+      quality:
+        "El cambio no superó la prueba de funcionamiento. Tu cupo sigue disponible; podés probar otra vez.",
       unsupported:
         "Ese pedido está fuera de las posibilidades visuales del experimento.",
       stale: "El diseño cambió durante la revisión. Tu turno sigue disponible.",
@@ -114,6 +116,8 @@ const copy = {
       rate_limited: "Attempt limit reached. Please try again tomorrow.",
       unsafe:
         "The proposal did not pass the safety checks. Try a different visual idea.",
+      quality:
+        "The change did not pass its functionality test. Your allowance is unchanged; you can try again.",
       unsupported:
         "That request is outside the visual capabilities of this experiment.",
       stale: "The design changed during review. Your turn is still available.",

@@ -16,6 +16,7 @@ import {
   problem,
   prune,
   reserve,
+  reserveRepair,
   finish,
   digest,
 } from "../server/community/state.mjs";
@@ -86,6 +87,7 @@ export default async function handler(req, res) {
               reason: job.reason,
               createdAt: job.createdAt,
               usage: job.usage,
+              checks: job.checks,
               prompt: job.prompt || null,
               kind: job.kind || (job.diagnostic ? "diagnostic" : "prompt"),
               canUndo: canUndo(state, job),
@@ -100,8 +102,12 @@ export default async function handler(req, res) {
     if (!sameOrigin(req)) throw problem(403, "origin");
     const data = command.parse(await body(req, 2000));
     if (data.action === "verify") {
-      const { images } = await renderReview((await readState()).scene);
-      return json(res, 200, { ok: true, images: images.length });
+      const preview = await renderReview((await readState()).scene);
+      return json(res, 200, {
+        ok: preview.quality?.passed !== false,
+        images: preview.images.length,
+        quality: preview.quality,
+      });
     }
     if (data.action === "test-ai") {
       if (!ready()) throw problem(503, "not_configured");
@@ -148,6 +154,7 @@ export default async function handler(req, res) {
             }
           : {}),
         deadline: Date.now() + 50000,
+        reserveRepair: () => reserveRepair(id),
       });
       const job = await finish(id, result);
       return json(res, 200, {
@@ -160,6 +167,7 @@ export default async function handler(req, res) {
         status: job.status,
         reason: job.reason,
         usage: job.usage,
+        checks: job.checks,
       });
     }
     const outcome = await mutate((state) => {

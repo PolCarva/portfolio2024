@@ -2,6 +2,7 @@ import {
   protectedVisualSelector,
   exclusionPath,
 } from "../../shared/community-protection.mjs";
+import { assessProgramQuality } from "./quality.mjs";
 import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -19,7 +20,7 @@ const mime = {
 };
 export async function renderReview(
   scene,
-  { deadline = Date.now() + 45000 } = {},
+  { deadline = Date.now() + 45000, prompt: argumentsPrompt = "" } = {},
 ) {
   const started = Date.now(),
     mark = (stage) =>
@@ -98,7 +99,8 @@ export async function renderReview(
         });
         const page = await context.newPage(),
           cdp = await context.newCDPSession(page),
-          images = [];
+          images = [],
+          temporalReports = [];
         for (const [width, height] of [
           [1280, 900],
           [390, 844],
@@ -118,19 +120,27 @@ export async function renderReview(
           if (scene.program) {
             const frame = page.frames().find((frame) => frame.parentFrame());
             if (!frame) throw new Error("Program frame missing");
-            await bounded(
-              frame.waitForSelector('html[data-status="ready"]', {
-                state: "attached",
-                timeout: 3000,
-              }),
-              3500,
-            );
-            await bounded(frame.waitForTimeout(450), 600);
-            if (
-              (await frame.locator("html").getAttribute("data-status")) !==
-              "ready"
-            )
-              throw new Error("Program runtime failed");
+            try {
+              await bounded(
+                frame.waitForSelector('html[data-status="ready"]', {
+                  state: "attached",
+                  timeout: 3000,
+                }),
+                3500,
+              );
+            } catch {
+              const raw = await frame
+                .locator("html")
+                .getAttribute("data-program-probe")
+                .catch(() => null);
+              const detail = raw ? JSON.parse(raw).lastError : null;
+              throw Object.assign(new Error("Program did not start"), {
+                code: "quality",
+                issues: [
+                  detail ? "program_error: " + detail : "program_did_not_start",
+                ],
+              });
+            }
             const rects = await page.evaluate(
               (selector) =>
                 [...document.querySelectorAll(selector)].map((node) => {
@@ -199,15 +209,87 @@ export async function renderReview(
             );
             images.push(Buffer.from(data, "base64"));
           };
+          if (scene.program) {
+            const frame = page.frames().find((frame) => frame.parentFrame());
+            for (const phase of ["moving", "paused", "resumed"]) {
+              try {
+                await bounded(
+                  frame.waitForFunction(
+                    (phase) => {
+                      const raw = document.documentElement.dataset.programProbe;
+                      if (!raw) return false;
+                      const p = JSON.parse(raw),
+                        samples = p.samples || [],
+                        last = samples.at(-1);
+                      if (document.documentElement.dataset.status === "error")
+                        throw new Error("Program runtime failed");
+                      if (phase === "moving")
+                        return (
+                          samples.filter((s) => s.phase === "moving").length >=
+                          10
+                        );
+                      if (phase === "paused")
+                        return (
+                          samples.filter((s) => s.phase === "paused").length >=
+                            3 && last.phase === "paused"
+                        );
+                      return (
+                        samples.some((s) => s.phase === "paused") &&
+                        last?.phase === "moving" &&
+                        samples.filter((s) => s.phase === "moving").length >= 14
+                      );
+                    },
+                    phase,
+                    { timeout: 3500 },
+                  ),
+                  4000,
+                );
+              } catch {
+                const raw = await frame
+                  .locator("html")
+                  .getAttribute("data-program-probe")
+                  .catch(() => null);
+                const detail = raw ? JSON.parse(raw).lastError : null;
+                throw Object.assign(new Error("Program motion probe failed"), {
+                  code: "quality",
+                  issues: [
+                    detail
+                      ? "program_error: " + detail
+                      : "program_motion_or_pause_failed",
+                  ],
+                });
+              }
+              const data = await frame.evaluate(() => {
+                const source = document.querySelector("body > canvas#surface"),
+                  shot = document.createElement("canvas");
+                const scale = Math.min(
+                  1,
+                  640 / source.width,
+                  480 / source.height,
+                );
+                shot.width = Math.max(1, Math.round(source.width * scale));
+                shot.height = Math.max(1, Math.round(source.height * scale));
+                const ctx = shot.getContext("2d");
+                ctx.fillStyle = "#f2f0e9";
+                ctx.fillRect(0, 0, shot.width, shot.height);
+                ctx.drawImage(source, 0, 0, shot.width, shot.height);
+                return shot.toDataURL("image/jpeg", 0.75).split(",")[1];
+              });
+              images.push(Buffer.from(data, "base64"));
+            }
+            const report = await frame.evaluate(() => ({
+              status: document.documentElement.dataset.status,
+              ...JSON.parse(
+                document.documentElement.dataset.programProbe || "{}",
+              ),
+            }));
+            temporalReports.push({
+              viewport: width < 800 ? "mobile" : "desktop",
+              ...report,
+            });
+          }
           await shot({ x: 0, y: 0, width, height: Math.ceil(size.height) });
           mark("full_screenshot_done");
-          if (scene.program)
-            await shot({
-              x: Math.max(0, width / 2 - 300),
-              y: Math.min(180, height / 4),
-              width: Math.min(width, 600),
-              height: Math.min(height - 180, 400),
-            });
 
           const { frameTree } = await cdp.send("Page.getFrameTree");
           const { styleSheetId } = await cdp.send("CSS.createStyleSheet", {
@@ -246,13 +328,18 @@ export async function renderReview(
           }
         }
         if (
-          images.length > 10 ||
+          images.length > 14 ||
           images.reduce((n, b) => n + b.length, 0) > 16_000_000
         )
           throw new Error("Preview image limit");
         mark("captured");
         return {
           images,
+          quality: scene.program
+            ? assessProgramQuality(temporalReports, argumentsPrompt, {
+                canvasExpected: !scene.program.html.trim(),
+              })
+            : null,
           contentRevision: current
             ? JSON.parse(current.bytes).revision
             : "initial",

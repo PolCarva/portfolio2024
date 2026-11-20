@@ -39,12 +39,11 @@ export default function ProgramLayer({ program, preview = false }) {
       send();
     }
     function schedule() {
-      clearTimeout(timer);
-      iframe.style.visibility = "hidden";
-      timer = setTimeout(() => {
+      if (timer) return;
+      timer = requestAnimationFrame(() => {
+        timer = null;
         mask();
-        iframe.style.visibility = "";
-      }, 50);
+      });
     }
     function motion() {
       iframe.hidden = reduced.matches;
@@ -61,7 +60,7 @@ export default function ProgramLayer({ program, preview = false }) {
     mask();
     motion();
     return () => {
-      clearTimeout(timer);
+      cancelAnimationFrame(timer);
       observer.disconnect();
       iframe.removeEventListener("load", mask);
       window.removeEventListener("pointermove", move);

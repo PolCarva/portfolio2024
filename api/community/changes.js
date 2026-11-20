@@ -13,6 +13,7 @@ import {
   mutate,
   takeRate,
   reserve,
+  reserveRepair,
   finish,
   readState,
   problem,
@@ -98,6 +99,7 @@ export function createChangeHandler({
           drawing: data.drawing,
           scene: reservation.scene,
           deadline: reservation.job.createdAt + 50000,
+          reserveRepair: () => reserveRepair(data.id),
         });
       } catch {
         result = { approved: false, reason: "technical" };
