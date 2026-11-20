@@ -122,7 +122,7 @@ export async function renderReview(
             if (!frame) throw new Error("Program frame missing");
             try {
               await bounded(
-                frame.waitForSelector('html[data-status="ready"]', {
+                frame.waitForSelector('html[data-status="prepared"]', {
                   state: "attached",
                   timeout: 3000,
                 }),
@@ -211,6 +211,14 @@ export async function renderReview(
           };
           if (scene.program) {
             const frame = page.frames().find((frame) => frame.parentFrame());
+            await page.evaluate(() =>
+              document
+                .querySelector("iframe.community-program")
+                .contentWindow.postMessage(
+                  { type: "portfolio-preview-start" },
+                  "*",
+                ),
+            );
             for (const phase of ["moving", "paused", "resumed"]) {
               try {
                 await bounded(
