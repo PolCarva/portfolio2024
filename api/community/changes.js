@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { drawingSchema, applyDrawing } from "../../shared/community-scene.mjs";
 import { sameOrigin, validSession } from "../../server/auth.mjs";
 import { body, json } from "../../server/http.mjs";
 import { communityFailure } from "../community.js";
@@ -37,6 +38,7 @@ const input = z
           }),
       ),
     token: z.string().min(1).max(2048),
+    drawing: drawingSchema.optional(),
   })
   .strict();
 export const config = { maxDuration: 60 };
@@ -51,7 +53,7 @@ export function createChangeHandler({
       if (!ready()) throw problem(503, "not_configured");
       const owner = visitor(req, res);
       if (!owner) throw problem(403, "visitor_required");
-      const data = input.parse(await body(req, 6000)),
+      const data = input.parse(await body(req, 50000)),
         ip = requestIP(req);
       const existing = (await readState()).jobs[data.id];
       if (existing) {
@@ -62,6 +64,13 @@ export function createChangeHandler({
         if (state.paused || (state.mode !== "public" && !validSession(req)))
           throw problem(503, "paused");
         if (state.visitors[owner]) throw problem(409, "used");
+        if (data.drawing) {
+          try {
+            applyDrawing(state.scene, data.drawing);
+          } catch {
+            throw problem(409, "capacity");
+          }
+        }
         takeRate(state, "submit:" + ip, 30, 3600000);
       });
       await verify(data.token, req);
@@ -72,6 +81,7 @@ export function createChangeHandler({
         prompt: data.prompt,
         tokenHash: digest("token:" + data.token),
         allowPrivate: validSession(req),
+        kind: data.drawing ? "drawing" : "prompt",
       });
       if (reservation.duplicate)
         return json(res, 200, jobResult(reservation.job));
@@ -79,6 +89,7 @@ export function createChangeHandler({
       try {
         result = await evaluate({
           prompt: data.prompt,
+          drawing: data.drawing,
           scene: reservation.scene,
           deadline: reservation.job.createdAt + 50000,
         });

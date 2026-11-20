@@ -728,3 +728,240 @@ test("generated labels cannot become arbitrary public text through visual identi
   input.nodes[0].id = "untrusted-label";
   assert.equal(validateScene(input).nodes[0].id, "n0");
 });
+
+test("shared drawings accept only bounded numeric strokes and preserve prior content", async () => {
+  const { drawingSchema, applyDrawing } = await import(
+    "../shared/community-scene.mjs"
+  );
+  const drawing = {
+    zone: "hero",
+    strokes: [
+      {
+        color: "blue",
+        width: 4,
+        points: [
+          { x: 10, y: 20 },
+          { x: 40, y: 50 },
+          { x: 60, y: 20 },
+        ],
+      },
+    ],
+  };
+  const next = applyDrawing(scene(), drawing);
+  assert.equal(next.nodes.length, 2);
+  assert.equal(next.nodes[1].shape, "stroke");
+  assert.equal(next.nodes[1].strokeWidth, 4);
+  assert.equal(next.drawing, true);
+  assert.equal(next.nodes[0].shape, "circle");
+  for (const attack of [
+    (d) => (d.strokes[0].points[0].x = -1),
+    (d) =>
+      (d.strokes[0].points = Array.from({ length: 65 }, () => ({
+        x: 1,
+        y: 2,
+      }))),
+    (d) => (d.strokes[0].width = 200),
+    (d) => (d.strokes[0].color = "url(https://evil.test)"),
+    (d) => (d.strokes[0].onload = "steal()"),
+    (d) => (d.zone = "identity"),
+    (d) => (d.strokes = Array.from({ length: 13 }, () => d.strokes[0])),
+  ]) {
+    const bad = structuredClone(drawing);
+    attack(bad);
+    assert.equal(drawingSchema.safeParse(bad).success, false);
+  }
+  await reset();
+  const c = await cookie();
+  let received;
+  const h = createChangeHandler({
+    verify: async () => {},
+    evaluate: async ({ scene, drawing }) => {
+      received = drawing;
+      return { approved: true, scene: applyDrawing(scene, drawing) };
+    },
+  });
+  const data = { ...request(), prompt: "Mi dibujo compartido", drawing };
+  const result = await direct(h, data, c);
+  assert.equal(result.payload.status, "published");
+  assert.deepEqual(received, drawing);
+  const visible = await (
+    await call("/api/community", "GET", null, await cookie())
+  ).json();
+  assert.equal(visible.scene.nodes[0].shape, "stroke");
+  assert.deepEqual(visible.scene.nodes[0].points, drawing.strokes[0].points);
+  assert.equal(
+    (await direct(h, { ...request(), drawing }, c)).payload.error,
+    "used",
+  );
+});
+
+test("drawing images must pass two independent visual reviewers before saving", async () => {
+  const { createEvaluator } = await import("../server/community/ai.mjs");
+  const drawing = {
+    zone: "work",
+    strokes: [
+      {
+        color: "red",
+        width: 2,
+        points: [
+          { x: 10, y: 20 },
+          { x: 80, y: 60 },
+        ],
+      },
+    ],
+  };
+  for (const deny of ["none", "first", "second"]) {
+    const calls = [];
+    let renders = 0;
+    const evaluate = createEvaluator({
+      respond: async (model, schema, system, user) => {
+        calls.push(model);
+        assert(Array.isArray(user));
+        assert(user.some((x) => x.type === "image"));
+        return {
+          value:
+            model === "claude-haiku-5-5"
+              ? {
+                  accepted: deny !== "first",
+                  reason: deny === "first" ? "unsafe" : "ok",
+                }
+              : {
+                  approved: deny !== "second",
+                  identityIntact: true,
+                  readable: true,
+                  safeVisuals: deny !== "second",
+                  reason: deny === "second" ? "unsafe" : "ok",
+                },
+          usage: { model, input: 10, output: 10 },
+        };
+      },
+      render: async (candidate) => {
+        renders++;
+        assert(candidate.nodes.some((n) => n.shape === "stroke"));
+        return {
+          images: [Buffer.from("drawing-preview")],
+          contentRevision: "initial",
+        };
+      },
+      readContent: async () => null,
+    });
+    const result = await evaluate({
+      prompt: "Una línea",
+      scene: originalScene,
+      drawing,
+      deadline: Date.now() + 10000,
+    });
+    assert.equal(result.approved, deny === "none");
+    assert.equal(renders, 1);
+    assert.equal(calls.length, deny === "first" ? 1 : 2);
+  }
+});
+
+test("admin can see requests privately and selectively undo one without refunding turns or spending", async () => {
+  await reset();
+  const c = await cookie(),
+    d = await cookie(),
+    a = request(),
+    b = request();
+  const ha = createChangeHandler({
+    verify: async () => {},
+    evaluate: async () => ({ approved: true, scene: scene() }),
+  });
+  await direct(ha, a, c);
+  const current = (await readState()).scene;
+  const later = {
+    ...current,
+    font: "editorial",
+    nodes: [
+      ...current.nodes,
+      {
+        ...current.nodes[0],
+        id: "second",
+        x: 70,
+        shape: "ring",
+        motion: "none",
+      },
+    ],
+  };
+  const hb = createChangeHandler({
+    verify: async () => {},
+    evaluate: async () => ({ approved: true, scene: later }),
+  });
+  await direct(hb, b, d);
+  const admin = await (
+    await call("/api/community?admin=1", "GET", null, adminCookie)
+  ).json();
+  assert.equal(admin.jobs.find((j) => j.id === a.id).prompt, a.prompt);
+  assert.equal(admin.jobs.find((j) => j.id === a.id).canUndo, true);
+  const publicView = await (
+    await call("/api/community", "GET", null, c)
+  ).json();
+  assert.equal(publicView.jobs, undefined);
+  assert(!JSON.stringify(publicView).includes(a.prompt));
+  assert.equal(
+    (
+      await call(
+        "/api/community",
+        "POST",
+        { action: "undo", requestId: a.id },
+        c,
+      )
+    ).status,
+    401,
+  );
+  const response = await call(
+    "/api/community",
+    "POST",
+    { action: "undo", requestId: a.id },
+    adminCookie,
+  );
+  assert.equal(response.status, 200);
+  const state = await readState();
+  assert.equal(state.scene.palette, "original");
+  assert.equal(state.scene.font, "editorial");
+  assert.equal(state.scene.nodes.length, 1);
+  assert.equal(state.scene.nodes[0].shape, "ring");
+  assert.equal(state.paused, true);
+  assert.equal(state.jobs[a.id].status, "reverted");
+  assert.equal(Object.keys(state.visitors).length, 2);
+  assert.equal(
+    state.budgets[new Date().toISOString().slice(0, 7)].reserved,
+    2 * RESERVATION,
+  );
+  assert.equal(
+    (
+      await call(
+        "/api/community",
+        "POST",
+        { action: "undo", requestId: a.id },
+        adminCookie,
+      )
+    ).status,
+    409,
+  );
+});
+
+test("selective undo preserves a later conflicting style and reports the skipped field", async () => {
+  const { undoRequest } = await import("../server/community/undo.mjs");
+  const s = freshState();
+  s.mode = "public";
+  s.paused = false;
+  const first = { ...originalScene, palette: "forest" },
+    latest = { ...first, palette: "cherry", font: "mono" };
+  s.scene = latest;
+  s.revision = "latest";
+  s.history = [
+    { revision: "original", scene: originalScene },
+    { revision: "first", scene: first },
+  ];
+  s.jobs.a = {
+    id: "a",
+    base: "original",
+    revision: "first",
+    status: "published",
+  };
+  const result = undoRequest(s, "a");
+  assert.equal(s.scene.palette, "cherry");
+  assert.equal(s.scene.font, "mono");
+  assert.deepEqual(result.skippedFields, ["palette"]);
+});

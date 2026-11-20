@@ -340,3 +340,58 @@
 .portfolio {
   padding-bottom: 90px;
 }
+
+.community-brush-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.community-brush-label select {
+  background: var(--paper);
+  color: var(--ink);
+  padding: 8px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+}
+.community-brush-colors {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.community-brush-colors .community-color {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.community-brush-colors .community-color[aria-pressed="true"] {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.community-draw-controls > small {
+  flex-basis: 100%;
+}
+
+.community-request-text {
+  margin: 12px 0;
+  padding: 14px;
+  border-left: 3px solid #b7b9ab;
+  background: #f2f0e9;
+  color: #262824;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.community-admin-history {
+  margin-top: 30px;
+}
+.community-admin-history summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 12px 0;
+}

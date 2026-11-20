@@ -11,11 +11,18 @@ export default function AdminCommunity() {
   useEffect(() => {
     load().catch((e) => setError(e.message));
   }, []);
-  async function act(action, revision, test) {
+  async function act(action, revision, test, requestId) {
     if (
       ["reset", "restore"].includes(action) &&
       !window.confirm(
         "Se restaurará el diseño comunitario y quedarán pausadas las intervenciones. Los turnos y el presupuesto se conservan. ¿Continuar?",
+      )
+    )
+      return;
+    if (
+      action === "undo" &&
+      !window.confirm(
+        "Se deshará este pedido conservando los cambios posteriores que se puedan identificar. Las intervenciones quedarán pausadas; el turno y el presupuesto no se devuelven. ¿Continuar?",
       )
     )
       return;
@@ -28,6 +35,7 @@ export default function AdminCommunity() {
           action,
           ...(revision ? { revision } : {}),
           ...(test ? { test } : {}),
+          ...(requestId ? { requestId } : {}),
         }),
       });
       if (action === "verify") setError("Motor de capturas verificado.");
@@ -37,9 +45,19 @@ export default function AdminCommunity() {
             ? "Prueba completada correctamente."
             : "La prueba no pasó: " + (result.reason || result.status),
         );
+      if (action === "undo")
+        setError(
+          result.undo?.skippedFields.length || result.undo?.skippedNodes
+            ? "Cambio revertido parcialmente: se conservaron partes modificadas por pedidos posteriores. Las intervenciones quedaron pausadas."
+            : "Cambio revertido. Se conservaron los demás aportes y las intervenciones quedaron pausadas.",
+        );
       await load();
     } catch (e) {
-      setError(e.message);
+      setError(
+        e.message === "undo_unavailable"
+          ? "Esta petición ya fue revertida o su versión salió del historial disponible."
+          : e.message,
+      );
     } finally {
       setBusy(false);
     }
@@ -121,40 +139,104 @@ export default function AdminCommunity() {
               {(b.measured / 1e6).toFixed(4)} medidos
             </p>
           ))}
-          <h3>Historial para restaurar</h3>
-          <div className="community-admin-list">
-            {data.history
-              .slice()
-              .reverse()
-              .map((h, i) => (
-                <div className="community-admin-row" key={h.revision + "-" + i}>
-                  <p>
-                    {new Date(h.at).toLocaleString("es-UY")} · {h.revision}
-                  </p>
-                  <button
-                    disabled={busy}
-                    onClick={() => act("restore", h.revision)}
-                  >
-                    Restaurar esta versión
-                  </button>
-                </div>
-              ))}
-            {!data.history.length && (
-              <p>Todavía no hay intervenciones publicadas.</p>
-            )}
-          </div>
-          <h3>Últimas solicitudes</h3>
+          <h3>Peticiones de visitantes</h3>
+          <p>
+            El texto se conserva hasta 30 días. Deshacer revierte lo que siga
+            vigente de ese pedido; los cambios posteriores independientes se
+            conservan.
+          </p>
           <div className="community-admin-list">
             {data.jobs.map((j) => (
-              <div className="community-admin-row" key={j.id}>
+              <article className="community-admin-row" key={j.id}>
                 <p>
-                  {new Date(j.createdAt).toLocaleString("es-UY")} · {j.status}{" "}
-                  {j.reason && "· " + j.reason}
+                  <strong>
+                    {{
+                      prompt: "Prompt",
+                      drawing: "Dibujo",
+                      diagnostic: "Prueba privada",
+                      admin: "Configuración del propietario",
+                    }[j.kind] || "Prompt"}
+                  </strong>{" "}
+                  · {new Date(j.createdAt).toLocaleString("es-UY")}
                 </p>
-                <small>{j.id}</small>
-              </div>
+                <blockquote className="community-request-text">
+                  {j.prompt ||
+                    "Texto eliminado por la política de retención de 30 días."}
+                </blockquote>
+                <p>
+                  {{
+                    published: "Publicado",
+                    rejected: "Rechazado",
+                    failed: "No se pudo completar",
+                    processing: "En revisión",
+                    verified: "Verificado",
+                    reverted: "Revertido",
+                  }[j.status] || j.status}
+                  {j.reason &&
+                    " · " +
+                      {
+                        unsafe: "No superó la revisión de seguridad",
+                        unsupported: "No se encontró una adaptación visual",
+                        already_available:
+                          "La capacidad solicitada ya estaba disponible",
+                        technical: "Error técnico",
+                        timeout: "Tiempo de revisión agotado",
+                        stale: "La versión cambió durante el proceso",
+                        admin_reverted: "Deshecho por el administrador",
+                      }[j.reason]}
+                </p>
+                {j.canUndo && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => act("undo", null, null, j.id)}
+                  >
+                    Deshacer este cambio
+                  </button>
+                )}
+                {j.status === "published" && !j.canUndo && (
+                  <small>
+                    Esta versión ya no está disponible para deshacer
+                    individualmente.
+                  </small>
+                )}
+                {j.revertedAt && (
+                  <small>
+                    Revertido el{" "}
+                    {new Date(j.revertedAt).toLocaleString("es-UY")}
+                  </small>
+                )}
+              </article>
             ))}
+            {!data.jobs.length && <p>Todavía no se recibieron peticiones.</p>}
           </div>
+          <details className="community-admin-history">
+            <summary>Restaurar una versión completa</summary>
+            <div className="community-admin-list">
+              {data.history
+                .slice()
+                .reverse()
+                .map((h, i) => (
+                  <div
+                    className="community-admin-row"
+                    key={h.revision + "-" + i}
+                  >
+                    <p>
+                      {new Date(h.at).toLocaleString("es-UY")} · {h.revision}
+                    </p>
+                    <button
+                      disabled={busy}
+                      onClick={() => act("restore", h.revision)}
+                    >
+                      Restaurar esta versión
+                    </button>
+                  </div>
+                ))}
+              {!data.history.length && (
+                <p>Todavía no hay intervenciones publicadas.</p>
+              )}
+            </div>
+          </details>
         </>
       )}
     </div>

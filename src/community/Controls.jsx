@@ -20,7 +20,7 @@ const copy = {
     privacy:
       "Tu pedido se procesa con IA y se conserva hasta 30 días para prevenir abuso. No incluyas datos personales. No se publica el texto del pedido.",
     limit:
-      "Un cambio publicado por navegador. Los rechazos no gastan tu turno; hasta tres intentos de generación por día.",
+      "Un prompt o un dibujo publicado por navegador. Los rechazos no gastan tu turno; hasta tres intentos de generación por día.",
     send: "Proponer y publicar",
     busy: "Creando y revisando…",
     close: "Cerrar",
@@ -29,6 +29,12 @@ const copy = {
     counter: "caracteres",
     waiting: "Si cerrás esta ventana, la revisión puede continuar.",
     reason: {
+      already_available:
+        "Eso ya está disponible. Podés dibujar en el lienzo y enviar tu aporte para guardarlo.",
+      admin_reverted:
+        "El propietario revirtió tu aporte. Tu participación ya se había utilizado.",
+      capacity:
+        "El lienzo alcanzó su capacidad. Probá con menos trazos o un cambio de estilo.",
       not_configured:
         "El experimento está en preparación. Pronto vas a poder participar.",
       paused:
@@ -74,7 +80,7 @@ const copy = {
     privacy:
       "Your request is processed with AI and kept for up to 30 days to prevent abuse. Do not include personal information. Your request text is not published.",
     limit:
-      "One published change per browser. Rejections do not use your turn; up to three generation attempts a day.",
+      "One published prompt or drawing per browser. Rejections do not use your turn; up to three generation attempts a day.",
     send: "Propose and publish",
     busy: "Creating and reviewing…",
     close: "Close",
@@ -83,6 +89,12 @@ const copy = {
     counter: "characters",
     waiting: "The review may continue if you close this window.",
     reason: {
+      already_available:
+        "That feature is already available. You can draw on the canvas and submit your contribution to save it.",
+      admin_reverted:
+        "The owner reverted your contribution. Your participation was already used.",
+      capacity:
+        "The canvas reached its capacity. Try fewer strokes or a style change.",
       not_configured:
         "The experiment is being prepared. Participation will open soon.",
       paused:
@@ -159,8 +171,14 @@ function Turnstile({ siteKey, onToken, reset }) {
   }, [siteKey, onToken, reset]);
   return <div ref={node} className="community-turnstile" />;
 }
-export default function CommunityControls({ language, onScene }) {
+export default function CommunityControls({
+  language,
+  onScene,
+  drawingDraft,
+  onDrawingComplete,
+}) {
   const t = copy[language === "es" ? "es" : "en"];
+  const es = language === "es";
   const [data, setData] = useState(null),
     [open, setOpen] = useState(false),
     [original, setOriginal] = useState(false),
@@ -187,7 +205,7 @@ export default function CommunityControls({ language, onScene }) {
     if (data) onScene(original || !data.modified ? null : data.scene);
   }, [data, original, onScene]);
   useEffect(() => {
-    if (!open || busy) return;
+    if (busy) return;
     let cancelled = false,
       inFlight = false;
     const controller = new AbortController();
@@ -206,13 +224,29 @@ export default function CommunityControls({ language, onScene }) {
       }
     }
     sync();
-    const interval = setInterval(sync, 8000);
+    const interval = setInterval(
+      () => {
+        if (!document.hidden) sync();
+      },
+      open ? 8000 : 30000,
+    );
     return () => {
       cancelled = true;
       controller.abort();
       clearInterval(interval);
     };
   }, [open, busy]);
+  useEffect(() => {
+    if (drawingDraft) {
+      setOpen(true);
+      setNotice("");
+      setPrompt(
+        es
+          ? "Quiero sumar este dibujo al lienzo comunitario."
+          : "I want to add this drawing to the community canvas.",
+      );
+    }
+  }, [drawingDraft, es]);
   useEffect(() => {
     if (!open) return;
     const before = document.activeElement;
@@ -269,7 +303,12 @@ export default function CommunityControls({ language, onScene }) {
       try {
         result = await api("/api/community/changes", {
           method: "POST",
-          body: JSON.stringify({ id, prompt: prompt.trim(), token }),
+          body: JSON.stringify({
+            id,
+            prompt: prompt.trim(),
+            token,
+            ...(drawingDraft ? { drawing: drawingDraft } : {}),
+          }),
         });
       } catch (e) {
         if (
@@ -286,6 +325,7 @@ export default function CommunityControls({ language, onScene }) {
           : result.reason || "technical",
       );
       if (result.status === "published") {
+        onDrawingComplete?.();
         setPrompt("");
         setOriginal(false);
       }
@@ -352,7 +392,34 @@ export default function CommunityControls({ language, onScene }) {
               </p>
             )}
             <form onSubmit={submit}>
-              <label htmlFor="community-prompt">{t.label}</label>
+              {drawingDraft && (
+                <p className="community-notice">
+                  {es
+                    ? `${drawingDraft.strokes.length} trazos listos para revisar y guardar. Tu aporte se suma al lienzo compartido.`
+                    : `${drawingDraft.strokes.length} strokes ready for review and saving. Your drawing joins the shared canvas.`}
+                </p>
+              )}
+              {drawingDraft && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    onDrawingComplete?.();
+                    setPrompt("");
+                  }}
+                >
+                  {es
+                    ? "Continuar solo con un prompt"
+                    : "Continue with a prompt only"}
+                </button>
+              )}
+              <label htmlFor="community-prompt">
+                {drawingDraft
+                  ? es
+                    ? "Describí tu dibujo"
+                    : "Describe your drawing"
+                  : t.label}
+              </label>
               <textarea
                 id="community-prompt"
                 maxLength={500}

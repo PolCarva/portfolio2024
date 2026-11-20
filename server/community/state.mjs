@@ -58,7 +58,10 @@ export function prune(state, now = Date.now()) {
     }
   // Keep idempotency/status records 30 days, but successful participation forever.
   for (const [key, job] of Object.entries(state.jobs))
-    if (now - job.createdAt > 30 * 86400000) {
+    if (
+      now - job.createdAt > 30 * 86400000 &&
+      !["published", "reverted"].includes(job.status)
+    ) {
       delete state.jobs[key];
       changed = true;
     }
@@ -182,6 +185,7 @@ export async function reserve({
   prompt,
   tokenHash,
   diagnostic = false,
+  kind = "prompt",
   allowPrivate = false,
 }) {
   return mutate((state) => {
@@ -212,6 +216,7 @@ export async function reserve({
       id,
       owner,
       diagnostic,
+      kind: diagnostic ? "diagnostic" : kind,
       prompt,
       createdAt: Date.now(),
       status: "processing",

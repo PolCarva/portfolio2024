@@ -205,6 +205,7 @@ function App({
 }) {
   const [content, setContent] = useState(initialContent);
   const [visualScene, setVisualScene] = useState(communityScene);
+  const [drawingDraft, setDrawingDraft] = useState(null);
   const [communityMounted, setCommunityMounted] = useState(false);
   useEffect(() => setCommunityMounted(true), []);
   const { copy, links, projects, clientProjects, media: assets } = content;
@@ -266,7 +267,12 @@ function App({
     >
       {!communityPreview && communityMounted && (
         <Suspense fallback={null}>
-          <CommunityControls language={language} onScene={setVisualScene} />
+          <CommunityControls
+            language={language}
+            onScene={setVisualScene}
+            drawingDraft={drawingDraft}
+            onDrawingComplete={() => setDrawingDraft(null)}
+          />
         </Suspense>
       )}
       <a className="skip-link" href="#main">
@@ -406,6 +412,7 @@ function App({
           zone="hero"
           language={language}
           preview={communityPreview}
+          onPublish={setDrawingDraft}
         />
         <div className="discipline-strip" aria-hidden="true">
           {t.strip.map((item) => (
@@ -522,6 +529,7 @@ function App({
           zone="work"
           language={language}
           preview={communityPreview}
+          onPublish={setDrawingDraft}
         />
         <section
           id="about"
@@ -620,6 +628,7 @@ function App({
           zone="contact"
           language={language}
           preview={communityPreview}
+          onPublish={setDrawingDraft}
         />
         <section
           id="contact"

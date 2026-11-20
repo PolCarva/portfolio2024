@@ -86,3 +86,13 @@ export function sceneAttributes(scene) {
     },
   };
 }
+
+export const brushColors = {
+  ink: null,
+  accent: null,
+  red: "#b64444",
+  blue: "#365ec2",
+  green: "#287246",
+  violet: "#7542a3",
+  gold: "#a16a15",
+};
