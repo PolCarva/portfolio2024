@@ -32,7 +32,7 @@ export const freshState = () => ({
 export function prune(state, now = Date.now()) {
   let changed = false;
   for (const job of Object.values(state.jobs)) {
-    if (job.prompt && now - job.createdAt > 30 * 86400000) {
+    if (job.prompt && now - job.createdAt > 29 * 86400000) {
       delete job.prompt;
       changed = true;
     }
