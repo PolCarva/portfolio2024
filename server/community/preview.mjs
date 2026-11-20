@@ -102,7 +102,7 @@ export async function renderReview(
           mark("viewport_" + width);
           const markup = renderPreview(content, scene, "es");
           await page.setContent(
-            `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important}</style></head><body>${markup}</body></html>`,
+            `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important} *:not(.community-node){animation:none!important;transition:none!important}</style></head><body>${markup}</body></html>`,
             { waitUntil: "load", timeout: 15000 },
           );
           mark("html_ready");
@@ -134,6 +134,7 @@ export async function renderReview(
               timeout: 15000,
             }),
           );
+          mark("full_screenshot_done");
           // Sample fixed phases of the only three allowed motion functions. No user code executes.
           for (const phase of [0, 0.25, 0.5]) {
             await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -151,13 +152,14 @@ export async function renderReview(
                     ),
                   ];
             for (const zone of zones) {
+              mark("band_" + zone + "_" + phase);
               if (Date.now() > deadline) throw new Error("Preview deadline");
               const index = ["hero", "work", "contact"].indexOf(zone);
               images.push(
                 await page
                   .locator(".community-canvas")
                   .nth(index)
-                  .screenshot({ type: "jpeg", quality: 75 }),
+                  .screenshot({ type: "jpeg", quality: 75, timeout: 4000 }),
               );
             }
           }
@@ -178,6 +180,13 @@ export async function renderReview(
       })(),
       Math.max(1, deadline - Date.now()),
     );
+  } catch (error) {
+    console.error(
+      "community_preview_error",
+      error.name,
+      error.message.split("\n")[0].slice(0, 180),
+    );
+    throw error;
   } finally {
     await bounded(server.close(), 2000).catch(() => {});
     if (server.process().exitCode === null) server.process().kill("SIGKILL");
