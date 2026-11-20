@@ -187,6 +187,33 @@ export default function CommunityControls({ language, onScene }) {
     if (data) onScene(original || !data.modified ? null : data.scene);
   }, [data, original, onScene]);
   useEffect(() => {
+    if (!open || busy) return;
+    let cancelled = false,
+      inFlight = false;
+    const controller = new AbortController();
+    async function sync() {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const current = await api("/api/community", {
+          signal: controller.signal,
+        });
+        if (!cancelled) setData(current);
+      } catch {
+        // Keep the last known availability when refreshing fails.
+      } finally {
+        inFlight = false;
+      }
+    }
+    sync();
+    const interval = setInterval(sync, 8000);
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearInterval(interval);
+    };
+  }, [open, busy]);
+  useEffect(() => {
     if (!open) return;
     const before = document.activeElement;
     dialog.current?.querySelector("button")?.focus();
@@ -197,7 +224,7 @@ export default function CommunityControls({ language, onScene }) {
       if (e.key === "Tab") {
         const nodes = [
           ...dialog.current.querySelectorAll(
-            'button:not(:disabled),textarea:not(:disabled),[tabindex="0"]',
+            'button:not(:disabled),textarea:not(:disabled),iframe,[tabindex="0"]',
           ),
         ];
         const first = nodes[0],

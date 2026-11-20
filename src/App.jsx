@@ -205,6 +205,8 @@ function App({
 }) {
   const [content, setContent] = useState(initialContent);
   const [visualScene, setVisualScene] = useState(communityScene);
+  const [communityMounted, setCommunityMounted] = useState(false);
+  useEffect(() => setCommunityMounted(true), []);
   const { copy, links, projects, clientProjects, media: assets } = content;
   useEffect(() => {
     const controller = new AbortController();
@@ -262,7 +264,7 @@ function App({
       id="top"
       {...(visualScene ? sceneAttributes(visualScene) : {})}
     >
-      {!communityPreview && (
+      {!communityPreview && communityMounted && (
         <Suspense fallback={null}>
           <CommunityControls language={language} onScene={setVisualScene} />
         </Suspense>

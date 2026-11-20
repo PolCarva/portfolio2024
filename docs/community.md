@@ -9,10 +9,10 @@ Configurar en Vercel **Production**:
 - `ANTHROPIC_API_KEY`: proyecto dedicado con acceso a `claude-haiku-5-5` y `claude-sonnet-5-5`. Las claves nunca llegan al cliente.
 - `TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY`: widget Managed, autorizado para `www.pablocarvalho.dev` y `pablocarvalho.dev`. La acción debe ser `portfolio-change`.
 - `COMMUNITY_SESSION_SECRET`: secreto aleatorio de al menos 32 bytes; si falta, se usa el secreto del administrador. Rotarlo invalida identificadores de visitantes; mantenerlo estable.
-- `CRON_SECRET`: secreto aleatorio para la limpieza diaria autenticada. La tarea de Vercel borra solicitudes y prompts con más de 30 días. No activar sin comprobar la ejecución de esta tarea.
+- `CRON_SECRET`: secreto aleatorio para la limpieza diaria autenticada. La tarea de Vercel borra solicitudes y prompts con más de 30 días. Verificar su configuración y la autenticación del endpoint antes de habilitar el experimento.
 - `BLOB_READ_WRITE_TOKEN` y credenciales del administrador: ya existentes.
 
-Hacer un deploy después de configurar las variables. El estado inicial está **pausado** incluso con claves presentes. Desde `/admin` → Experimento comunitario, verificar el motor de capturas. Antes de habilitar públicamente, comprobar un pedido real con Anthropic y Turnstile, revisar el resultado y restaurar el diseño original. No activar claves de prueba de Turnstile en producción.
+Hacer un deploy después de configurar las variables. El estado inicial está **pausado** y en modo privado, incluso con claves presentes. El administrador puede activar pruebas privadas; los demás visitantes siguen viendo la última versión pública y no pueden publicar. Desde `/admin` → Experimento comunitario, verificar el motor de capturas. Antes de habilitar públicamente, comprobar un pedido real con Anthropic y Turnstile, revisar el resultado y restaurar el diseño original. No activar claves de prueba de Turnstile en producción.
 
 ## Experiencia
 
@@ -29,7 +29,7 @@ Diseño, dibujos vectoriales y animaciones se interpretan mediante componentes p
 3. Reserva atómica con ETag de revisión base, turno temporal, token utilizado y presupuesto; tres generaciones por navegador/día y diez por IP/día.
 4. Generador `claude-haiku-5-5` con salida estructurada y sin herramientas; esquema estricto y validación semántica del motor.
 5. Chromium aislado sin JavaScript ni acceso a red externa renderiza el mismo App y CSS de producción. Solo sirve imágenes y fuentes locales y medios privados del propietario con identificadores validados. No usa cookies ni sesiones del navegador del usuario.
-6. Revisor `claude-sonnet-5-5` en una llamada y contexto separados: JSON, vistas completas y bandas decorativas en varias fases. Imágenes con el formato de imágenes de Anthropic para acotar el costo y contexto; la legibilidad se limita también mediante paletas contrastadas y variantes CSS propias. Los muestreos y la IA no garantizan detectar todo contenido ofensivo.
+6. Revisor `claude-sonnet-5-5` en una llamada y contexto separados: JSON, vistas completas y bandas decorativas en varias fases. Se cuentan los tokens de texto e imágenes antes de cada llamada, con un techo de 90.000 tokens más margen para el esquema; la legibilidad se limita también mediante paletas contrastadas y variantes CSS propias. Los muestreos y la IA no garantizan detectar todo contenido ofensivo.
 7. Publicación condicional únicamente ante aprobación completa y revisión base vigente. Errores conservan el diseño anterior. Una pausa/restauración administrativa invalida trabajo en curso.
 
 ## Presupuesto y recuperación
@@ -45,3 +45,5 @@ Se conservan hasta 100 revisiones para restaurar. Restaurar o reiniciar pausa la
 ## Verificación
 
 `npm test`, `npm run lint`, `npm run build`, `npm run check`. Las pruebas cubren concurrencia, idempotencia, cuotas, aislamiento, rechazo del esquema, fallos de generación/renderizado/revisión, restauración y retención. Las llamadas reales necesitan las claves anteriores; los dobles de prueba no son una vía activable por variables de producción.
+
+Las pruebas privadas de IA de `/admin` comparten el presupuesto de USD 10 y nunca publican sus propuestas. Las pruebas de flujo con Turnstile se hacen en modo privado desde un navegador de QA autenticado, y se restaura el original antes de habilitar visitantes.
