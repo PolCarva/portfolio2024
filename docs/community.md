@@ -38,7 +38,7 @@ Se reservan **USD 0,30 por intento** antes de generar. El límite de USD 10 por 
 
 La reserva asume los modelos fijos indicados, salidas máximas de 8.000/1.000 tokens, texto acotado y hasta 20 imágenes con tamaño acotado. No hay herramientas ni reintentos automáticos del proveedor. Cambiar estos límites requiere recalcular la reserva.
 
-Una sola generación global, con plazo máximo de 260 segundos y lease de 290 segundos. Un timeout nunca devuelve presupuesto ni concede participación. Repetir un ID devuelve la solicitud propia sin volver a generar. Los estados publicados consumen un turno de forma atómica con la nueva escena. Una respuesta perdida puede recuperarse mediante el estado privado por ID.
+Una sola generación global, con plazo máximo de 50 segundos y lease de 70 segundos. Un timeout nunca devuelve presupuesto ni concede participación. Repetir un ID devuelve la solicitud propia sin volver a generar. Los estados publicados consumen un turno de forma atómica con la nueva escena. Una respuesta perdida puede recuperarse mediante el estado privado por ID.
 
 Se conservan hasta 100 revisiones para restaurar. Restaurar o reiniciar pausa las intervenciones y conserva tanto turnos como presupuesto. La cookie del administrador nunca concede derechos a visitantes. La limpieza diaria no elimina la constancia de participación exitosa.
 

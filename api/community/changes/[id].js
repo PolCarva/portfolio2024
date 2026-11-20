@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       new URL(req.url, "https://local").pathname.split("/").pop();
     const job = (await readState()).jobs[id];
     if (!job || job.owner !== owner) throw problem(404, "not_found");
-    if (job.status === "processing" && Date.now() - job.createdAt > 290000)
+    if (job.status === "processing" && Date.now() - job.createdAt > 70000)
       return json(res, 200, {
         id: job.id,
         status: "failed",

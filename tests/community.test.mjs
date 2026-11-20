@@ -611,3 +611,82 @@ test("private diagnostics reserve the same budget but can never publish or consu
     RESERVATION,
   );
 });
+
+test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete or over-budget replies", async () => {
+  const { createEvaluator, providerSchema } = await import(
+    "../server/community/ai.mjs"
+  );
+  const transformed = providerSchema(sceneSchema);
+  assert(!JSON.stringify(transformed).includes("maxItems"));
+  assert.equal(transformed.additionalProperties, false);
+  const originalFetch = globalThis.fetch;
+  try {
+    for (const scenario of [
+      "approved",
+      "over-budget",
+      "refused",
+      "provider-down",
+    ]) {
+      let paid = 0,
+        counted = 0;
+      globalThis.fetch = async (url, options) => {
+        const body = JSON.parse(options.body);
+        assert(!body.tools);
+        assert.equal(body.messages.length, 1);
+        assert.equal(
+          options.headers["x-api-key"],
+          process.env.ANTHROPIC_API_KEY,
+        );
+        if (url.endsWith("count_tokens")) {
+          counted++;
+          return {
+            ok: true,
+            json: async () => ({
+              input_tokens: scenario === "over-budget" ? 100000 : 100,
+            }),
+          };
+        }
+        paid++;
+        assert(body.output_config.format.schema);
+        assert.equal(body.output_config.format.type, "json_schema");
+        assert(body.max_tokens <= 8000);
+        const value =
+          body.model === "claude-haiku-5-5"
+            ? { accepted: true, reason: "ok", scene: scene() }
+            : {
+                approved: true,
+                identityIntact: true,
+                readable: true,
+                safeVisuals: true,
+                reason: "ok",
+              };
+        return {
+          ok: scenario !== "provider-down",
+          status: 503,
+          json: async () => ({
+            stop_reason: scenario === "refused" ? "refusal" : "end_turn",
+            content: [{ type: "text", text: JSON.stringify(value) }],
+            usage: { input_tokens: 100, output_tokens: 100 },
+          }),
+        };
+      };
+      const result = await createEvaluator({
+        render: async () => ({
+          images: [Buffer.from("test")],
+          contentRevision: "initial",
+        }),
+        readContent: async () => null,
+      })({
+        prompt: "garden",
+        scene: originalScene,
+        deadline: Date.now() + 10000,
+      });
+      assert.equal(result.approved, scenario === "approved");
+      assert(counted > 0);
+      if (scenario === "over-budget") assert.equal(paid, 0);
+      if (scenario === "approved") assert.equal(paid, 2);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

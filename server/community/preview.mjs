@@ -15,7 +15,7 @@ const mime = {
 };
 export async function renderReview(
   scene,
-  { deadline = Date.now() + 90000 } = {},
+  { deadline = Date.now() + 45000 } = {},
 ) {
   const { renderPreview } = await import(
     pathToFileURL(resolve(root, ".generated/community-preview.mjs")).href
@@ -129,6 +129,7 @@ export async function renderReview(
                 ),
               ];
         for (const zone of zones) {
+          if (Date.now() > deadline) throw new Error("Preview deadline");
           const index = ["hero", "work", "contact"].indexOf(zone);
           images.push(
             await page

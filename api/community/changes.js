@@ -39,7 +39,7 @@ const input = z
     token: z.string().min(1).max(2048),
   })
   .strict();
-export const config = { maxDuration: 300 };
+export const config = { maxDuration: 60 };
 export function createChangeHandler({
   verify = verifyTurnstile,
   evaluate = evaluateChange,
@@ -78,7 +78,7 @@ export function createChangeHandler({
         result = await evaluate({
           prompt: data.prompt,
           scene: reservation.scene,
-          deadline: reservation.job.createdAt + 260000,
+          deadline: reservation.job.createdAt + 50000,
         });
       } catch {
         result = { approved: false, reason: "technical" };

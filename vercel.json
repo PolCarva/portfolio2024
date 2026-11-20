@@ -58,11 +58,11 @@
   ],
   "functions": {
     "api/community/changes.js": {
-      "maxDuration": 300,
+      "maxDuration": 60,
       "includeFiles": "{.generated/community-preview.mjs,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**}"
     },
     "api/community.js": {
-      "maxDuration": 300,
+      "maxDuration": 60,
       "includeFiles": "{.generated/community-preview.mjs,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**}"
     }
   },
@@ -71,6 +71,5 @@
       "path": "/api/community/maintenance",
       "schedule": "17 5 * * *"
     }
-  ],
-  "fluid": true
+  ]
 }

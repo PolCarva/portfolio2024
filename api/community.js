@@ -102,7 +102,7 @@ export default async function handler(req, res) {
       const result = await evaluateChange({
         prompt,
         scene: reservation.scene,
-        deadline: Date.now() + 260000,
+        deadline: Date.now() + 50000,
       });
       const job = await finish(id, result);
       return json(res, 200, {
