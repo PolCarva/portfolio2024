@@ -71,5 +71,6 @@
       "path": "/api/community/maintenance",
       "schedule": "17 5 * * *"
     }
-  ]
+  ],
+  "fluid": true
 }
