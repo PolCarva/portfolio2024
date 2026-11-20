@@ -20,7 +20,11 @@ const mime = {
 };
 export async function renderReview(
   scene,
-  { deadline = Date.now() + 45000, prompt: argumentsPrompt = "" } = {},
+  {
+    deadline = Date.now() + 45000,
+    prompt: argumentsPrompt = "",
+    drawingZone,
+  } = {},
 ) {
   const started = Date.now(),
     mark = (stage) =>
@@ -180,7 +184,7 @@ export async function renderReview(
           });
           const bands = await cdp.send("DOM.querySelectorAll", {
             nodeId: document.nodeId,
-            selector: ".community-canvas",
+            selector: ".community-canvas:not(.community-canvas--image)",
           });
           const metrics = await cdp.send("Page.getLayoutMetrics");
           const size = metrics.cssContentSize;
@@ -299,6 +303,42 @@ export async function renderReview(
             });
           }
           await shot({ x: 0, y: 0, width, height: Math.ceil(size.height) });
+          const imageZones =
+            drawingZone &&
+            (drawingZone === "portrait" || drawingZone.startsWith("project:"))
+              ? [drawingZone]
+              : [
+                  ...(scene.drawingTargets?.includes("portrait")
+                    ? ["portrait"]
+                    : []),
+                  ...(scene.drawingTargets?.includes("projects")
+                    ? ["project:first"]
+                    : []),
+                ];
+          for (const zone of imageZones) {
+            const selector =
+              zone === "project:first"
+                ? '[data-draw-surface^="project:"]'
+                : `[data-draw-surface="${zone}"]`;
+            const { nodeId } = await cdp.send("DOM.querySelector", {
+              nodeId: document.nodeId,
+              selector,
+            });
+            if (!nodeId)
+              throw Object.assign(new Error("Drawing surface missing"), {
+                code: "quality",
+                issues: ["requested_image_surface_missing"],
+              });
+            const { model } = await cdp.send("DOM.getBoxModel", { nodeId });
+            const xs = model.border.filter((_, i) => i % 2 === 0),
+              ys = model.border.filter((_, i) => i % 2 === 1);
+            await shot({
+              x: Math.max(0, Math.min(...xs)),
+              y: Math.max(0, Math.min(...ys)),
+              width: Math.max(...xs) - Math.min(...xs),
+              height: Math.max(...ys) - Math.min(...ys),
+            });
+          }
           mark("full_screenshot_done");
 
           const { frameTree } = await cdp.send("Page.getFrameTree");
@@ -338,8 +378,8 @@ export async function renderReview(
           }
         }
         if (
-          images.length > 14 ||
-          images.reduce((n, b) => n + b.length, 0) > 16_000_000
+          images.length > 18 ||
+          images.reduce((n, b) => n + b.length, 0) > 4_000_000
         )
           throw new Error("Preview image limit");
         mark("captured");

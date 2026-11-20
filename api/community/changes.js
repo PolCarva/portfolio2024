@@ -1,3 +1,4 @@
+import { ensureDrawingTarget } from "../../server/community/drawing-targets.mjs";
 import { z } from "zod";
 import { drawingSchema, applyDrawing } from "../../shared/community-scene.mjs";
 import { sameOrigin, validSession } from "../../server/auth.mjs";
@@ -63,6 +64,7 @@ export function createChangeHandler({
         if (existing.owner !== owner) throw problem(404, "not_found");
         return json(res, 200, jobResult(existing));
       }
+      if (data.drawing) await ensureDrawingTarget(data.drawing.zone);
       await mutate((state) => {
         if (state.paused || (state.mode !== "public" && !validSession(req)))
           throw problem(503, "paused");
@@ -100,6 +102,7 @@ export function createChangeHandler({
           scene: reservation.scene,
           deadline: reservation.job.createdAt + 50000,
           reserveRepair: () => reserveRepair(data.id),
+          deferStages: true,
         });
       } catch {
         result = { approved: false, reason: "technical" };

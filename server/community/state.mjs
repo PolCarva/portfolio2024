@@ -2,7 +2,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readObject, writeObject, isStorageConflict } from "../storage.mjs";
 import { originalScene, validateScene } from "../../shared/community-scene.mjs";
 export const MONTHLY_MICRODOLLARS = 10_000_000;
-export const RESERVATION = 70_000;
+export const RESERVATION = 80_000;
 export const LEASE_MS = 70_000;
 const path = "community/state.json";
 export const secret = () =>
@@ -42,17 +42,39 @@ export const freshState = () => ({
 export function prune(state, now = Date.now()) {
   let changed = false;
   for (const job of Object.values(state.jobs)) {
+    if (
+      !["processing", "awaiting_review", "awaiting_repair"].includes(
+        job.status,
+      ) &&
+      job.pending
+    ) {
+      delete job.pending;
+      delete job.pendingStep;
+      changed = true;
+    }
     if (job.prompt && now - job.createdAt > 29 * 86400000) {
       delete job.prompt;
       changed = true;
     }
-    if (job.status === "processing" && now - job.createdAt > LEASE_MS) {
+    if (
+      ["processing", "awaiting_review", "awaiting_repair"].includes(
+        job.status,
+      ) &&
+      now - (job.leaseAt || job.createdAt) > LEASE_MS
+    ) {
       job.status = "failed";
       job.reason = "timeout";
+      delete job.pending;
+      delete job.pendingStep;
       changed = true;
     }
   }
-  if (state.active && state.jobs[state.active]?.status !== "processing") {
+  if (
+    state.active &&
+    !["processing", "awaiting_review", "awaiting_repair"].includes(
+      state.jobs[state.active]?.status,
+    )
+  ) {
     state.active = null;
     changed = true;
   }
@@ -288,12 +310,42 @@ export async function finish(id, result) {
     if (!job || job.status !== "processing") return job;
     job.usage = result.usage || [];
     job.checks = result.checks || null;
-    state.budgets[job.month].measured += result.cost || 0;
+    const measured = result.cost || 0;
+    state.budgets[job.month].measured += Math.max(
+      0,
+      measured - (job.measuredCost || 0),
+    );
+    job.measuredCost = Math.max(measured, job.measuredCost || 0);
     if (result.cost > job.reserved) {
       state.paused = true;
       result.approved = false;
       result.reason = "budget";
     }
+    if (
+      result.pending &&
+      result.reason === null &&
+      result.cost <= job.reserved
+    ) {
+      if (
+        state.active !== id ||
+        state.revision !== job.base ||
+        (!job.diagnostic && state.paused)
+      ) {
+        result.pending = null;
+        result.reason = "stale";
+      } else if (JSON.stringify(result.pending).length > 6_000_000) {
+        result.pending = null;
+        result.reason = "technical";
+      } else {
+        job.pending = result.pending;
+        job.pendingStep = randomUUID();
+        job.leaseAt = Date.now();
+        job.status = "awaiting_" + result.pending.kind;
+        return job;
+      }
+    }
+    delete job.pending;
+    delete job.pendingStep;
     if (job.diagnostic) {
       job.status = result.approved
         ? "verified"
@@ -349,7 +401,8 @@ export async function finish(id, result) {
 }
 export const jobResult = (job) => ({
   id: job.id,
-  status: job.status,
+  status: job.status.startsWith("awaiting_") ? "processing" : job.status,
+  ...(job.pendingStep ? { continueRequired: true, step: job.pendingStep } : {}),
   reason: job.reason,
   revision: job.revision,
 });

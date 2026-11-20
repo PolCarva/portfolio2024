@@ -1,5 +1,10 @@
 import { Component, useEffect, useRef, useState } from "react";
-import { sceneColors, brushColors } from "../../shared/community-catalog.mjs";
+import { createPortal } from "react-dom";
+import {
+  sceneColors,
+  brushColors,
+  drawingEnabled,
+} from "../../shared/community-catalog.mjs";
 export function SceneNodes({ scene, zone }) {
   const colors = {
     ...sceneColors(scene),
@@ -94,6 +99,14 @@ const colorLabels = {
     gold: "Gold",
   },
 };
+function DrawingTools({ floating, children }) {
+  return floating && typeof document !== "undefined"
+    ? createPortal(
+        <div className="community-floating-tools">{children}</div>,
+        document.body,
+      )
+    : children;
+}
 function CommunityCanvas({
   scene,
   zone,
@@ -101,6 +114,7 @@ function CommunityCanvas({
   preview = false,
   onPublish,
   onClear,
+  image = false,
 }) {
   const [strokes, setStrokes] = useState([]),
     [drawing, setDrawing] = useState(false),
@@ -108,6 +122,8 @@ function CommunityCanvas({
     [width, setWidth] = useState(4);
   const active = useRef(null),
     area = useRef(null),
+    coordinates = useRef(null),
+    activePointer = useRef(null),
     es = language === "es";
   useEffect(() => {
     if (!scene) return;
@@ -132,8 +148,22 @@ function CommunityCanvas({
     ...sceneColors(scene),
     ...Object.fromEntries(Object.entries(brushColors).filter(([, v]) => v)),
   };
+  const enabled = drawingEnabled(scene, zone);
   function point(e) {
     const r = area.current.getBoundingClientRect();
+    if (coordinates.current?.getScreenCTM) {
+      const matrix = coordinates.current.getScreenCTM();
+      if (matrix) {
+        const p = coordinates.current.createSVGPoint();
+        p.x = e.clientX;
+        p.y = e.clientY;
+        const local = p.matrixTransform(matrix.inverse());
+        return {
+          x: Math.round(Math.max(0, Math.min(100, local.x / 10)) * 100) / 100,
+          y: Math.round(Math.max(0, Math.min(100, local.y / 2.4)) * 100) / 100,
+        };
+      }
+    }
     return {
       x:
         Math.round(
@@ -148,7 +178,15 @@ function CommunityCanvas({
     };
   }
   function start(e) {
-    if (!drawing || e.button !== 0 || strokes.length >= 12) return;
+    if (
+      !drawing ||
+      !enabled ||
+      active.current ||
+      e.button !== 0 ||
+      strokes.length >= 12
+    )
+      return;
+    activePointer.current = e.pointerId;
     area.current.setPointerCapture(e.pointerId);
     const stroke = { points: [point(e)], color, width };
     active.current = stroke;
@@ -166,7 +204,7 @@ function CommunityCanvas({
         `${((e.clientY - r.top) / r.height - 0.5) * 16}px`,
       );
     }
-    if (!active.current) return;
+    if (!active.current || activePointer.current !== e.pointerId) return;
     let points = [...active.current.points, point(e)];
     if (points.length > 64)
       points = points.filter((_, i) => i % 2 === 0 || i === points.length - 1);
@@ -174,7 +212,8 @@ function CommunityCanvas({
     active.current = stroke;
     setStrokes((s) => [...s.slice(0, -1), stroke]);
   }
-  function end() {
+  function end(e) {
+    if (!active.current || (e && activePointer.current !== e.pointerId)) return;
     if (active.current?.points.length === 1) {
       const stroke = {
         ...active.current,
@@ -184,11 +223,12 @@ function CommunityCanvas({
       setStrokes((s) => [...s.slice(0, -1), stroke]);
     }
     active.current = null;
+    activePointer.current = null;
   }
   return (
     <aside
       id={`community-canvas-${zone}`}
-      className={`community-canvas ${drawing ? "is-drawing" : ""}`}
+      className={`community-canvas ${image ? "community-canvas--image" : ""} ${drawing ? "is-drawing" : ""}`}
       aria-label={es ? "Lienzo comunitario" : "Community canvas"}
     >
       <div
@@ -198,9 +238,17 @@ function CommunityCanvas({
         onPointerMove={move}
         onPointerUp={end}
         onPointerCancel={end}
+        onLostPointerCapture={end}
       >
+        <svg
+          ref={coordinates}
+          className="community-coordinate-plane"
+          viewBox="0 0 1000 240"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        />
         <SceneNodes scene={scene} zone={zone} />
-        {scene.drawing &&
+        {enabled &&
           !strokes.length &&
           !scene.nodes.some((n) => n.zone === zone) && (
             <span className="community-canvas-hint" aria-hidden="true">
@@ -231,80 +279,100 @@ function CommunityCanvas({
           </svg>
         )}
       </div>
-      {scene.drawing && !preview && (
-        <div className="community-draw-controls">
-          <button
-            type="button"
-            aria-pressed={drawing}
-            onClick={() => setDrawing((v) => !v)}
-          >
-            {es
-              ? drawing
-                ? "Terminar dibujo"
-                : "Dibujar acá"
-              : drawing
-                ? "Finish drawing"
-                : "Draw here"}
-          </button>
-          <label className="community-brush-label">
-            {es ? "Pincel" : "Brush"}
-            <select
-              aria-label={es ? "Tamaño del pincel" : "Brush size"}
-              value={width}
-              onChange={(e) => setWidth(Number(e.target.value))}
-            >
-              {[2, 4, 8, 12].map((n) => (
-                <option key={n} value={n}>
-                  {n} px
-                </option>
-              ))}
-            </select>
-          </label>
+      {enabled && !preview && (
+        <DrawingTools floating={image && (drawing || strokes.length > 0)}>
           <div
-            className="community-brush-colors"
-            role="group"
-            aria-label={es ? "Color del pincel" : "Brush color"}
+            className={
+              "community-draw-controls" +
+              (image ? " community-image-tools" : "")
+            }
           >
-            {Object.keys(brushColors).map((c) => (
-              <button
-                key={c}
-                type="button"
-                aria-label={(colorLabels[language] || colorLabels.en)[c]}
-                aria-pressed={color === c}
-                title={(colorLabels[language] || colorLabels.en)[c]}
-                className="community-color"
-                style={{ background: colors[c] }}
-                onClick={() => setColor(c)}
-              />
-            ))}
+            <button
+              type="button"
+              aria-pressed={drawing}
+              onClick={() => setDrawing((v) => !v)}
+            >
+              {es
+                ? drawing
+                  ? "Terminar dibujo"
+                  : image
+                    ? zone === "portrait"
+                      ? "Dibujar en la foto de perfil"
+                      : "Dibujar en esta imagen"
+                    : "Dibujar acá"
+                : drawing
+                  ? "Finish drawing"
+                  : image
+                    ? zone === "portrait"
+                      ? "Draw on the profile photo"
+                      : "Draw on this image"
+                    : "Draw here"}
+            </button>
+            {(!image || drawing || strokes.length > 0) && (
+              <>
+                <label className="community-brush-label">
+                  {es ? "Pincel" : "Brush"}
+                  <select
+                    aria-label={es ? "Tamaño del pincel" : "Brush size"}
+                    value={width}
+                    onChange={(e) => setWidth(Number(e.target.value))}
+                  >
+                    {[2, 4, 8, 12].map((n) => (
+                      <option key={n} value={n}>
+                        {n} px
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div
+                  className="community-brush-colors"
+                  role="group"
+                  aria-label={es ? "Color del pincel" : "Brush color"}
+                >
+                  {Object.keys(brushColors).map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      aria-label={(colorLabels[language] || colorLabels.en)[c]}
+                      aria-pressed={color === c}
+                      title={(colorLabels[language] || colorLabels.en)[c]}
+                      className="community-color"
+                      style={{ background: colors[c] }}
+                      onClick={() => setColor(c)}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStrokes([]);
+                    active.current = null;
+                    activePointer.current = null;
+                    onClear?.(zone);
+                  }}
+                >
+                  {es ? "Borrar borrador" : "Clear draft"}
+                </button>
+                <button
+                  type="button"
+                  disabled={!strokes.length || !onPublish}
+                  onClick={() => {
+                    setDrawing(false);
+                    onPublish({ zone, strokes });
+                  }}
+                >
+                  {es ? "Publicar este dibujo" : "Publish this drawing"} ↗
+                </button>
+                <small>
+                  {strokes.length}/12{" "}
+                  {es
+                    ? "trazos · Se guardan para todos después de la revisión con IA. Consultá tu cupo en el formulario."
+                    : "strokes · Saved for everyone after AI review. Check your allowance in the form."}
+                </small>
+              </>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setStrokes([]);
-              active.current = null;
-              onClear?.(zone);
-            }}
-          >
-            {es ? "Borrar borrador" : "Clear draft"}
-          </button>
-          <button
-            type="button"
-            disabled={!strokes.length || !onPublish}
-            onClick={() => {
-              setDrawing(false);
-              onPublish({ zone, strokes });
-            }}
-          >
-            {es ? "Publicar este dibujo" : "Publish this drawing"} ↗
-          </button>
-          <small>
-            {strokes.length}/12{" "}
-            {es
-              ? "trazos · Se guardan para todos después de la revisión con IA. Consultá tu cupo en el formulario."
-              : "strokes · Saved for everyone after AI review. Check your allowance in the form."}
-          </small>
-        </div>
+        </DrawingTools>
       )}
     </aside>
   );

@@ -14,7 +14,7 @@ before(async () => {
     format: "esm",
     outfile: ".generated/community-canvas-test.mjs",
     jsx: "automatic",
-    external: ["react", "react/jsx-runtime"],
+    external: ["react", "react/jsx-runtime", "react-dom"],
   });
   Canvas = (await import("../.generated/community-canvas-test.mjs")).default;
 });
@@ -121,4 +121,51 @@ test("a canvas render failure is isolated and can be reset without losing the pr
   } finally {
     console.error = previous;
   }
+});
+
+test("drawing on the profile photo creates a target-specific publishable draft", async () => {
+  let renderer, published;
+  await act(async () => {
+    renderer = create(
+      React.createElement(Canvas, {
+        scene: {
+          ...originalScene,
+          drawing: false,
+          drawingTargets: ["portrait"],
+        },
+        zone: "portrait",
+        image: true,
+        language: "es",
+        onPublish: (d) => {
+          published = d;
+        },
+      }),
+      options,
+    );
+  });
+  await act(async () => {
+    renderer.root
+      .findAllByType("button")
+      .find((b) => b.children.join("") === "Dibujar en la foto de perfil")
+      .props.onClick();
+  });
+  const area = renderer.root.findByProps({
+    className: "community-drawing-area",
+  });
+  await act(async () => {
+    area.props.onPointerDown(event());
+    area.props.onPointerUp(event());
+  });
+  await act(async () => {
+    renderer.root
+      .findAllByType("button")
+      .find((b) => b.children.join("").includes("Publicar este dibujo"))
+      .props.onClick();
+  });
+  assert.equal(published.zone, "portrait");
+  assert.equal(published.strokes.length, 1);
+  assert.equal(published.strokes[0].points.length, 2);
+  await act(async () => {
+    renderer.unmount();
+  });
 });

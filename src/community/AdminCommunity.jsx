@@ -29,8 +29,9 @@ export default function AdminCommunity() {
     setBusy(true);
     setError("");
     try {
-      const result = await request("/api/community", {
+      let result = await request("/api/community", {
         method: "POST",
+        signal: AbortSignal.timeout(60000),
         body: JSON.stringify({
           action,
           ...(settings ? { settings } : {}),
@@ -39,6 +40,18 @@ export default function AdminCommunity() {
           ...(requestId ? { requestId } : {}),
         }),
       });
+      for (let i = 0; result.status === "processing" && i < 145; i++) {
+        if (result.continueRequired)
+          result = await request("/api/community/changes/" + result.id, {
+            method: "POST",
+            signal: AbortSignal.timeout(60000),
+            body: JSON.stringify({ step: result.step }),
+          });
+        else {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          result = await request("/api/community/changes/" + result.id);
+        }
+      }
       if (action === "verify")
         setError(
           result.ok

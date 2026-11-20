@@ -9,7 +9,10 @@ import {
 } from "./ProjectArtwork";
 
 import CommunityCanvas from "./community/Artwork.jsx";
-import { sceneAttributes } from "../shared/community-catalog.mjs";
+import {
+  sceneAttributes,
+  drawingEnabled,
+} from "../shared/community-catalog.mjs";
 import "./community/community.css";
 import CommunityProgram from "./community/ProgramLayer.jsx";
 const CommunityControls = lazy(() => import("./community/Controls.jsx"));
@@ -384,7 +387,7 @@ function App({
               </div>
             </div>
             <figure className="portrait-composition">
-              <div className="portrait-frame">
+              <div className="portrait-frame" data-draw-surface="portrait">
                 <img
                   src={assets.portrait}
                   srcSet={
@@ -397,6 +400,19 @@ function App({
                   height="800"
                   alt={t.portrait}
                 />
+                {drawingEnabled(visualScene, "portrait") && (
+                  <CommunityCanvas
+                    scene={visualScene}
+                    zone="portrait"
+                    image
+                    language={lang}
+                    preview={communityPreview}
+                    onPublish={setDrawingDraft}
+                    onClear={(zone) =>
+                      setDrawingDraft((d) => (d?.zone === zone ? null : d))
+                    }
+                  />
+                )}
                 <span className="portrait-mark" aria-hidden="true">
                   <BrandMark />
                 </span>
@@ -455,27 +471,53 @@ function App({
                   className={`project project--${project.id} reveal`}
                   key={project.id}
                 >
-                  <a
-                    className="project-link"
-                    href={project.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`${project[lang].title} — ${["tv", "youtube"].includes(project.kind) ? t.watch : t.visit}`}
-                  >
-                    <div className="project-media">
-                      <ProjectMedia
-                        project={project}
-                        language={lang}
-                        imageNote={t.imageNote}
-                      />
-                      <span className="project-number">
-                        0{index + 1} / {project.year}
-                      </span>
-                      <span className="project-open">
-                        <Arrow />
-                      </span>
+                  <div className="project-link">
+                    <div
+                      className="project-media"
+                      data-draw-surface={"project:" + project.id}
+                    >
+                      <a
+                        className="project-media-link"
+                        href={project.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`${project[lang].title} — ${["tv", "youtube"].includes(project.kind) ? t.watch : t.visit}`}
+                      >
+                        <ProjectMedia
+                          project={project}
+                          language={lang}
+                          imageNote={t.imageNote}
+                        />
+                        <span className="project-number">
+                          0{index + 1} / {project.year}
+                        </span>
+                        <span className="project-open">
+                          <Arrow />
+                        </span>
+                      </a>
+                      {drawingEnabled(visualScene, "project:" + project.id) && (
+                        <CommunityCanvas
+                          scene={visualScene}
+                          zone={"project:" + project.id}
+                          image
+                          language={lang}
+                          preview={communityPreview}
+                          onPublish={setDrawingDraft}
+                          onClear={(zone) =>
+                            setDrawingDraft((d) =>
+                              d?.zone === zone ? null : d,
+                            )
+                          }
+                        />
+                      )}
                     </div>
-                    <div className="project-caption">
+                    <a
+                      className="project-caption"
+                      href={project.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      tabIndex={-1}
+                    >
                       <p className="eyebrow">{project[lang].label}</p>
                       <h3>{project[lang].title}</h3>
                       <p>{project[lang].text}</p>
@@ -487,8 +529,8 @@ function App({
                           <span key={tag}>{tag}</span>
                         ))}
                       </div>
-                    </div>
-                  </a>
+                    </a>
+                  </div>
                   {project.downloads && (
                     <div className="project-downloads">
                       {project.downloads.map((download) => (

@@ -57,11 +57,14 @@ export default function ProgramLayer({ program, preview = false }) {
     reduced.addEventListener("change", motion);
     const observer = new ResizeObserver(schedule);
     observer.observe(document.documentElement);
+    const mutations = new MutationObserver(schedule);
+    mutations.observe(document.body, { childList: true, subtree: true });
     mask();
     motion();
     return () => {
       cancelAnimationFrame(timer);
       observer.disconnect();
+      mutations.disconnect();
       iframe.removeEventListener("load", mask);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerdown", move);

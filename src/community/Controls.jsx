@@ -257,8 +257,16 @@ export default function CommunityControls({
       setNotice("");
       setPrompt(
         es
-          ? "Quiero sumar este dibujo al lienzo comunitario."
-          : "I want to add this drawing to the community canvas.",
+          ? drawingDraft.zone === "portrait"
+            ? "Quiero sumar este dibujo al lienzo compartido de la foto de perfil."
+            : drawingDraft.zone.startsWith("project:")
+              ? "Quiero sumar este dibujo al lienzo compartido de esta imagen de proyecto."
+              : "Quiero sumar este dibujo al lienzo comunitario."
+          : drawingDraft.zone === "portrait"
+            ? "I want to add this drawing to the shared profile-photo canvas."
+            : drawingDraft.zone.startsWith("project:")
+              ? "I want to add this drawing to this project image's shared canvas."
+              : "I want to add this drawing to the community canvas.",
       );
     }
   }, [drawingDraft, es]);
@@ -300,7 +308,24 @@ export default function CommunityControls({
   }
   async function follow(id) {
     for (let i = 0; i < 145; i++) {
-      const d = await api("/api/community/changes/" + id);
+      let d = await api("/api/community/changes/" + id);
+      if (d.continueRequired) {
+        try {
+          d = await api("/api/community/changes/" + id, {
+            method: "POST",
+            body: JSON.stringify({ step: d.step }),
+          });
+        } catch (error) {
+          if (
+            error.message === "Failed to fetch" ||
+            error.message === "NetworkError when attempting to fetch resource."
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            continue;
+          }
+          throw error;
+        }
+      }
       if (d.status !== "processing") return d;
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }

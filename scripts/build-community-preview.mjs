@@ -7,5 +7,5 @@ await build({
   outfile: ".generated/community-preview.mjs",
   loader: { ".css": "empty" },
   jsx: "automatic",
-  external: ["react", "react-dom/server"],
+  external: ["react", "react-dom", "react-dom/server"],
 });

@@ -8,10 +8,14 @@ export {
 export const pointSchema = z
   .object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100) })
   .strict();
+export const drawingZoneSchema = z.union([
+  z.enum(["hero", "work", "contact", "portrait"]),
+  z.string().regex(/^project:[a-z0-9-]{1,80}$/),
+]);
 export const nodeSchema = z
   .object({
     id: z.string().regex(/^[a-z0-9-]{1,24}$/),
-    zone: z.enum(["hero", "work", "contact"]),
+    zone: drawingZoneSchema,
     shape: z.enum([
       "circle",
       "ellipse",
@@ -98,6 +102,10 @@ export const sceneSchema = z
     corners: z.enum(["original", "rounded", "cut"]),
     background: z.enum(["plain", "grid", "dots", "stars"]),
     drawing: z.boolean(),
+    drawingTargets: z
+      .array(z.enum(["bands", "portrait", "projects"]))
+      .max(3)
+      .default([]),
     nodes: z.array(nodeSchema).max(200),
   })
   .strict();
@@ -128,7 +136,7 @@ export function validateScene(input) {
 
 export const drawingSchema = z
   .object({
-    zone: z.enum(["hero", "work", "contact"]),
+    zone: drawingZoneSchema,
     strokes: z
       .array(
         z
@@ -147,7 +155,19 @@ export function applyDrawing(scene, drawing) {
   const d = drawingSchema.parse(drawing);
   return validateScene({
     ...scene,
-    drawing: true,
+    drawing: ["hero", "work", "contact"].includes(d.zone)
+      ? true
+      : scene.drawing,
+    drawingTargets: [
+      ...new Set([
+        ...(scene.drawingTargets || []),
+        d.zone === "portrait"
+          ? "portrait"
+          : d.zone.startsWith("project:")
+            ? "projects"
+            : "bands",
+      ]),
+    ],
     nodes: [
       ...scene.nodes,
       ...d.strokes.map((s, i) => ({

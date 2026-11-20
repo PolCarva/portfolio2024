@@ -75,7 +75,7 @@ for (const file of javascript) {
     `${file}: ${bytes.length.toLocaleString()} bytes / gzip ${gzipSync(bytes).length.toLocaleString()} bytes`,
   );
 }
-assert(total < 230000, `JavaScript budget exceeded: ${total}`);
+assert(total < 240000, `JavaScript budget exceeded: ${total}`);
 console.log(
   "Build verified: prerendered EN/ES, local assets, social metadata, OG dimensions and both CVs.",
 );

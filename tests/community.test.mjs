@@ -1444,3 +1444,301 @@ test("repair budget reservations are atomic, idempotent and do not spend a secon
   });
   assert.equal(await reserveRepair(b.job.id), false);
 });
+
+test("staged review is owner-bound, idempotent, private and publishes once after approval", async () => {
+  const { createContinuationHandler } = await import(
+    "../api/community/changes/[id].js"
+  );
+  await reset();
+  const c = await cookie(),
+    other = await cookie(),
+    owner = identity(c);
+  const r = await reserve({
+    id: randomUUID(),
+    owner,
+    ip: "staged",
+    prompt: "garden",
+    tokenHash: randomUUID(),
+  });
+  await finish(r.job.id, {
+    approved: false,
+    reason: null,
+    cost: 7,
+    usage: [{ model: "claude-haiku-5-5", input: 10, output: 12 }],
+    checks: { generationAttempts: 1 },
+    pending: {
+      kind: "review",
+      candidate: scene(),
+      previews: {
+        images: [Buffer.from("image").toString("base64")],
+        contentRevision: "initial",
+      },
+    },
+  });
+  let s = await readState();
+  assert.equal(s.scene.palette, "original");
+  assert.equal(Object.keys(s.visitors).length, 0);
+  const view = await (
+    await call("/api/community/changes/" + r.job.id, "GET", null, c)
+  ).json();
+  assert.equal(view.status, "processing");
+  assert.equal(view.continueRequired, true);
+  assert(!JSON.stringify(view).includes("candidate"));
+  assert.equal(
+    (await call("/api/community/changes/" + r.job.id, "GET", null, other))
+      .status,
+    404,
+  );
+  assert.equal(
+    (
+      await call(
+        "/api/community/changes/" + r.job.id,
+        "POST",
+        { step: view.step },
+        c,
+        "https://evil.test",
+      )
+    ).status,
+    403,
+  );
+  let calls = 0;
+  const handler = createContinuationHandler({
+    evaluate: async (args) => {
+      calls++;
+      assert.equal(args.resume.kind, "review");
+      assert(Buffer.isBuffer(args.resume.previews.images[0]));
+      return {
+        approved: true,
+        scene: args.resume.candidate,
+        cost: 20,
+        usage: args.resume.usage,
+        checks: { generationAttempts: 1 },
+      };
+    },
+  });
+  async function directContinue(step) {
+    let status = 200,
+      payload;
+    await handler(
+      {
+        method: "POST",
+        url: "/api/community/changes/" + r.job.id,
+        headers: {
+          host: new URL(base).host,
+          origin: base,
+          cookie: c,
+          "content-type": "application/json",
+        },
+        body: { step },
+      },
+      {
+        setHeader() {},
+        status(n) {
+          status = n;
+          return this;
+        },
+        json(d) {
+          payload = d;
+        },
+      },
+    );
+    return { status, payload };
+  }
+  await Promise.all([directContinue(view.step), directContinue(view.step)]);
+  assert.equal(calls, 1);
+  s = await readState();
+  assert.equal(s.scene.palette, "forest");
+  assert.equal(s.visitors[owner].count, 1);
+  assert.equal(s.budgets[r.job.month].measured, 20);
+  assert.equal(s.jobs[r.job.id].pending, undefined);
+  assert.equal((await directContinue(view.step)).payload.status, "published");
+  assert.equal(calls, 1);
+});
+
+test("staged evaluation can correct once across separate invocations and still requires review", async () => {
+  const { createEvaluator } = await import("../server/community/ai.mjs");
+  let generators = 0,
+    reviews = 0,
+    renders = 0;
+  const evaluate = createEvaluator({
+    respond: async (model) => {
+      if (model === "claude-haiku-5-5") {
+        generators++;
+        return {
+          value: {
+            accepted: true,
+            reason: "ok",
+            changedFields: ["palette"],
+            scene: scene(),
+          },
+          usage: { model, input: 1, output: 1 },
+        };
+      }
+      reviews++;
+      return {
+        value: {
+          approved: true,
+          identityIntact: true,
+          readable: true,
+          safeVisuals: true,
+          requestFulfilled: true,
+          animationStable: true,
+          qualityIssues: [],
+          reason: "ok",
+        },
+        usage: { model, input: 1, output: 1 },
+      };
+    },
+    render: async () => {
+      renders++;
+      if (renders === 1)
+        throw Object.assign(new Error("quality"), {
+          code: "quality",
+          issues: ["test_failure"],
+        });
+      return { images: [Buffer.from("image")], contentRevision: "initial" };
+    },
+    readContent: async () => null,
+  });
+  const args = {
+    prompt: "garden",
+    scene: originalScene,
+    deferStages: true,
+    deadline: Date.now() + 5000,
+    reserveRepair: async () => true,
+  };
+  const first = await evaluate(args);
+  assert.equal(first.pending.kind, "repair");
+  assert.equal(reviews, 0);
+  const second = await evaluate({
+    ...args,
+    deadline: Date.now() + 50000,
+    resume: { ...first.pending, usage: first.usage, checks: first.checks },
+  });
+  assert.equal(second.pending.kind, "review");
+  assert.equal(reviews, 0);
+  assert.equal(second.checks.generationAttempts, 2);
+  const pending = second.pending;
+  pending.previews.images = pending.previews.images.map((x) =>
+    Buffer.from(x, "base64"),
+  );
+  const final = await evaluate({
+    ...args,
+    deadline: Date.now() + 50000,
+    resume: { ...pending, usage: second.usage, checks: second.checks },
+  });
+  assert.equal(final.approved, true);
+  assert.equal(final.checks.repairAttempts, 1);
+  assert.equal(generators, 2);
+  assert.equal(reviews, 1);
+});
+
+test("image drawing persists against the exact portrait or project surface without changing the photo/content", async () => {
+  const { applyDrawing } = await import("../shared/community-scene.mjs");
+  const { drawingEnabled } = await import("../shared/community-catalog.mjs");
+  const stroke = {
+    points: [
+      { x: 20, y: 30 },
+      { x: 50, y: 60 },
+    ],
+    color: "blue",
+    width: 4,
+  };
+  let s = applyDrawing(originalScene, { zone: "portrait", strokes: [stroke] });
+  assert.equal(drawingEnabled(s, "portrait"), true);
+  assert.equal(drawingEnabled(s, "hero"), false);
+  assert.equal(s.nodes[0].zone, "portrait");
+  s = applyDrawing(s, { zone: "project:teclado-tv", strokes: [stroke] });
+  assert.equal(s.nodes.length, 2);
+  assert.equal(s.nodes[1].zone, "project:teclado-tv");
+  assert.equal(drawingEnabled(s, "project:teclado-tv"), true);
+  assert.throws(() =>
+    applyDrawing(s, { zone: "project:<script>", strokes: [stroke] }),
+  );
+  assert.equal(s.photo, undefined);
+  assert.equal(s.name, undefined);
+});
+
+test("image-drawing requests cannot be satisfied by the existing bands-only canvas", async () => {
+  const { scopedProposal } = await import("../server/community/proposal.mjs");
+  const base = { ...originalScene, drawing: true };
+  assert.throws(
+    () =>
+      scopedProposal(
+        base,
+        { changedFields: ["drawing"], scene: base },
+        "que en la imagen de perfil se pueda dibujar",
+      ),
+    (e) => e.code === "quality",
+  );
+  const next = { ...base, drawing: false, drawingTargets: ["portrait"] };
+  const result = scopedProposal(
+    base,
+    { changedFields: ["drawing", "drawingTargets"], scene: next },
+    "dibujar solo en la foto del hero y que todos vean los aportes",
+  );
+  assert.equal(result.drawing, false);
+  assert.deepEqual(result.drawingTargets, ["portrait"]);
+});
+
+test("pause cancels private staged artifacts and stale continuation tokens never execute AI", async () => {
+  const { createContinuationHandler } = await import(
+    "../api/community/changes/[id].js"
+  );
+  await reset();
+  const c = await cookie(),
+    r = await reserve({
+      id: randomUUID(),
+      owner: identity(c),
+      ip: "pause-stage",
+      prompt: "test",
+      tokenHash: randomUUID(),
+    });
+  const pending = await finish(r.job.id, {
+    approved: false,
+    reason: null,
+    cost: 0,
+    pending: {
+      kind: "review",
+      candidate: scene(),
+      previews: { images: [], contentRevision: "initial" },
+    },
+  });
+  const step = pending.pendingStep;
+  await call("/api/community", "POST", { action: "pause" }, adminCookie);
+  const s = await readState();
+  assert.equal(s.jobs[r.job.id].pending, undefined);
+  assert.equal(s.jobs[r.job.id].status, "failed");
+  let calls = 0;
+  const handler = createContinuationHandler({
+    evaluate: async () => {
+      calls++;
+      throw Error("must not execute");
+    },
+  });
+  let result;
+  await handler(
+    {
+      method: "POST",
+      url: "/api/community/changes/" + r.job.id,
+      headers: {
+        host: new URL(base).host,
+        origin: base,
+        cookie: c,
+        "content-type": "application/json",
+      },
+      body: { step },
+    },
+    {
+      setHeader() {},
+      status() {
+        return this;
+      },
+      json(d) {
+        result = d;
+      },
+    },
+  );
+  assert.equal(result.reason, "stale");
+  assert.equal(calls, 0);
+});
