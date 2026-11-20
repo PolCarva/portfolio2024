@@ -38,10 +38,15 @@ export async function renderReview(
     )
   ).join("\n");
   mark("assets_ready");
+  chromium.setGraphicsMode = false;
   const executablePath = await bounded(chromium.executablePath(), 15000);
   mark("binary_ready");
   const server = await browserType.launchServer({
-    args: chromium.args,
+    args: [
+      ...chromium.args.filter((x) => x !== "--in-process-gpu"),
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+    ],
     executablePath,
     headless: true,
     timeout: Math.min(15000, Math.max(1, deadline - Date.now())),
@@ -124,7 +129,7 @@ export async function renderReview(
           });
           const metrics = await cdp.send("Page.getLayoutMetrics");
           const size = metrics.cssContentSize;
-          mark("layout_ready");
+          mark("layout_" + size.width + "x" + size.height);
           if (
             heading.nodeIds.length !== 1 ||
             bands.nodeIds.length !== 3 ||
