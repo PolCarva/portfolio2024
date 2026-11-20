@@ -27,6 +27,7 @@ const command = z
       "restore",
       "verify",
       "test-ai",
+      "private",
     ]),
     revision: z.string().max(80).optional(),
     test: z.enum(["safe", "unsafe"]).optional(),
@@ -57,8 +58,9 @@ export default async function handler(req, res) {
       ) {
         if (!validSession(req)) throw problem(401, "unauthorized");
         return json(res, 200, {
-          ...publicState(state, id),
+          ...publicState(state, id, validSession(req)),
           paused: state.paused,
+          mode: state.mode || "private",
           configured: ready(),
           budgets: state.budgets,
           history: state.history.map(({ revision, at }) => ({ revision, at })),
@@ -74,7 +76,7 @@ export default async function handler(req, res) {
             })),
         });
       }
-      return json(res, 200, publicState(state, id));
+      return json(res, 200, publicState(state, id, validSession(req)));
     }
     if (req.method !== "POST") throw problem(405, "method");
     if (!validSession(req)) throw problem(401, "unauthorized");
@@ -116,9 +118,15 @@ export default async function handler(req, res) {
       });
     }
     await mutate((state) => {
-      if (data.action === "resume") {
+      if (data.action === "resume" || data.action === "private") {
         if (!ready()) throw problem(503, "not_configured");
+        if (data.action === "private" && state.mode === "public")
+          state.publicSnapshot = {
+            scene: state.scene,
+            revision: state.revision,
+          };
         state.paused = false;
+        state.mode = data.action === "resume" ? "public" : "private";
       } else if (data.action === "pause") state.paused = true;
       else {
         const old = {

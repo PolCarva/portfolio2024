@@ -58,9 +58,11 @@ export default function AdminCommunity() {
         <>
           <p>
             <strong>
-              {data.paused
-                ? "Intervenciones pausadas"
-                : "Intervenciones habilitadas"}
+              {data.mode === "private" && !data.paused
+                ? "Pruebas privadas: solo el administrador"
+                : data.paused
+                  ? "Intervenciones pausadas"
+                  : "Intervenciones habilitadas"}
             </strong>{" "}
             ·{" "}
             {data.configured
@@ -85,6 +87,12 @@ export default function AdminCommunity() {
               Actualizar
             </button>
           </div>
+          <button
+            disabled={busy || !data.configured}
+            onClick={() => act("private")}
+          >
+            Activar pruebas privadas
+          </button>
           <button disabled={busy} onClick={() => act("verify")}>
             Verificar motor de capturas
           </button>

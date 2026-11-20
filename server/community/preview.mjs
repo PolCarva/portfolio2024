@@ -46,12 +46,12 @@ export async function renderReview(
     headless: true,
     timeout: Math.min(25000, Math.max(1, deadline - Date.now())),
   });
-  const browser = await browserType.connect(server.wsEndpoint(), {
-    timeout: 10000,
-  });
-  mark("browser_ready");
   const images = [];
   try {
+    const browser = await browserType.connect(server.wsEndpoint(), {
+      timeout: 10000,
+    });
+    mark("browser_ready");
     return await bounded(
       (async () => {
         const context = await browser.newContext({

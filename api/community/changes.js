@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sameOrigin } from "../../server/auth.mjs";
+import { sameOrigin, validSession } from "../../server/auth.mjs";
 import { body, json } from "../../server/http.mjs";
 import { communityFailure } from "../community.js";
 import {
@@ -59,7 +59,8 @@ export function createChangeHandler({
         return json(res, 200, jobResult(existing));
       }
       await mutate((state) => {
-        if (state.paused) throw problem(503, "paused");
+        if (state.paused || (state.mode !== "public" && !validSession(req)))
+          throw problem(503, "paused");
         if (state.visitors[owner]) throw problem(409, "used");
         takeRate(state, "submit:" + ip, 30, 3600000);
       });
@@ -70,6 +71,7 @@ export function createChangeHandler({
         ip,
         prompt: data.prompt,
         tokenHash: digest("token:" + data.token),
+        allowPrivate: validSession(req),
       });
       if (reservation.duplicate)
         return json(res, 200, jobResult(reservation.job));

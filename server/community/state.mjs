@@ -141,24 +141,29 @@ export function takeRate(state, key, max, windowMs, now = Date.now()) {
   rate.count++;
   state.rates[id] = rate;
 }
-export function publicState(state, id) {
+export function publicState(state, id, admin = false) {
   const month = new Date().toISOString().slice(0, 7),
     spent = state.budgets[month]?.reserved || 0;
   const used = Boolean(id && state.visitors[id]);
+  const visible =
+    state.mode !== "public" && !admin
+      ? state.publicSnapshot || { revision: "original", scene: originalScene }
+      : state;
   return {
-    revision: state.revision,
-    scene: validateScene(state.scene),
-    modified: JSON.stringify(state.scene) !== JSON.stringify(originalScene),
+    revision: visible.revision,
+    scene: validateScene(visible.scene),
+    modified: JSON.stringify(visible.scene) !== JSON.stringify(originalScene),
     available:
       ready() &&
       !state.paused &&
+      (state.mode === "public" || admin) &&
       !used &&
       !state.active &&
       spent + RESERVATION <= MONTHLY_MICRODOLLARS,
     used,
     reason: !ready()
       ? "not_configured"
-      : state.paused
+      : state.paused || (state.mode !== "public" && !admin)
         ? "paused"
         : used
           ? "used"
@@ -177,6 +182,7 @@ export async function reserve({
   prompt,
   tokenHash,
   diagnostic = false,
+  allowPrivate = false,
 }) {
   return mutate((state) => {
     const duplicate = state.jobs[id];
@@ -184,7 +190,11 @@ export async function reserve({
       if (duplicate.owner !== owner) throw problem(404, "not_found");
       return { duplicate: true, job: duplicate };
     }
-    if (state.paused && !diagnostic) throw problem(503, "paused");
+    if (
+      (state.paused || (state.mode !== "public" && !allowPrivate)) &&
+      !diagnostic
+    )
+      throw problem(503, "paused");
     if (state.visitors[owner] && !diagnostic) throw problem(409, "used");
     if (state.active) throw problem(409, "busy");
     if (state.tokens[tokenHash]) throw problem(403, "verification");
@@ -192,8 +202,10 @@ export async function reserve({
     const budget = state.budgets[month] || { reserved: 0, measured: 0 };
     if (budget.reserved + RESERVATION > MONTHLY_MICRODOLLARS)
       throw problem(429, "budget");
-    takeRate(state, "visitor:" + owner, 3, 86400000);
-    takeRate(state, "generation-ip:" + ip, 10, 86400000);
+    if (!diagnostic) {
+      takeRate(state, "visitor:" + owner, 3, 86400000);
+      takeRate(state, "generation-ip:" + ip, 10, 86400000);
+    }
     budget.reserved += RESERVATION;
     state.budgets[month] = budget;
     const job = {

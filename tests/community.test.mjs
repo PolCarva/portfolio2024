@@ -87,6 +87,7 @@ async function reset() {
   await mutate((s) => {
     Object.assign(s, freshState());
     s.paused = false;
+    s.mode = "public";
   });
 }
 async function direct(handler, data, c, extraHeaders = {}) {
@@ -689,4 +690,35 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("private mode hides draft designs and does not let visitors reach Turnstile or generation", async () => {
+  await reset();
+  await mutate((s) => {
+    s.mode = "private";
+    s.paused = false;
+    s.scene = scene();
+    s.revision = "private-draft";
+  });
+  const c = await cookie(),
+    publicView = await (await call("/api/community", "GET", null, c)).json();
+  assert.equal(publicView.available, false);
+  assert.equal(publicView.reason, "paused");
+  assert.equal(publicView.revision, "original");
+  assert.equal(publicView.scene.palette, "original");
+  const adminView = await (
+    await call("/api/community?admin=1", "GET", null, adminCookie)
+  ).json();
+  assert.equal(adminView.scene.palette, "forest");
+  let calls = 0;
+  const h = createChangeHandler({
+    verify: async () => {
+      calls++;
+    },
+    evaluate: async () => {
+      calls++;
+    },
+  });
+  assert.equal((await direct(h, request(), c)).status, 503);
+  assert.equal(calls, 0);
 });
