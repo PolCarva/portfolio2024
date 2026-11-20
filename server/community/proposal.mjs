@@ -16,7 +16,14 @@ export const visualFields = [
 export function scopedProposal(current, proposal, prompt) {
   const base = validateScene(current),
     generated = validateScene(proposal.scene);
-  const cursorRequest = /\b(cursor|mouse|puntero|ratón|raton)\b/i.test(prompt);
+  const drawingRequest = /dibuj|draw|pint|sketch/i.test(prompt);
+  const cursorRequest =
+    !drawingRequest &&
+    (/\b(cursor|puntero)\b/i.test(prompt) ||
+      (/\b(mouse|ratón|raton)\b/i.test(prompt) &&
+        /burbuj|bubble|rastro|trail|part[ií]cul|efecto|effect|seguir|follow/i.test(
+          prompt,
+        )));
   const otherDesign =
     /(paleta|fondo|background|tipograf|tarjeta|layout|column|rediseñ|estética|whole|theme)/i.test(
       prompt,

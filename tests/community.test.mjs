@@ -1675,7 +1675,7 @@ test("image-drawing requests cannot be satisfied by the existing bands-only canv
   const result = scopedProposal(
     base,
     { changedFields: ["drawing", "drawingTargets"], scene: next },
-    "dibujar solo en la foto del hero y que todos vean los aportes",
+    "dibujar solo en la foto del hero, que con el mouse se pueda y que todos vean los aportes",
   );
   assert.equal(result.drawing, false);
   assert.deepEqual(result.drawingTargets, ["portrait"]);
