@@ -1,4 +1,4 @@
-import { validateScene } from "../../shared/community-scene.mjs";
+import { validateScene, sceneSchema } from "../../shared/community-scene.mjs";
 export const visualFields = [
   "palette",
   "font",
@@ -15,10 +15,14 @@ export const visualFields = [
 ];
 export function scopedProposal(current, proposal, prompt) {
   const base = validateScene(current),
-    generated = validateScene(proposal.scene);
+    generated = sceneSchema.partial().parse(proposal.scene);
   const next = { ...base };
   for (const field of proposal.changedFields)
-    if (visualFields.includes(field)) next[field] = generated[field];
+    if (visualFields.includes(field)) {
+      if (!Object.hasOwn(proposal.scene, field))
+        throw new Error("Missing modified field");
+      next[field] = generated[field];
+    }
   void prompt;
   return validateScene(next);
 }

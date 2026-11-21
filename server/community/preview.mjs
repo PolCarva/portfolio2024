@@ -1,10 +1,6 @@
 import { applyRuntimeValue } from "./runtime.mjs";
 import { contactPayload } from "../../src/contact.mjs";
 import { pageDocument } from "../../shared/community-page.mjs";
-import {
-  protectedVisualSelector,
-  exclusionPath,
-} from "../../shared/community-protection.mjs";
 import { assessProgramQuality } from "./quality.mjs";
 import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
@@ -225,27 +221,6 @@ export async function renderReview(
                 ],
               });
             }
-            const rects = await page.evaluate(
-              (selector) =>
-                [...document.querySelectorAll(selector)].map((node) => {
-                  const r = node.getBoundingClientRect();
-                  return {
-                    width: r.width,
-                    height: r.height,
-                    left: r.left,
-                    top: r.top,
-                    right: r.right,
-                    bottom: r.bottom,
-                  };
-                }),
-              protectedVisualSelector,
-            );
-            await page.locator("iframe.community-program").evaluate(
-              (node, path) => {
-                node.style.clipPath = path;
-              },
-              exclusionPath(rects, width, height),
-            );
           }
 
           await bounded(

@@ -190,7 +190,7 @@ export default function PageProgram({
         title={
           language === "es" ? "Portfolio intervenido" : "Community portfolio"
         }
-        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads"
+        sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
         referrerPolicy="no-referrer"
         allow="camera 'none'; microphone 'none'; geolocation 'none'; clipboard-read 'none'; clipboard-write 'none'"
         onLoad={() =>

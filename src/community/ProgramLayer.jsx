@@ -1,8 +1,4 @@
 import { useEffect, useMemo, useRef } from "react";
-import {
-  protectedVisualSelector,
-  exclusionPath,
-} from "../../shared/community-protection.mjs";
 import { programDocument } from "../../shared/community-program.mjs";
 export default function ProgramLayer({ program, preview = false }) {
   const frame = useRef(null);
@@ -14,8 +10,7 @@ export default function ProgramLayer({ program, preview = false }) {
     if (preview) return;
     const iframe = frame.current,
       reduced = matchMedia("(prefers-reduced-motion: reduce)");
-    let timer,
-      pointer = { x: innerWidth / 2, y: innerHeight / 3, down: false };
+    let pointer = { x: innerWidth / 2, y: innerHeight / 3, down: false };
     function send() {
       if (!reduced.matches)
         iframe.contentWindow?.postMessage(
@@ -23,54 +18,30 @@ export default function ProgramLayer({ program, preview = false }) {
           "*",
         );
     }
-    function mask() {
-      iframe.style.clipPath = exclusionPath(
-        [...document.querySelectorAll(protectedVisualSelector)].map((node) =>
-          node.getBoundingClientRect(),
-        ),
-        innerWidth,
-        innerHeight,
-      );
-      send();
-    }
     function move(event) {
       if (event.pointerType === "touch") return;
       pointer = { x: event.clientX, y: event.clientY, down: event.buttons > 0 };
       send();
     }
-    function schedule() {
-      if (timer) return;
-      timer = requestAnimationFrame(() => {
-        timer = null;
-        mask();
-      });
-    }
     function motion() {
       iframe.hidden = reduced.matches;
     }
-    iframe.addEventListener("load", mask);
+    iframe.addEventListener("load", send);
     window.addEventListener("pointermove", move, { passive: true });
     window.addEventListener("pointerdown", move, { passive: true });
     window.addEventListener("pointerup", move, { passive: true });
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", send, { passive: true });
+    window.addEventListener("resize", send);
     reduced.addEventListener("change", motion);
-    const observer = new ResizeObserver(schedule);
-    observer.observe(document.documentElement);
-    const mutations = new MutationObserver(schedule);
-    mutations.observe(document.body, { childList: true, subtree: true });
-    mask();
+    send();
     motion();
     return () => {
-      cancelAnimationFrame(timer);
-      observer.disconnect();
-      mutations.disconnect();
-      iframe.removeEventListener("load", mask);
+      iframe.removeEventListener("load", send);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerdown", move);
       window.removeEventListener("pointerup", move);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
+      window.removeEventListener("scroll", send);
+      window.removeEventListener("resize", send);
       reduced.removeEventListener("change", motion);
     };
   }, [preview, source]);

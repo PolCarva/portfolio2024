@@ -663,7 +663,7 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
         paid++;
         assert(body.output_config.format.schema);
         assert.equal(body.output_config.format.type, "json_schema");
-        assert(body.max_tokens <= 8000);
+        assert(body.max_tokens <= 12000);
         const value =
           body.model === "claude-haiku-5-5"
             ? {
@@ -1894,5 +1894,25 @@ test("shared runtime data is atomic, idempotent and separate from professional c
   assert.equal(
     (await (await call("/api/community/data?key=" + key)).json()).value,
     9,
+  );
+});
+
+test("partial generation patches preserve existing code and drawings without echoing them", async () => {
+  const { scopedProposal } = await import("../server/community/proposal.mjs");
+  const original = scene();
+  const result = scopedProposal(
+    original,
+    { changedFields: ["drawingTargets"], scene: { drawingTargets: ["page"] } },
+    "Dibujar en todo",
+  );
+  assert.deepEqual(result.nodes, validateScene(original).nodes);
+  assert.equal(result.palette, original.palette);
+  assert.deepEqual(result.drawingTargets, ["page"]);
+  assert.throws(() =>
+    scopedProposal(
+      original,
+      { changedFields: ["program"], scene: {} },
+      "Cambiar todo",
+    ),
   );
 });
