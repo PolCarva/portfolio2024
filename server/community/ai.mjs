@@ -136,6 +136,12 @@ async function response(
   let parsed;
   try {
     parsed = JSON.parse(text);
+    if (schema === verdict && Array.isArray(parsed.qualityIssues))
+      parsed.qualityIssues = parsed.qualityIssues
+        .slice(0, 5)
+        .map((issue) =>
+          typeof issue === "string" ? issue.slice(0, 160) : issue,
+        );
     return { value: schema.parse(parsed), usage };
   } catch (error) {
     throw Object.assign(new Error("Invalid AI response"), {

@@ -643,6 +643,7 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
   try {
     for (const scenario of [
       "approved",
+      "verbose-review",
       "over-budget",
       "refused",
       "provider-down",
@@ -679,7 +680,10 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
             : {
                 requestFulfilled: true,
                 animationStable: true,
-                qualityIssues: [],
+                qualityIssues:
+                  scenario === "verbose-review"
+                    ? ["Diagnostic ".repeat(40)]
+                    : [],
               };
         return {
           ok: scenario !== "provider-down",
@@ -702,10 +706,14 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
         scene: originalScene,
         deadline: Date.now() + 10000,
       });
-      assert.equal(result.approved, scenario === "approved");
+      assert.equal(
+        result.approved,
+        ["approved", "verbose-review"].includes(scenario),
+      );
       assert(counted > 0);
       if (scenario === "over-budget") assert.equal(paid, 0);
-      if (scenario === "approved") assert.equal(paid, 2);
+      if (["approved", "verbose-review"].includes(scenario))
+        assert.equal(paid, 2);
     }
   } finally {
     globalThis.fetch = originalFetch;
