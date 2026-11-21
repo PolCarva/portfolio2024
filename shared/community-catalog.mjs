@@ -164,6 +164,7 @@ export const communityMarkPath =
 
 export function drawingEnabled(scene, zone) {
   if (!scene) return false;
+  if (zone === "page") return scene.drawingTargets?.includes("page");
   const targets = scene.drawingTargets || [];
   return zone === "portrait"
     ? targets.includes("portrait")

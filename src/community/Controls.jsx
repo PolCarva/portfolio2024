@@ -12,14 +12,14 @@ const copy = {
     community: "Ver versión comunitaria",
     title: "Este portfolio también es tuyo.",
     intro:
-      "Un pedido. Un cambio que verán los demás. Podés transformar la estética y sumar dibujos o movimiento. Mi identidad y mi trabajo permanecen intactos.",
+      "Un pedido. Un cambio que verán los demás. Podés transformar la estética y sumar dibujos o movimiento. Podés cambiar textos, diseño e interacciones.",
     label: "¿Qué le cambiarías?",
     placeholder:
       "Un jardín digital: tonos verdes, tarjetas redondeadas y estrellas que flotan…",
     examples: [
       "Una estética retro y geométrica",
       "Un cielo espacial con partículas",
-      "Activá un lienzo para dibujar",
+      "Dibujar en todo el portfolio",
     ],
     privacy:
       "Tu pedido se procesa con IA y se conserva hasta 30 días para prevenir abuso. No incluyas datos personales. No se publica el texto del pedido.",
@@ -76,14 +76,14 @@ const copy = {
     community: "View community version",
     title: "This portfolio is yours, too.",
     intro:
-      "One request. A change everyone will see. Transform its look, add drawings or motion. My identity and work stay intact.",
+      "One request. A change everyone will see. Transform its look, add drawings or motion. Change texts, design and interactions.",
     label: "What would you change?",
     placeholder:
       "A digital garden: green tones, rounded cards and floating stars…",
     examples: [
       "A retro geometric look",
       "A space sky with particles",
-      "Enable a drawing canvas",
+      "Draw anywhere on the portfolio",
     ],
     privacy:
       "Your request is processed with AI and kept for up to 30 days to prevent abuse. Do not include personal information. Your request text is not published.",

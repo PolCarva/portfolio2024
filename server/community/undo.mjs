@@ -8,6 +8,7 @@ export function sceneAt(state, revision) {
 export function canUndo(state, job) {
   return (
     job.status === "published" &&
+    !job.unchanged &&
     Boolean(sceneAt(state, job.base) && sceneAt(state, job.revision))
   );
 }

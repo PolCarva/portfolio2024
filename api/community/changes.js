@@ -103,6 +103,7 @@ export function createChangeHandler({
           deadline: reservation.job.createdAt + 50000,
           reserveRepair: () => reserveRepair(data.id),
           deferStages: true,
+          deferRuntime: true,
         });
       } catch {
         result = { approved: false, reason: "technical" };

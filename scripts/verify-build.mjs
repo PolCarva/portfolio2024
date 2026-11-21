@@ -75,7 +75,8 @@ for (const file of javascript) {
     `${file}: ${bytes.length.toLocaleString()} bytes / gzip ${gzipSync(bytes).length.toLocaleString()} bytes`,
   );
 }
-assert(total < 240000, `JavaScript budget exceeded: ${total}`);
+// Full-page DOM runtime preserves the baseline menu, languages and contact bridge.
+assert(total < 250000, `JavaScript budget exceeded: ${total}`);
 console.log(
   "Build verified: prerendered EN/ES, local assets, social metadata, OG dimensions and both CVs.",
 );

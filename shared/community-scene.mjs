@@ -9,7 +9,7 @@ export const pointSchema = z
   .object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100) })
   .strict();
 export const drawingZoneSchema = z.union([
-  z.enum(["hero", "work", "contact", "portrait"]),
+  z.enum(["hero", "work", "contact", "portrait", "page"]),
   z.string().regex(/^project:[a-z0-9-]{1,80}$/),
 ]);
 export const nodeSchema = z
@@ -64,7 +64,21 @@ export const sceneSchema = z
         html: z.string().max(12000),
         css: z.string().max(12000),
         javascript: z.string().max(24000),
-        layer: z.enum(["foreground", "background"]),
+        layer: z.enum(["foreground", "background", "page"]),
+        tests: z
+          .array(
+            z
+              .object({
+                action: z.enum(["click", "fill", "press", "hover", "assert"]),
+                selector: z.string().max(300),
+                value: z.string().max(500),
+                expectSelector: z.string().max(300),
+                expectText: z.string().max(500),
+              })
+              .strict(),
+          )
+          .max(12)
+          .default([]),
       })
       .strict()
       .refine(
@@ -103,8 +117,8 @@ export const sceneSchema = z
     background: z.enum(["plain", "grid", "dots", "stars"]),
     drawing: z.boolean(),
     drawingTargets: z
-      .array(z.enum(["bands", "portrait", "projects"]))
-      .max(3)
+      .array(z.enum(["bands", "portrait", "projects", "page"]))
+      .max(4)
       .default([]),
     nodes: z.array(nodeSchema).max(200),
   })
@@ -161,11 +175,13 @@ export function applyDrawing(scene, drawing) {
     drawingTargets: [
       ...new Set([
         ...(scene.drawingTargets || []),
-        d.zone === "portrait"
-          ? "portrait"
-          : d.zone.startsWith("project:")
-            ? "projects"
-            : "bands",
+        d.zone === "page"
+          ? "page"
+          : d.zone === "portrait"
+            ? "portrait"
+            : d.zone.startsWith("project:")
+              ? "projects"
+              : "bands",
       ]),
     ],
     nodes: [

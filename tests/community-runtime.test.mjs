@@ -10,8 +10,8 @@ test("the visible frame remains painted while the next worker frame is in flight
     javascript: "function render(){}",
     layer: "foreground",
   });
-  const start = doc.indexOf("function tick(now)"),
-    end = doc.indexOf("try{worker=new Worker", start);
+  const start = doc.search(/function tick\(now\)\s*\{/),
+    end = start + doc.slice(start).search(/try\s*\{\s*worker\s*=\s*new Worker/);
   let visible = true,
     width = 1280,
     height = 720;

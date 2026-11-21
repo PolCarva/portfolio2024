@@ -1,3 +1,6 @@
+import { applyRuntimeValue } from "./runtime.mjs";
+import { contactPayload } from "../../src/contact.mjs";
+import { pageDocument } from "../../shared/community-page.mjs";
 import {
   protectedVisualSelector,
   exclusionPath,
@@ -29,6 +32,7 @@ export async function renderReview(
 ) {
   // A manual drawing changes only trusted numeric strokes; do not rerun unrelated code.
   if (drawingOnly) scene = { ...scene, program: null };
+  const isPage = scene.program?.layer === "page";
   const started = Date.now(),
     mark = (stage) =>
       console.info("community_preview", stage, Date.now() - started);
@@ -107,24 +111,97 @@ export async function renderReview(
         const page = await context.newPage(),
           cdp = await context.newCDPSession(page),
           images = [],
-          temporalReports = [];
+          temporalReports = [],
+          pageErrors = [];
+        // Collect browser exceptions outside the generated document as well as
+        // its telemetry. An initialization error must not pass a runtime test.
+        let previewValues = {};
+        await page.exposeBinding(
+          "__communityPreviewBridge",
+          (_source, data) => {
+            if (data.type === "community-page-contact") {
+              try {
+                contactPayload(data.data);
+                return { ok: true };
+              } catch {
+                return { ok: false };
+              }
+            }
+            const { key, op, value } = data.data || {};
+            if (!/^[a-z][a-z0-9_-]{0,47}$/.test(key || ""))
+              return { error: "invalid" };
+            const current = Object.hasOwn(previewValues, key)
+              ? previewValues[key]
+              : null;
+            if (op === "get") return { value: current };
+            try {
+              const next = applyRuntimeValue(current, op, value);
+              if (JSON.stringify(next).length > 32000)
+                return { error: "capacity" };
+              previewValues[key] = next;
+              return { value: next };
+            } catch {
+              return { error: "invalid" };
+            }
+          },
+        );
+        await page.addInitScript(() => {
+          addEventListener("message", async (event) => {
+            if (
+              event.source !== window ||
+              !["community-page-data", "community-page-contact"].includes(
+                event.data?.type,
+              )
+            )
+              return;
+            const data = event.data,
+              result = await window.__communityPreviewBridge(data);
+            window.postMessage(
+              {
+                ...result,
+                type:
+                  data.type === "community-page-data"
+                    ? "community-data-result"
+                    : "community-contact-result",
+                id: data.id,
+              },
+              "*",
+            );
+          });
+        });
+        page.on("pageerror", (error) => {
+          pageErrors.push(error.message.split("\n")[0].slice(0, 160));
+        });
         for (const [width, height] of [
           [1280, 900],
           [390, 844],
         ]) {
           if (Date.now() > deadline) throw new Error("Preview timeout");
+          pageErrors.length = 0;
+          previewValues = {};
           mark("viewport_" + width);
           await page.setViewportSize({ width, height });
           await page.emulateMedia({
             reducedMotion: scene.program ? "no-preference" : "reduce",
           });
-          const markup = renderPreview(content, scene, "es");
+          const markup = renderPreview(
+            content,
+            isPage ? { ...scene, program: null } : scene,
+            "es",
+          );
           await page.setContent(
-            `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important} *:not(.community-node){animation:none!important;transition:none!important}.community-node{animation-play-state:paused!important}</style></head><body>${markup}</body></html>`,
+            isPage
+              ? pageDocument(scene.program, {
+                  html: markup,
+                  styles: css,
+                  base: "https://portfolio-preview.invalid",
+                  viewportHeight: height,
+                })
+              : `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important} *:not(.community-node){animation:none!important;transition:none!important}.community-node{animation-play-state:paused!important}</style></head><body>${markup}</body></html>`,
             { waitUntil: "load", timeout: 10000 },
           );
           mark("html_ready");
-          if (scene.program) {
+          if (scene.program && !isPage) {
             const frame = page.frames().find((frame) => frame.parentFrame());
             if (!frame) throw new Error("Program frame missing");
             try {
@@ -193,9 +270,9 @@ export async function renderReview(
           const size = metrics.cssContentSize;
           mark("layout_" + size.width + "x" + size.height);
           if (
-            heading.nodeIds.length !== 1 ||
-            bands.nodeIds.length !== 3 ||
-            size.width > width + 2 ||
+            (!isPage &&
+              (heading.nodeIds.length !== 1 || bands.nodeIds.length !== 3)) ||
+            (!isPage && size.width > width + 2) ||
             size.height > 26000
           )
             throw new Error("Preview integrity failed");
@@ -216,7 +293,7 @@ export async function renderReview(
             );
             images.push(Buffer.from(data, "base64"));
           };
-          if (scene.program) {
+          if (scene.program && !isPage) {
             const frame = page.frames().find((frame) => frame.parentFrame());
             await page.evaluate(() =>
               document
@@ -304,6 +381,76 @@ export async function renderReview(
               viewport: width < 800 ? "mobile" : "desktop",
               ...report,
             });
+          }
+          if (isPage) {
+            const results = [];
+            try {
+              await page.waitForFunction(
+                () => document.documentElement.dataset.status === "ready",
+                {},
+                { timeout: 4000 },
+              );
+              for (const step of scene.program.tests || []) {
+                const locator = page.locator(step.selector).first();
+                if (step.action === "click")
+                  await locator.click({ timeout: 2500 });
+                if (step.action === "fill")
+                  await locator.fill(step.value, { timeout: 2500 });
+                if (step.action === "press")
+                  await locator.press(step.value, { timeout: 2500 });
+                if (step.action === "hover")
+                  await locator.hover({ timeout: 2500 });
+                if (step.expectSelector) {
+                  const expected = page.locator(step.expectSelector).first();
+                  await expected.waitFor({ state: "visible", timeout: 2500 });
+                  if (
+                    step.expectText &&
+                    !(await expected.textContent()).includes(step.expectText)
+                  )
+                    throw Error(
+                      "Expected text missing: " + step.expectText.slice(0, 80),
+                    );
+                }
+                results.push({
+                  action: step.action,
+                  selector: step.selector,
+                  passed: true,
+                });
+              }
+              await page.waitForFunction(
+                () =>
+                  JSON.parse(document.documentElement.dataset.pageProbe || "{}")
+                    .frames >= 8,
+                {},
+                { timeout: 3000 },
+              );
+              const probe = await page.evaluate(() =>
+                JSON.parse(document.documentElement.dataset.pageProbe || "{}"),
+              );
+              if (pageErrors.length || probe.errors?.length)
+                throw Error(
+                  [...pageErrors, ...(probe.errors || [])].join("; "),
+                );
+              temporalReports.push({
+                viewport: width < 800 ? "mobile" : "desktop",
+                frames: probe.frames,
+                tests: results,
+                errors: 0,
+              });
+            } catch (error) {
+              throw Object.assign(new Error("Page program failed"), {
+                code: "quality",
+                issues: [error.message.split("\n")[0].slice(0, 160)],
+              });
+            }
+            const live = await cdp.send("Page.getLayoutMetrics");
+            await shot({
+              x: 0,
+              y: 0,
+              width,
+              height: Math.ceil(Math.min(26000, live.cssContentSize.height)),
+            });
+            continue;
           }
           if (!drawingOnly)
             await shot({ x: 0, y: 0, width, height: Math.ceil(size.height) });
@@ -412,11 +559,13 @@ export async function renderReview(
         return {
           images,
           viewports: ["desktop", "mobile"],
-          quality: scene.program
-            ? assessProgramQuality(temporalReports, argumentsPrompt, {
-                canvasExpected: !scene.program.html.trim(),
-              })
-            : null,
+          quality: isPage
+            ? { passed: true, issues: [], reports: temporalReports }
+            : scene.program
+              ? assessProgramQuality(temporalReports, argumentsPrompt, {
+                  canvasExpected: !scene.program.html.trim(),
+                })
+              : null,
           contentRevision: current
             ? JSON.parse(current.bytes).revision
             : "initial",

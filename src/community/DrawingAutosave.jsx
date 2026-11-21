@@ -204,8 +204,8 @@ export default function DrawingAutosave({
       {status !== "saved" && (
         <small>
           {es
-            ? "Revisión breve de seguridad con IA. El dibujo se guarda sin enviar un formulario."
-            : "Brief AI safety review. No form submission needed."}
+            ? "Guardado directo y automático. El dibujo queda visible para todos."
+            : "Direct automatic saving. Your drawing becomes visible to everyone."}
         </small>
       )}
       {!busy && status !== "saved" && (

@@ -258,7 +258,7 @@ function CommunityCanvas({
   return (
     <aside
       id={`community-canvas-${zone}`}
-      className={`community-canvas ${image ? "community-canvas--image" : ""} ${drawing ? "is-drawing" : ""}`}
+      className={`community-canvas ${zone === "page" ? "community-canvas--page" : image ? "community-canvas--image" : ""} ${drawing ? "is-drawing" : ""}`}
       aria-label={es ? "Lienzo comunitario" : "Community canvas"}
     >
       <div
@@ -310,7 +310,11 @@ function CommunityCanvas({
         )}
       </div>
       {enabled && !preview && (
-        <DrawingTools floating={image && (drawing || strokes.length > 0)}>
+        <DrawingTools
+          floating={
+            zone === "page" || (image && (drawing || strokes.length > 0))
+          }
+        >
           <div
             className={
               "community-draw-controls" +
@@ -327,16 +331,20 @@ function CommunityCanvas({
                 ? drawing
                   ? "Terminar dibujo"
                   : image
-                    ? zone === "portrait"
-                      ? "Dibujar en la foto de perfil"
-                      : "Dibujar en esta imagen"
+                    ? zone === "page"
+                      ? "Dibujar en todo el portfolio"
+                      : zone === "portrait"
+                        ? "Dibujar en la foto de perfil"
+                        : "Dibujar en esta imagen"
                     : "Dibujar acá"
                 : drawing
                   ? "Finish drawing"
                   : image
-                    ? zone === "portrait"
-                      ? "Draw on the profile photo"
-                      : "Draw on this image"
+                    ? zone === "page"
+                      ? "Draw anywhere on the portfolio"
+                      : zone === "portrait"
+                        ? "Draw on the profile photo"
+                        : "Draw on this image"
                     : "Draw here"}
             </button>
             {(!image || drawing || strokes.length > 0) && (

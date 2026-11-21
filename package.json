@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/build-community-preview.mjs && vite build && vite build --ssr src/entry-server.jsx --outDir .prerender && node scripts/prerender.mjs",
+    "build": "node scripts/write-third-party-licenses.mjs && node scripts/build-community-preview.mjs && vite build && vite build --ssr src/entry-server.jsx --outDir .prerender && node scripts/prerender.mjs",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "check": "node scripts/verify-build.mjs",
@@ -33,6 +33,7 @@
     "postcss": "^8.4.33",
     "react-test-renderer": "^18.2.0",
     "tailwindcss": "^3.4.1",
+    "terser": "^5.44.1",
     "vite": "^5.0.8"
   },
   "overrides": {

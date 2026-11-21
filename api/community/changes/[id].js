@@ -98,6 +98,7 @@ export function createContinuationHandler({ evaluate = evaluateChange } = {}) {
           drawing: pending.drawing || job.kind === "drawing" ? true : undefined,
           resume,
           deferStages: true,
+          deferRuntime: true,
           deadline: Date.now() + 50000,
           reserveRepair: () => reserveRepair(id),
         });

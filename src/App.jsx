@@ -1,3 +1,4 @@
+import { deliverContact } from "./contact.mjs";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import defaults from "./content";
 import {
@@ -11,10 +12,12 @@ import {
 import CommunityCanvas from "./community/Artwork.jsx";
 import {
   sceneAttributes,
+  communityMarkPath,
   drawingEnabled,
 } from "../shared/community-catalog.mjs";
 import "./community/community.css";
 import CommunityProgram from "./community/ProgramLayer.jsx";
+const CommunityPage = lazy(() => import("./community/PageProgram.jsx"));
 const CommunityControls = lazy(() => import("./community/Controls.jsx"));
 
 const sectionIds = ["work", "about", "experience", "contact"];
@@ -28,10 +31,7 @@ function Arrow() {
 function BrandMark() {
   return (
     <svg viewBox="0 0 30 30" fill="none" aria-hidden="true">
-      <path
-        d="M5.66749 15.125C4.19428 15.125 3 16.3192 3 17.7925V24.5824C3 26.0557 4.19428 27.2499 5.66749 27.2499H12.5447C14.0179 27.2499 15.2121 26.0557 15.2121 24.5824V17.7925C15.2121 16.3192 16.4065 15.125 17.8796 15.125H24.5824C26.0556 15.125 27.2499 13.9307 27.2499 12.4575V5.66749C27.2499 4.19431 26.0556 3 24.5824 3H17.7052C16.232 3 15.0377 4.19431 15.0377 5.66749V12.4575C15.0377 13.9307 13.8435 15.125 12.3702 15.125H5.66749Z"
-        fill="currentColor"
-      />
+      <path d={communityMarkPath} fill="currentColor" />
     </svg>
   );
 }
@@ -113,13 +113,7 @@ function ContactForm({ t }) {
     setStatus("sending");
     const timeout = setTimeout(() => controller.abort(), 20000);
     try {
-      const response = await fetch(form.action, {
-        method: "POST",
-        body: new FormData(form),
-        headers: { Accept: "application/json" },
-        signal: controller.signal,
-      });
-      if (!response.ok) throw new Error("Message delivery failed");
+      await deliverContact(new FormData(form), controller.signal);
       form.reset();
       setStatus("sent");
     } catch {
@@ -279,471 +273,508 @@ function App({
           />
         </Suspense>
       )}
-      {visualScene?.program && (
-        <CommunityProgram
-          program={visualScene.program}
-          preview={communityPreview}
-        />
+      {visualScene?.program?.layer === "page" ? (
+        <Suspense fallback={null}>
+          <CommunityPage
+            program={visualScene.program}
+            content={content}
+            language={language}
+            scene={visualScene}
+            saving={Boolean(drawingDraft)}
+            onDrawing={setDrawingDraft}
+            onClear={() => setDrawingDraft(null)}
+          />
+        </Suspense>
+      ) : (
+        visualScene?.program && (
+          <CommunityProgram
+            program={visualScene.program}
+            preview={communityPreview}
+          />
+        )
       )}
-      <a className="skip-link" href="#main">
-        {t.skip}
-      </a>
-      <header
-        className="site-header"
-        onKeyDown={(event) => {
-          if (event.key === "Escape") setMenuOpen(false);
-        }}
-      >
-        <a
-          className="wordmark"
-          href={lang === "es" ? "/es/" : "/"}
-          aria-label="Pablo Carvalho — home"
-        >
-          pablo<span>carvalho</span>
-          <i>↗</i>
+      <div className="community-original-content">
+        <a className="skip-link" href="#main">
+          {t.skip}
         </a>
-        <nav
-          className={`site-nav ${menuOpen ? "is-open" : ""}`}
-          id="navigation"
-          aria-label={
-            lang === "es" ? "Navegación principal" : "Main navigation"
-          }
+        <header
+          className="site-header"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setMenuOpen(false);
+          }}
         >
-          {t.nav.map((item, index) => (
-            <a
-              key={item}
-              href={`#${sectionIds[index]}`}
-              onClick={() => setMenuOpen(false)}
-            >
-              {item}
-              <span>0{index + 1}</span>
-            </a>
-          ))}
-        </nav>
-        <div className="header-actions">
-          <div
-            className="language-switch"
-            aria-label={lang === "es" ? "Idioma" : "Language"}
+          <a
+            className="wordmark"
+            href={lang === "es" ? "/es/" : "/"}
+            aria-label="Pablo Carvalho — home"
           >
-            <a
-              href="/"
-              lang="en"
-              hrefLang="en"
-              aria-current={lang === "en" ? "page" : undefined}
-            >
-              EN
-            </a>
-            <span>/</span>
-            <a
-              href="/es/"
-              lang="es"
-              hrefLang="es"
-              aria-current={lang === "es" ? "page" : undefined}
-            >
-              ES
-            </a>
-          </div>
-          <button
-            className="menu-toggle"
-            aria-expanded={menuOpen}
-            aria-controls="navigation"
-            onClick={() => setMenuOpen(!menuOpen)}
+            pablo<span>carvalho</span>
+            <i>↗</i>
+          </a>
+          <nav
+            className={`site-nav ${menuOpen ? "is-open" : ""}`}
+            id="navigation"
+            aria-label={
+              lang === "es" ? "Navegación principal" : "Main navigation"
+            }
           >
-            {menuOpen ? "×" : t.menu}
-          </button>
-        </div>
-      </header>
-      <main id="main">
-        <section className="hero section-shell" aria-labelledby="hero-title">
-          <div className="hero-topline">
-            <p className="eyebrow">
-              <span className="status-dot" />
-              {t.role}
-            </p>
-            <p className="hero-location">
-              MONTEVIDEO, UY <span>UTC−3</span>
-            </p>
-          </div>
-          <div className="hero-grid">
-            <div className="hero-copy">
-              <h1 id="hero-title">
-                <span>{t.hero[0]}</span>
-                <span className="hero-second">{t.hero[1]}</span>
-              </h1>
-              <p className="hero-intro">{t.intro}</p>
-              <div className="hero-actions">
-                <a className="button button--dark" href="#work">
-                  {t.explore}
-                  <Arrow />
-                </a>
-                <a
-                  className="text-link"
-                  href={lang === "es" ? assets.cvES : assets.cvEN}
-                  download
-                >
-                  {t.resume}
-                  <span aria-hidden="true">↓</span>
-                </a>
-              </div>
+            {t.nav.map((item, index) => (
+              <a
+                key={item}
+                href={`#${sectionIds[index]}`}
+                onClick={() => setMenuOpen(false)}
+              >
+                {item}
+                <span>0{index + 1}</span>
+              </a>
+            ))}
+          </nav>
+          <div className="header-actions">
+            <div
+              className="language-switch"
+              aria-label={lang === "es" ? "Idioma" : "Language"}
+            >
+              <a
+                href="/"
+                lang="en"
+                hrefLang="en"
+                aria-current={lang === "en" ? "page" : undefined}
+              >
+                EN
+              </a>
+              <span>/</span>
+              <a
+                href="/es/"
+                lang="es"
+                hrefLang="es"
+                aria-current={lang === "es" ? "page" : undefined}
+              >
+                ES
+              </a>
             </div>
-            <figure className="portrait-composition">
-              <div className="portrait-frame" data-draw-surface="portrait">
-                <img
-                  src={assets.portrait}
-                  srcSet={
-                    assets.portrait === "/images/pablo-800.webp"
-                      ? "/images/pablo-480.webp 480w, /images/pablo-800.webp 800w"
-                      : undefined
-                  }
-                  sizes="(max-width: 700px) 76vw, 32vw"
-                  width="800"
-                  height="800"
-                  alt={t.portrait}
-                />
-                {drawingEnabled(visualScene, "portrait") && (
-                  <CommunityCanvas
-                    scene={visualScene}
-                    zone="portrait"
-                    image
-                    language={lang}
-                    preview={communityPreview}
-                    saving={Boolean(drawingDraft)}
-                    onPublish={setDrawingDraft}
-                    onClear={(zone) =>
-                      setDrawingDraft((d) => (d?.zone === zone ? null : d))
+            <button
+              className="menu-toggle"
+              aria-expanded={menuOpen}
+              aria-controls="navigation"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              {menuOpen ? "×" : t.menu}
+            </button>
+          </div>
+        </header>
+        <main id="main">
+          <section className="hero section-shell" aria-labelledby="hero-title">
+            <div className="hero-topline">
+              <p className="eyebrow">
+                <span className="status-dot" />
+                {t.role}
+              </p>
+              <p className="hero-location">
+                MONTEVIDEO, UY <span>UTC−3</span>
+              </p>
+            </div>
+            <div className="hero-grid">
+              <div className="hero-copy">
+                <h1 id="hero-title">
+                  <span>{t.hero[0]}</span>
+                  <span className="hero-second">{t.hero[1]}</span>
+                </h1>
+                <p className="hero-intro">{t.intro}</p>
+                <div className="hero-actions">
+                  <a className="button button--dark" href="#work">
+                    {t.explore}
+                    <Arrow />
+                  </a>
+                  <a
+                    className="text-link"
+                    href={lang === "es" ? assets.cvES : assets.cvEN}
+                    download
+                  >
+                    {t.resume}
+                    <span aria-hidden="true">↓</span>
+                  </a>
+                </div>
+              </div>
+              <figure className="portrait-composition">
+                <div className="portrait-frame" data-draw-surface="portrait">
+                  <img
+                    src={assets.portrait}
+                    srcSet={
+                      assets.portrait === "/images/pablo-800.webp"
+                        ? "/images/pablo-480.webp 480w, /images/pablo-800.webp 800w"
+                        : undefined
                     }
+                    sizes="(max-width: 700px) 76vw, 32vw"
+                    width="800"
+                    height="800"
+                    alt={t.portrait}
                   />
-                )}
-                <span className="portrait-mark" aria-hidden="true">
-                  <BrandMark />
-                </span>
-              </div>
-              <figcaption>
-                <span>PABLO CARVALHO</span>
-                <span>{t.portraitNote}</span>
-              </figcaption>
-            </figure>
-          </div>
-          <div className="hero-bottom">
-            <p>{t.location}</p>
-            <a href="#work" className="scroll-cue" aria-label={t.explore}>
-              {t.scroll} <span aria-hidden="true">↓</span>
-            </a>
-          </div>
-        </section>
-        <CommunityCanvas
-          scene={visualScene}
-          zone="hero"
-          language={language}
-          preview={communityPreview}
-          saving={Boolean(drawingDraft)}
-          onPublish={setDrawingDraft}
-          onClear={(zone) =>
-            setDrawingDraft((current) =>
-              current?.zone === zone ? null : current,
-            )
-          }
-        />
-        <div className="discipline-strip" aria-hidden="true">
-          {t.strip.map((item) => (
-            <span key={item}>
-              <BrandMark />
-              {item}
-            </span>
-          ))}
-        </div>
-        <section
-          id="work"
-          className="work-section section-shell"
-          aria-labelledby="work-title"
-        >
-          <div className="section-heading reveal">
-            <p className="eyebrow">{t.workLabel}</p>
-            <div>
-              <h2 id="work-title">{t.workTitle}</h2>
-              <p>{t.workIntro}</p>
+                  {drawingEnabled(visualScene, "portrait") && (
+                    <CommunityCanvas
+                      scene={visualScene}
+                      zone="portrait"
+                      image
+                      language={lang}
+                      preview={
+                        communityPreview ||
+                        visualScene?.program?.layer === "page"
+                      }
+                      saving={Boolean(drawingDraft)}
+                      onPublish={setDrawingDraft}
+                      onClear={(zone) =>
+                        setDrawingDraft((d) => (d?.zone === zone ? null : d))
+                      }
+                    />
+                  )}
+                  <span className="portrait-mark" aria-hidden="true">
+                    <BrandMark />
+                  </span>
+                </div>
+                <figcaption>
+                  <span>PABLO CARVALHO</span>
+                  <span>{t.portraitNote}</span>
+                </figcaption>
+              </figure>
             </div>
+            <div className="hero-bottom">
+              <p>{t.location}</p>
+              <a href="#work" className="scroll-cue" aria-label={t.explore}>
+                {t.scroll} <span aria-hidden="true">↓</span>
+              </a>
+            </div>
+          </section>
+          <CommunityCanvas
+            scene={visualScene}
+            zone="hero"
+            language={language}
+            preview={communityPreview}
+            saving={Boolean(drawingDraft)}
+            onPublish={setDrawingDraft}
+            onClear={(zone) =>
+              setDrawingDraft((current) =>
+                current?.zone === zone ? null : current,
+              )
+            }
+          />
+          <div className="discipline-strip" aria-hidden="true">
+            {t.strip.map((item) => (
+              <span key={item}>
+                <BrandMark />
+                {item}
+              </span>
+            ))}
           </div>
-          <div className="project-grid">
-            {projects
-              .filter((project) => !project.hidden)
-              .map((project, index) => (
-                <article
-                  id={project.anchor || project.id}
-                  className={`project project--${project.id} reveal`}
-                  key={project.id}
-                >
-                  <div className="project-link">
-                    <div
-                      className="project-media"
-                      data-draw-surface={"project:" + project.id}
-                    >
+          <section
+            id="work"
+            className="work-section section-shell"
+            aria-labelledby="work-title"
+          >
+            <div className="section-heading reveal">
+              <p className="eyebrow">{t.workLabel}</p>
+              <div>
+                <h2 id="work-title">{t.workTitle}</h2>
+                <p>{t.workIntro}</p>
+              </div>
+            </div>
+            <div className="project-grid">
+              {projects
+                .filter((project) => !project.hidden)
+                .map((project, index) => (
+                  <article
+                    id={project.anchor || project.id}
+                    className={`project project--${project.id} reveal`}
+                    key={project.id}
+                  >
+                    <div className="project-link">
+                      <div
+                        className="project-media"
+                        data-draw-surface={"project:" + project.id}
+                      >
+                        <a
+                          className="project-media-link"
+                          href={project.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`${project[lang].title} — ${["tv", "youtube"].includes(project.kind) ? t.watch : t.visit}`}
+                        >
+                          <ProjectMedia
+                            project={project}
+                            language={lang}
+                            imageNote={t.imageNote}
+                          />
+                          <span className="project-number">
+                            0{index + 1} / {project.year}
+                          </span>
+                          <span className="project-open">
+                            <Arrow />
+                          </span>
+                        </a>
+                        {drawingEnabled(
+                          visualScene,
+                          "project:" + project.id,
+                        ) && (
+                          <CommunityCanvas
+                            scene={visualScene}
+                            zone={"project:" + project.id}
+                            image
+                            language={lang}
+                            preview={
+                              communityPreview ||
+                              visualScene?.program?.layer === "page"
+                            }
+                            saving={Boolean(drawingDraft)}
+                            onPublish={setDrawingDraft}
+                            onClear={(zone) =>
+                              setDrawingDraft((d) =>
+                                d?.zone === zone ? null : d,
+                              )
+                            }
+                          />
+                        )}
+                      </div>
                       <a
-                        className="project-media-link"
+                        className="project-caption"
                         href={project.href}
                         target="_blank"
                         rel="noreferrer"
-                        aria-label={`${project[lang].title} — ${["tv", "youtube"].includes(project.kind) ? t.watch : t.visit}`}
+                        tabIndex={-1}
                       >
-                        <ProjectMedia
-                          project={project}
-                          language={lang}
-                          imageNote={t.imageNote}
-                        />
-                        <span className="project-number">
-                          0{index + 1} / {project.year}
-                        </span>
-                        <span className="project-open">
-                          <Arrow />
-                        </span>
+                        <p className="eyebrow">{project[lang].label}</p>
+                        <h3>{project[lang].title}</h3>
+                        <p>{project[lang].text}</p>
+                        <div className="project-tags">
+                          {(lang === "es" && project.tagsEs
+                            ? project.tagsEs
+                            : project.tags
+                          ).map((tag) => (
+                            <span key={tag}>{tag}</span>
+                          ))}
+                        </div>
                       </a>
-                      {drawingEnabled(visualScene, "project:" + project.id) && (
-                        <CommunityCanvas
-                          scene={visualScene}
-                          zone={"project:" + project.id}
-                          image
-                          language={lang}
-                          preview={communityPreview}
-                          saving={Boolean(drawingDraft)}
-                          onPublish={setDrawingDraft}
-                          onClear={(zone) =>
-                            setDrawingDraft((d) =>
-                              d?.zone === zone ? null : d,
-                            )
-                          }
-                        />
-                      )}
                     </div>
-                    <a
-                      className="project-caption"
-                      href={project.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      tabIndex={-1}
-                    >
-                      <p className="eyebrow">{project[lang].label}</p>
-                      <h3>{project[lang].title}</h3>
-                      <p>{project[lang].text}</p>
-                      <div className="project-tags">
-                        {(lang === "es" && project.tagsEs
-                          ? project.tagsEs
-                          : project.tags
-                        ).map((tag) => (
-                          <span key={tag}>{tag}</span>
+                    {project.downloads && (
+                      <div className="project-downloads">
+                        {project.downloads.map((download) => (
+                          <a
+                            className="button project-download"
+                            key={download.href}
+                            href={download.href}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {download[lang]}
+                            <Arrow />
+                          </a>
                         ))}
                       </div>
-                    </a>
+                    )}
+                  </article>
+                ))}
+            </div>
+            <div className="client-work reveal">
+              <div className="client-heading">
+                <p className="eyebrow">{t.clientLabel}</p>
+                <h3>{t.clientTitle}</h3>
+              </div>
+              {clientProjects.map((project) => (
+                <a
+                  className="client-row"
+                  key={project.name}
+                  href={project.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${project.name} — ${t.clientVisit}`}
+                >
+                  <ClientArtwork project={project} language={lang} />
+                  <div>
+                    <h4>{project.name}</h4>
+                    <p>
+                      {project[lang]}
+                      <span>{project.tools}</span>
+                    </p>
                   </div>
-                  {project.downloads && (
-                    <div className="project-downloads">
-                      {project.downloads.map((download) => (
-                        <a
-                          className="button project-download"
-                          key={download.href}
-                          href={download.href}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {download[lang]}
-                          <Arrow />
-                        </a>
-                      ))}
-                    </div>
-                  )}
+                  <span className="client-year">{project.year}</span>
+                  <Arrow />
+                </a>
+              ))}
+            </div>
+          </section>
+          <CommunityCanvas
+            scene={visualScene}
+            zone="work"
+            language={language}
+            preview={communityPreview}
+            saving={Boolean(drawingDraft)}
+            onPublish={setDrawingDraft}
+            onClear={(zone) =>
+              setDrawingDraft((current) =>
+                current?.zone === zone ? null : current,
+              )
+            }
+          />
+          <section
+            id="about"
+            className="about-section section-shell"
+            aria-labelledby="about-title"
+          >
+            <div className="about-intro reveal">
+              <p className="eyebrow">{t.aboutLabel}</p>
+              <h2 id="about-title">
+                {t.aboutTitle[0]}
+                <br />
+                <em>{t.aboutTitle[1]}</em>
+              </h2>
+              <div className="about-body">
+                <BrandMark />
+                <div>
+                  <p>{t.about}</p>
+                  <p>{t.aboutMore}</p>
+                </div>
+              </div>
+            </div>
+            <div className="capability-section reveal">
+              <h3>{t.capabilityTitle}</h3>
+              <div className="capabilities">
+                {t.capabilities.map(([number, title, text]) => (
+                  <details key={number}>
+                    <summary>
+                      <span>{number}</span>
+                      <h4>{title}</h4>
+                      <i aria-hidden="true">+</i>
+                    </summary>
+                    <p>{text}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+            <div className="toolkit reveal">
+              <p className="eyebrow">{t.toolkitLabel}</p>
+              <p>{t.toolkit}</p>
+            </div>
+          </section>
+          <section
+            id="experience"
+            className="experience-section section-shell"
+            aria-labelledby="experience-title"
+          >
+            <div className="section-heading reveal">
+              <p className="eyebrow">{t.experienceLabel}</p>
+              <h2 id="experience-title">{t.experienceTitle}</h2>
+            </div>
+            <div className="experience-list">
+              {t.experience.map((item) => (
+                <article key={item.company} className="experience-row reveal">
+                  <p className="experience-date">{item.date}</p>
+                  <div>
+                    <h3>{item.company}</h3>
+                    <h4>{item.role}</h4>
+                    <p>{item.text}</p>
+                  </div>
                 </article>
               ))}
-          </div>
-          <div className="client-work reveal">
-            <div className="client-heading">
-              <p className="eyebrow">{t.clientLabel}</p>
-              <h3>{t.clientTitle}</h3>
             </div>
-            {clientProjects.map((project) => (
-              <a
-                className="client-row"
-                key={project.name}
-                href={project.href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`${project.name} — ${t.clientVisit}`}
-              >
-                <ClientArtwork project={project} language={lang} />
-                <div>
-                  <h4>{project.name}</h4>
-                  <p>
-                    {project[lang]}
-                    <span>{project.tools}</span>
-                  </p>
-                </div>
-                <span className="client-year">{project.year}</span>
-                <Arrow />
-              </a>
-            ))}
-          </div>
-        </section>
-        <CommunityCanvas
-          scene={visualScene}
-          zone="work"
-          language={language}
-          preview={communityPreview}
-          saving={Boolean(drawingDraft)}
-          onPublish={setDrawingDraft}
-          onClear={(zone) =>
-            setDrawingDraft((current) =>
-              current?.zone === zone ? null : current,
-            )
-          }
-        />
-        <section
-          id="about"
-          className="about-section section-shell"
-          aria-labelledby="about-title"
-        >
-          <div className="about-intro reveal">
-            <p className="eyebrow">{t.aboutLabel}</p>
-            <h2 id="about-title">
-              {t.aboutTitle[0]}
-              <br />
-              <em>{t.aboutTitle[1]}</em>
-            </h2>
-            <div className="about-body">
-              <BrandMark />
+            <div className="education-row reveal">
+              <span className="eyebrow">
+                {lang === "es" ? "FORMACIÓN" : "EDUCATION"}
+              </span>
               <div>
-                <p>{t.about}</p>
-                <p>{t.aboutMore}</p>
+                <h3>{t.education}</h3>
+                <p>{t.educationDetail}</p>
+              </div>
+              <div className="resume-links">
+                <a href={assets.cvEN} download>
+                  CV / EN <span>↓</span>
+                </a>
+                <a href={assets.cvES} download>
+                  CV / ES <span>↓</span>
+                </a>
               </div>
             </div>
-          </div>
-          <div className="capability-section reveal">
-            <h3>{t.capabilityTitle}</h3>
-            <div className="capabilities">
-              {t.capabilities.map(([number, title, text]) => (
-                <details key={number}>
-                  <summary>
-                    <span>{number}</span>
-                    <h4>{title}</h4>
-                    <i aria-hidden="true">+</i>
-                  </summary>
-                  <p>{text}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-          <div className="toolkit reveal">
-            <p className="eyebrow">{t.toolkitLabel}</p>
-            <p>{t.toolkit}</p>
-          </div>
-        </section>
-        <section
-          id="experience"
-          className="experience-section section-shell"
-          aria-labelledby="experience-title"
-        >
-          <div className="section-heading reveal">
-            <p className="eyebrow">{t.experienceLabel}</p>
-            <h2 id="experience-title">{t.experienceTitle}</h2>
-          </div>
-          <div className="experience-list">
-            {t.experience.map((item) => (
-              <article key={item.company} className="experience-row reveal">
-                <p className="experience-date">{item.date}</p>
-                <div>
-                  <h3>{item.company}</h3>
-                  <h4>{item.role}</h4>
-                  <p>{item.text}</p>
+            <aside className="workbench reveal">
+              <span className="workbench-symbol" aria-hidden="true">
+                ↗
+              </span>
+              <div>
+                <p className="eyebrow">{t.labLabel}</p>
+                <h3>{t.lab}</h3>
+                <p>{t.labText}</p>
+              </div>
+              <span className="workbench-dots" aria-hidden="true">
+                •••
+              </span>
+            </aside>
+          </section>
+          <CommunityCanvas
+            scene={visualScene}
+            zone="contact"
+            language={language}
+            preview={communityPreview}
+            saving={Boolean(drawingDraft)}
+            onPublish={setDrawingDraft}
+            onClear={(zone) =>
+              setDrawingDraft((current) =>
+                current?.zone === zone ? null : current,
+              )
+            }
+          />
+          <section
+            id="contact"
+            className="contact-section section-shell"
+            aria-labelledby="contact-title"
+          >
+            <p className="eyebrow reveal">{t.contactLabel}</p>
+            <div className="contact-grid">
+              <div className="contact-copy reveal">
+                <h2 id="contact-title">
+                  {t.contactTitle[0]}
+                  <br />
+                  <em>{t.contactTitle[1]}</em>
+                </h2>
+                <p>{t.contactText}</p>
+                <a className="email-link" href={`mailto:${links.email}`}>
+                  {links.email}
+                  <Arrow />
+                </a>
+                <div className="social-links">
+                  <a href={links.linkedin} target="_blank" rel="noreferrer">
+                    LinkedIn <Arrow />
+                  </a>
+                  <a href={links.github} target="_blank" rel="noreferrer">
+                    GitHub <Arrow />
+                  </a>
+                  <a href={links.whatsapp} target="_blank" rel="noreferrer">
+                    WhatsApp <Arrow />
+                  </a>
                 </div>
-              </article>
-            ))}
+              </div>
+              <div className="reveal">
+                <ContactForm t={t} />
+              </div>
+            </div>
+          </section>
+        </main>
+        <footer className="site-footer section-shell">
+          <a className="footer-name" href="#top">
+            PABLO CARVALHO<span>© 2026</span>
+          </a>
+          <div>
+            <p>{t.footer}</p>
+            <a href="#top">{t.top} ↑</a>
           </div>
-          <div className="education-row reveal">
-            <span className="eyebrow">
-              {lang === "es" ? "FORMACIÓN" : "EDUCATION"}
-            </span>
-            <div>
-              <h3>{t.education}</h3>
-              <p>{t.educationDetail}</p>
-            </div>
-            <div className="resume-links">
-              <a href={assets.cvEN} download>
-                CV / EN <span>↓</span>
-              </a>
-              <a href={assets.cvES} download>
-                CV / ES <span>↓</span>
-              </a>
-            </div>
-          </div>
-          <aside className="workbench reveal">
-            <span className="workbench-symbol" aria-hidden="true">
-              ↗
-            </span>
-            <div>
-              <p className="eyebrow">{t.labLabel}</p>
-              <h3>{t.lab}</h3>
-              <p>{t.labText}</p>
-            </div>
-            <span className="workbench-dots" aria-hidden="true">
-              •••
-            </span>
-          </aside>
-        </section>
+        </footer>
+      </div>
+      {visualScene && drawingEnabled(visualScene, "page") && (
         <CommunityCanvas
           scene={visualScene}
-          zone="contact"
+          zone="page"
+          image
           language={language}
           preview={communityPreview}
           saving={Boolean(drawingDraft)}
           onPublish={setDrawingDraft}
-          onClear={(zone) =>
-            setDrawingDraft((current) =>
-              current?.zone === zone ? null : current,
-            )
-          }
+          onClear={() => setDrawingDraft(null)}
         />
-        <section
-          id="contact"
-          className="contact-section section-shell"
-          aria-labelledby="contact-title"
-        >
-          <p className="eyebrow reveal">{t.contactLabel}</p>
-          <div className="contact-grid">
-            <div className="contact-copy reveal">
-              <h2 id="contact-title">
-                {t.contactTitle[0]}
-                <br />
-                <em>{t.contactTitle[1]}</em>
-              </h2>
-              <p>{t.contactText}</p>
-              <a className="email-link" href={`mailto:${links.email}`}>
-                {links.email}
-                <Arrow />
-              </a>
-              <div className="social-links">
-                <a href={links.linkedin} target="_blank" rel="noreferrer">
-                  LinkedIn <Arrow />
-                </a>
-                <a href={links.github} target="_blank" rel="noreferrer">
-                  GitHub <Arrow />
-                </a>
-                <a href={links.whatsapp} target="_blank" rel="noreferrer">
-                  WhatsApp <Arrow />
-                </a>
-              </div>
-            </div>
-            <div className="reveal">
-              <ContactForm t={t} />
-            </div>
-          </div>
-        </section>
-      </main>
-      <footer className="site-footer section-shell">
-        <a className="footer-name" href="#top">
-          PABLO CARVALHO<span>© 2026</span>
-        </a>
-        <div>
-          <p>{t.footer}</p>
-          <a href="#top">{t.top} ↑</a>
-        </div>
-      </footer>
+      )}
     </div>
   );
 }

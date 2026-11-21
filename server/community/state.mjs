@@ -43,9 +43,12 @@ export function prune(state, now = Date.now()) {
   let changed = false;
   for (const job of Object.values(state.jobs)) {
     if (
-      !["processing", "awaiting_review", "awaiting_repair"].includes(
-        job.status,
-      ) &&
+      ![
+        "processing",
+        "awaiting_review",
+        "awaiting_repair",
+        "awaiting_runtime",
+      ].includes(job.status) &&
       job.pending
     ) {
       delete job.pending;
@@ -57,9 +60,12 @@ export function prune(state, now = Date.now()) {
       changed = true;
     }
     if (
-      ["processing", "awaiting_review", "awaiting_repair"].includes(
-        job.status,
-      ) &&
+      [
+        "processing",
+        "awaiting_review",
+        "awaiting_repair",
+        "awaiting_runtime",
+      ].includes(job.status) &&
       now - (job.leaseAt || job.createdAt) > LEASE_MS
     ) {
       job.status = "failed";
@@ -71,9 +77,12 @@ export function prune(state, now = Date.now()) {
   }
   if (
     state.active &&
-    !["processing", "awaiting_review", "awaiting_repair"].includes(
-      state.jobs[state.active]?.status,
-    )
+    ![
+      "processing",
+      "awaiting_review",
+      "awaiting_repair",
+      "awaiting_runtime",
+    ].includes(state.jobs[state.active]?.status)
   ) {
     state.active = null;
     changed = true;
@@ -251,7 +260,8 @@ export async function reserve({
     if (state.tokens[tokenHash]) throw problem(403, "verification");
     const month = new Date().toISOString().slice(0, 7);
     const budget = state.budgets[month] || { reserved: 0, measured: 0 };
-    if (budget.reserved + RESERVATION > MONTHLY_MICRODOLLARS)
+    const reservation = kind === "drawing" && !diagnostic ? 0 : RESERVATION;
+    if (budget.reserved + reservation > MONTHLY_MICRODOLLARS)
       throw problem(429, "budget");
     if (!diagnostic) {
       takeRate(state, "visitor:" + owner, settings.attemptsPerDay, 86400000);
@@ -262,7 +272,7 @@ export async function reserve({
         86400000,
       );
     }
-    budget.reserved += RESERVATION;
+    budget.reserved += reservation;
     state.budgets[month] = budget;
     const job = {
       id,
@@ -275,7 +285,7 @@ export async function reserve({
       reason: null,
       base: state.revision,
       month,
-      reserved: RESERVATION,
+      reserved: reservation,
       usage: [],
       revision: null,
     };
@@ -370,6 +380,14 @@ export async function finish(id, result) {
     ) {
       result.approved = false;
       result.reason = "stale";
+    }
+    if (result.approved && result.unchanged) {
+      job.status = "published";
+      job.reason = null;
+      job.revision = state.revision;
+      job.unchanged = true;
+      if (state.active === id) state.active = null;
+      return job;
     }
     if (result.approved) {
       const scene = validateScene(result.scene),

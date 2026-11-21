@@ -497,7 +497,7 @@ test("review exceptions never publish or consume participation", async () => {
   assert.equal((await readState()).revision, "original");
 });
 
-test("independent review is mandatory and must pass every check after actual scene validation", async () => {
+test("functional review checks fidelity and execution, not identity or taste", async () => {
   const { createEvaluator } = await import("../server/community/ai.mjs");
   const allowed = {
     accepted: true,
@@ -548,7 +548,10 @@ test("independent review is mandatory and must pass every check after actual sce
       scene: originalScene,
       deadline: Date.now() + 10000,
     });
-    assert.equal(result.approved, verdict === good);
+    assert.equal(
+      result.approved,
+      verdict.requestFulfilled && verdict.animationStable,
+    );
     assert.equal(calls, 2);
     assert.equal(renders, 1);
   }
@@ -664,20 +667,13 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
         const value =
           body.model === "claude-haiku-5-5"
             ? {
-                accepted: true,
-                reason: "ok",
                 changedFields: ["palette", "nodes"],
                 scene: scene(),
               }
             : {
-                approved: true,
-                identityIntact: true,
-                readable: true,
-                safeVisuals: true,
                 requestFulfilled: true,
                 animationStable: true,
                 qualityIssues: [],
-                reason: "ok",
               };
         return {
           ok: scenario !== "provider-down",
@@ -813,72 +809,40 @@ test("shared drawings accept only bounded numeric strokes and preserve prior con
   );
 });
 
-test("drawing images must pass two independent visual reviewers before saving", async () => {
+test("manual drawings publish directly without invoking AI", async () => {
   const { createEvaluator } = await import("../server/community/ai.mjs");
   const drawing = {
-    zone: "work",
+    zone: "portrait",
     strokes: [
       {
         color: "red",
-        width: 2,
+        width: 4,
         points: [
-          { x: 10, y: 20 },
-          { x: 80, y: 60 },
+          { x: 10, y: 10 },
+          { x: 80, y: 80 },
         ],
       },
     ],
   };
-  for (const deny of ["none", "first", "second"]) {
-    const calls = [];
-    let renders = 0;
-    const evaluate = createEvaluator({
-      respond: async (model, schema, system, user) => {
-        assert(system.includes("Do not reject taste"));
-        calls.push(model);
-        assert(Array.isArray(user));
-        assert(user.some((x) => x.type === "image"));
-        return {
-          value:
-            model === "claude-haiku-5-5"
-              ? {
-                  accepted: deny !== "first",
-                  reason: deny === "first" ? "unsafe" : "ok",
-                }
-              : {
-                  accepted: deny !== "second",
-                  approved: deny !== "second",
-                  identityIntact: true,
-                  readable: true,
-                  safeVisuals: deny !== "second",
-                  requestFulfilled: true,
-                  animationStable: true,
-                  qualityIssues: [],
-                  reason: deny === "second" ? "unsafe" : "ok",
-                },
-          usage: { model, input: 10, output: 10 },
-        };
-      },
-      render: async (candidate, options) => {
-        assert.equal(options.drawingOnly, true);
-        renders++;
-        assert(candidate.nodes.some((n) => n.shape === "stroke"));
-        return {
-          images: [Buffer.from("drawing-preview")],
-          contentRevision: "initial",
-        };
-      },
-      readContent: async () => null,
-    });
-    const result = await evaluate({
-      prompt: "Una línea",
-      scene: originalScene,
-      drawing,
-      deadline: Date.now() + 10000,
-    });
-    assert.equal(result.approved, deny === "none");
-    assert.equal(renders, 1);
-    assert.equal(calls.length, deny === "first" ? 1 : 2);
-  }
+  const evaluate = createEvaluator({
+    respond: async () => {
+      throw Error("must not call AI");
+    },
+    render: async () => {
+      throw Error("must not render");
+    },
+  });
+  const result = await evaluate({
+    scene: originalScene,
+    drawing,
+    prompt: "un dibujo",
+    deadline: Date.now() + 10000,
+  });
+  assert.equal(result.approved, true);
+  assert.equal(result.cost, 0);
+  assert.deepEqual(result.usage, []);
+  assert.deepEqual(result.scene.nodes[0].points, drawing.strokes[0].points);
+  assert.equal(result.checks.review, "direct_drawing");
 });
 
 test("admin can see requests privately and selectively undo one without refunding turns or spending", async () => {
@@ -1176,56 +1140,37 @@ test("admin configures publication and attempt limits, legacy participation coun
   );
 });
 
-test("cursor requests cannot recolor or rearrange the site and require the requested effect", async () => {
+test("page proposals support DOM code and respect declared changed fields", async () => {
   const { scopedProposal } = await import("../server/community/proposal.mjs");
   const base = validateScene(scene());
   const program = {
-    html: "",
-    css: "",
-    javascript:
-      "function render({ctx,pointer}){ctx.beginPath();ctx.arc(pointer.x,pointer.y,12,0,Math.PI*2);ctx.stroke();}",
-    layer: "foreground",
-  };
-  const proposal = {
-    changedFields: ["program", "palette", "nodes"],
-    scene: { ...base, palette: "cherry", nodes: [], program },
+    html: '<button id="new">Hola</button>',
+    css: "h1{color:red}",
+    javascript: 'document.querySelector("h1").textContent="Hola";',
+    layer: "page",
+    tests: [],
   };
   const result = scopedProposal(
     base,
-    proposal,
-    "haz un cursor que cuando lo vas moviendo salen burbujas",
+    {
+      changedFields: ["program", "palette", "nodes"],
+      scene: { ...base, palette: "cherry", nodes: [], program },
+    },
+    "Cambiar todo y agregar una interacción con el mouse",
   );
   assert.deepEqual(result.program, program);
-  assert.equal(result.palette, base.palette);
-  assert.deepEqual(result.nodes, base.nodes);
-  assert.throws(
-    () =>
-      scopedProposal(
-        base,
-        { ...proposal, scene: { ...proposal.scene, program: null } },
-        "Un cursor de burbujas",
-      ),
-    (e) => e.code === "unsupported",
-  );
+  assert.equal(result.palette, "cherry");
+  assert.deepEqual(result.nodes, []);
   const narrow = scopedProposal(
     base,
-    { ...proposal, changedFields: ["palette"] },
-    "Cambiá la paleta",
+    {
+      changedFields: ["palette"],
+      scene: { ...base, palette: "cherry", program },
+    },
+    "Solo paleta",
   );
+  assert.equal(narrow.program, base.program);
   assert.equal(narrow.palette, "cherry");
-  assert.deepEqual(narrow.nodes, base.nodes);
-  assert.equal(narrow.program, null);
-  assert.throws(() =>
-    validateScene({
-      ...base,
-      program: { ...program, javascript: "x".repeat(24001) },
-    }),
-  );
-  const { validateProgram } = await import("../server/community/program.mjs");
-  assert.doesNotThrow(() => validateProgram(program));
-  assert.throws(() =>
-    validateProgram({ ...program, javascript: "function render( {" }),
-  );
 });
 
 test("program documents keep source inert in parent markup and use strict isolated capabilities", async () => {
@@ -1662,30 +1607,31 @@ test("image drawing persists against the exact portrait or project surface witho
   assert.equal(s.name, undefined);
 });
 
-test("image-drawing requests cannot be satisfied by the existing bands-only canvas", async () => {
-  const { scopedProposal } = await import("../server/community/proposal.mjs");
-  const base = { ...originalScene, drawing: true };
-  assert.throws(
-    () =>
-      scopedProposal(
-        base,
-        { changedFields: ["drawing"], scene: base },
-        "que en la imagen de perfil se pueda dibujar",
-      ),
-    (e) => e.code === "quality",
-  );
-  const next = { ...base, drawing: false, drawingTargets: ["portrait"] };
-  const result = scopedProposal(
-    base,
-    {
-      changedFields: ["drawing", "drawingTargets", "palette"],
-      scene: { ...next, palette: "cherry" },
-    },
-    "dibujar solo en la foto del hero, que con el mouse se pueda y que todos vean los aportes",
-  );
-  assert.equal(result.drawing, false);
-  assert.deepEqual(result.drawingTargets, ["portrait"]);
-  assert.equal(result.palette, base.palette);
+test("whole-page drawing is distinct from image and band tools", async () => {
+  const { drawingEnabled } = await import("../shared/community-catalog.mjs");
+  const { applyDrawing } = await import("../shared/community-scene.mjs");
+  const base = {
+    ...originalScene,
+    drawing: true,
+    drawingTargets: ["portrait", "projects"],
+  };
+  assert.equal(drawingEnabled(base, "page"), false);
+  const next = applyDrawing(base, {
+    zone: "page",
+    strokes: [
+      {
+        color: "blue",
+        width: 8,
+        points: [
+          { x: 0, y: 0 },
+          { x: 100, y: 100 },
+        ],
+      },
+    ],
+  });
+  assert.equal(drawingEnabled(next, "page"), true);
+  assert.equal(next.nodes.at(-1).zone, "page");
+  assert.equal(next.nodes.at(-1).points[1].y, 100);
 });
 
 test("pause cancels private staged artifacts and stale continuation tokens never execute AI", async () => {
@@ -1750,73 +1696,203 @@ test("pause cancels private staged artifacts and stale continuation tokens never
   assert.equal(calls, 0);
 });
 
-test("manual strokes review only their surface, not unchanged generated motion, across invocations", async () => {
+test("direct drawing reserves no AI budget and repeated IDs save only once", async () => {
+  await reset();
   const { createEvaluator } = await import("../server/community/ai.mjs");
-  const drawing = {
-    zone: "portrait",
-    strokes: [
-      {
-        points: [
-          { x: 10, y: 20 },
-          { x: 20, y: 30 },
-        ],
-        color: "blue",
-        width: 4,
-      },
-    ],
-  };
-  const base = {
-    ...originalScene,
-    program: {
-      html: "",
-      css: "",
-      javascript: "function render() {}",
-      layer: "foreground",
+  const evaluate = createEvaluator({
+    respond: async () => {
+      throw Error("no AI");
+    },
+    render: async () => {
+      throw Error("no browser");
+    },
+  });
+  const handler = createChangeHandler({ verify: async () => {}, evaluate }),
+    c = await cookie();
+  const data = {
+    ...request(),
+    drawing: {
+      zone: "page",
+      strokes: [
+        {
+          color: "green",
+          width: 4,
+          points: [
+            { x: 30, y: 20 },
+            { x: 50, y: 70 },
+          ],
+        },
+      ],
     },
   };
-  let calls = 0;
+  const result = await direct(handler, data, c);
+  assert.equal(result.payload.status, "published");
+  assert.equal(
+    (await direct(handler, data, c)).payload.revision,
+    result.payload.revision,
+  );
+  const state = await readState();
+  assert.equal(state.scene.nodes.length, 1);
+  assert.equal(state.jobs[data.id].reserved, 0);
+  assert.equal(state.budgets[new Date().toISOString().slice(0, 7)].reserved, 0);
+  assert.equal(state.visitors[identity(c)].count, 1);
+});
+
+test("generation, runtime and fidelity continue independently without repeating paid generation", async () => {
+  const { createEvaluator } = await import("../server/community/ai.mjs");
+  let generated = 0,
+    rendered = 0,
+    reviewed = 0;
   const evaluate = createEvaluator({
-    respond: async (model, schema, system, user) => {
-      calls++;
-      assert(!JSON.stringify(user).includes("function render"));
+    respond: async (model) => {
+      if (model === "claude-haiku-5-5") {
+        generated++;
+        return {
+          value: {
+            changedFields: ["palette"],
+            scene: { ...originalScene, palette: "cherry" },
+          },
+          usage: { model, input: 50, output: 50 },
+        };
+      }
+      reviewed++;
       return {
-        value: { accepted: true, reason: "ok" },
+        value: {
+          requestFulfilled: true,
+          animationStable: true,
+          qualityIssues: [],
+        },
         usage: { model, input: 30, output: 10 },
       };
     },
-    render: async (candidate, options) => {
-      assert.equal(options.drawingOnly, true);
-      assert.equal(options.drawingZone, "portrait");
-      return {
-        images: [Buffer.from("photo")],
-        quality: null,
-        contentRevision: "initial",
-      };
+    render: async () => {
+      rendered++;
+      return { images: [Buffer.from("image")], contentRevision: "initial" };
     },
     readContent: async () => null,
   });
-  const pending = await evaluate({
-    scene: base,
-    prompt: "my doodle",
-    drawing,
+  const args = {
+    scene: originalScene,
+    prompt: "Cambiar la paleta",
     deferStages: true,
+    deferRuntime: true,
     deadline: Date.now() + 10000,
+  };
+  const first = await evaluate(args);
+  assert.equal(first.pending.kind, "runtime");
+  assert.equal(generated, 1);
+  assert.equal(rendered, 0);
+  const second = await evaluate({
+    ...args,
+    resume: { ...first.pending, usage: first.usage, checks: first.checks },
   });
-  assert.equal(pending.pending.kind, "review");
-  assert.equal(calls, 1);
-  const result = await evaluate({
-    scene: base,
-    prompt: "my doodle",
-    drawing: true,
-    deferStages: true,
+  assert.equal(second.pending.kind, "review");
+  assert.equal(generated, 1);
+  assert.equal(rendered, 1);
+  const final = await evaluate({
+    ...args,
     resume: {
-      ...pending.pending,
-      usage: pending.usage,
-      previews: { ...pending.pending.previews, images: [Buffer.from("photo")] },
+      ...second.pending,
+      usage: second.usage,
+      checks: second.checks,
+      previews: { ...second.pending.previews, images: [Buffer.from("image")] },
     },
-    deadline: Date.now() + 10000,
   });
-  assert.equal(result.approved, true);
-  assert.equal(calls, 2);
-  assert.deepEqual(result.scene.program, base.program);
+  assert.equal(final.approved, true);
+  assert.equal(generated, 1);
+  assert.equal(rendered, 1);
+  assert.equal(reviewed, 1);
+});
+
+test("no-op requests still require fidelity and do not spend an extra published contribution", async () => {
+  const { createEvaluator } = await import("../server/community/ai.mjs");
+  let reviewed = 0;
+  const evaluate = createEvaluator({
+    respond: async (model) => {
+      if (model === "claude-haiku-5-5")
+        return {
+          value: { changedFields: [], scene: originalScene },
+          usage: { model, input: 10, output: 10 },
+        };
+      reviewed++;
+      return {
+        value: {
+          requestFulfilled: true,
+          animationStable: true,
+          qualityIssues: [],
+        },
+        usage: { model, input: 10, output: 10 },
+      };
+    },
+    render: async () => ({ images: [], contentRevision: "initial" }),
+    readContent: async () => null,
+  });
+  await reset();
+  const c = await cookie(),
+    handler = createChangeHandler({
+      verify: async () => {},
+      evaluate: (args) =>
+        evaluate({ ...args, deferRuntime: false, deferStages: false }),
+    });
+  const data = request();
+  const r = await direct(handler, data, c);
+  assert.equal(r.payload.status, "published");
+  assert.equal(reviewed, 1);
+  const state = await readState();
+  assert.equal(state.revision, "original");
+  assert.equal(state.history.length, 0);
+  assert.equal(state.visitors[identity(c)], undefined);
+});
+
+test("shared runtime data is atomic, idempotent and separate from professional content", async () => {
+  await reset();
+  const c = await cookie(),
+    key = "qa-counter";
+  const before = await (await call("/api/content")).json();
+  const write = (data, cookieValue = c, origin = base) =>
+    call("/api/community/data", "POST", data, cookieValue, origin);
+  const payload = { id: randomUUID(), key, op: "increment", value: 1 };
+  assert.equal((await write(payload, "")).status, 403);
+  assert.equal((await write(payload)).status, 200);
+  assert.equal(
+    (await write({ ...payload, id: randomUUID() }, "community_visitor=forged"))
+      .status,
+    403,
+  );
+  assert.equal(
+    (await write({ ...payload, id: randomUUID() }, c, "https://evil.test"))
+      .status,
+    403,
+  );
+  await Promise.all(
+    Array.from({ length: 8 }, () => write({ ...payload, id: randomUUID() })),
+  );
+  await write(payload);
+  const data = await (await call("/api/community/data?key=" + key)).json();
+  assert.equal(data.value, 9);
+  assert.equal(data.version, 9);
+  assert.equal(
+    (await write({ ...payload, id: randomUUID(), expectedVersion: 0 })).status,
+    409,
+  );
+  assert.equal(
+    (
+      await write({
+        ...payload,
+        id: randomUUID(),
+        op: "set",
+        value: "x".repeat(33000),
+      })
+    ).status,
+    409,
+  );
+  assert.deepEqual(await (await call("/api/content")).json(), before);
+  await mutate((s) => {
+    s.paused = true;
+  });
+  assert.equal((await write({ ...payload, id: randomUUID() })).status, 503);
+  assert.equal(
+    (await (await call("/api/community/data?key=" + key)).json()).value,
+    9,
+  );
 });

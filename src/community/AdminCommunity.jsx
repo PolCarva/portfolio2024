@@ -258,7 +258,11 @@ export default function AdminCommunity() {
                         admin_reverted: "Deshecho por el administrador",
                       }[j.reason]}
                 </p>
-                {j.checks?.review === "drawing_safety" ? (
+                {j.checks?.review === "direct_drawing" ? (
+                  <small>
+                    Dibujo guardado directamente, sin revisión de IA.
+                  </small>
+                ) : j.checks?.review === "drawing_safety" ? (
                   <small>
                     Revisión de seguridad del dibujo · {j.checks.previewCount}{" "}
                     vistas · {j.checks.viewports?.join(" / ")}
