@@ -3,7 +3,7 @@ import { readObject, writeObject, isStorageConflict } from "../storage.mjs";
 import { originalScene, validateScene } from "../../shared/community-scene.mjs";
 export const MONTHLY_MICRODOLLARS = 10_000_000;
 export const RESERVATION = 80_000;
-export const LEASE_MS = 70_000;
+export const LEASE_MS = 150_000;
 const path = "community/state.json";
 export const secret = () =>
   process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET;

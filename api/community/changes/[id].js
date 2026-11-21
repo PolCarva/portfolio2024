@@ -99,7 +99,7 @@ export function createContinuationHandler({ evaluate = evaluateChange } = {}) {
           resume,
           deferStages: true,
           deferRuntime: true,
-          deadline: Date.now() + 50000,
+          deadline: Date.now() + 120000,
           reserveRepair: () => reserveRepair(id),
         });
       } catch {

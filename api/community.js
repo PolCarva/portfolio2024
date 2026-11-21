@@ -177,7 +177,7 @@ export default async function handler(req, res) {
               },
             }
           : {}),
-        deadline: Date.now() + 50000,
+        deadline: Date.now() + 120000,
         reserveRepair: () => reserveRepair(id),
         deferStages: true,
         deferRuntime: true,

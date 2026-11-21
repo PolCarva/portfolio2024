@@ -100,7 +100,7 @@ export function createChangeHandler({
           prompt: data.prompt,
           drawing: data.drawing,
           scene: reservation.scene,
-          deadline: reservation.job.createdAt + 50000,
+          deadline: reservation.job.createdAt + 120000,
           reserveRepair: () => reserveRepair(data.id),
           deferStages: true,
           deferRuntime: true,

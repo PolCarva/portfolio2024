@@ -31,7 +31,7 @@ export default function AdminCommunity() {
     try {
       let result = await request("/api/community", {
         method: "POST",
-        signal: AbortSignal.timeout(60000),
+        signal: AbortSignal.timeout(140000),
         body: JSON.stringify({
           action,
           ...(settings ? { settings } : {}),
@@ -44,7 +44,7 @@ export default function AdminCommunity() {
         if (result.continueRequired)
           result = await request("/api/community/changes/" + result.id, {
             method: "POST",
-            signal: AbortSignal.timeout(60000),
+            signal: AbortSignal.timeout(140000),
             body: JSON.stringify({ step: result.step }),
           });
         else {
@@ -86,8 +86,9 @@ export default function AdminCommunity() {
     <div>
       <h2>Portfolio comunitario</h2>
       <p>
-        Tu contenido profesional se administra por separado. Estos controles
-        solo afectan la capa visual de visitantes.
+        El contenido original se administra por separado. Los visitantes pueden
+        cambiar textos, diseño e interacciones de la versión comunitaria. La
+        revisión comprueba funcionamiento; no modera contenido.
       </p>
       {error && <p role="alert">{error}</p>}
       {!data ? (
@@ -143,9 +144,9 @@ export default function AdminCommunity() {
             </button>
             <button
               disabled={busy || !data.configured}
-              onClick={() => act("test-ai", null, "unsafe")}
+              onClick={() => act("test-ai", null, "page")}
             >
-              Probar rechazo de ataque
+              Probar cambios de texto
             </button>
           </div>
           <button
@@ -154,6 +155,20 @@ export default function AdminCommunity() {
           >
             Probar código de cursor generado
           </button>
+          <div className="community-admin-actions">
+            <button
+              disabled={busy || !data.configured}
+              onClick={() => act("test-ai", null, "all-drawing")}
+            >
+              Probar dibujo en toda la página
+            </button>
+            <button
+              disabled={busy || !data.configured}
+              onClick={() => act("test-ai", null, "interaction")}
+            >
+              Probar interacción generada
+            </button>
+          </div>
           <h3>Cupos por navegador</h3>
           <form
             key={JSON.stringify(data.settings)}

@@ -1252,7 +1252,7 @@ test("quality feedback gets one budgeted correction and a complete independent r
     ) => {
       if (model === "claude-haiku-5-5") {
         generations++;
-        assert.equal(effort, "high");
+        assert.equal(effort, "medium");
         if (generations === 2) {
           const input = JSON.parse(user);
           assert.deepEqual(input.validationFeedback.issues, [

@@ -275,7 +275,7 @@ export function createEvaluator({
               deadline,
               12000,
               90000,
-              "high",
+              "medium",
             );
             usage.push(generated.usage);
             candidate = scopedProposal(scene, generated.value, prompt);
