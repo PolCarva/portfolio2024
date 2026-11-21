@@ -34,11 +34,15 @@ function validateStrokes(strokes) {
   });
 }
 const key = (zone) => "community-drawing-draft-v1:" + zone;
+let embeddedStorage;
+export function setDraftStorage(storage) {
+  embeddedStorage = storage;
+}
 export const fingerprint = (draft) =>
   JSON.stringify({ zone: draft.zone, strokes: validateStrokes(draft.strokes) });
 export function loadDraft(zone, storage) {
   try {
-    storage ||= globalThis.localStorage;
+    storage ||= embeddedStorage || globalThis.localStorage;
     const value = JSON.parse(storage.getItem(key(zone)));
     if (Date.now() - value.at > 30 * 86400000) {
       storage.removeItem(key(zone));
@@ -51,7 +55,7 @@ export function loadDraft(zone, storage) {
 }
 export function saveDraft(zone, strokes, storage) {
   try {
-    storage ||= globalThis.localStorage;
+    storage ||= embeddedStorage || globalThis.localStorage;
     if (!strokes.length) {
       storage.removeItem(key(zone));
       return;

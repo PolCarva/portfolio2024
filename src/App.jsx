@@ -100,7 +100,7 @@ function ProjectMedia({ project, language, imageNote }) {
   return <VideoArtwork language={language} description={p.alt} />;
 }
 
-function ContactForm({ t }) {
+function ContactForm({ t, embedded = false }) {
   const [status, setStatus] = useState("idle");
   const request = useRef(null);
   useEffect(() => () => request.current?.abort(), []);
@@ -113,7 +113,11 @@ function ContactForm({ t }) {
     setStatus("sending");
     const timeout = setTimeout(() => controller.abort(), 20000);
     try {
-      await deliverContact(new FormData(form), controller.signal);
+      const payload = new FormData(form);
+      if (embedded) {
+        if (!(await window.community.sendContact(Object.fromEntries(payload))))
+          throw new Error("Message delivery failed");
+      } else await deliverContact(payload, controller.signal);
       form.reset();
       setStatus("sent");
     } catch {
@@ -200,6 +204,9 @@ function App({
   initialContent = defaults,
   communityScene = null,
   communityPreview = false,
+  communityEmbedded = false,
+  embeddedSaving = false,
+  onEmbeddedDrawing,
 }) {
   const [content, setContent] = useState(initialContent);
   const [visualScene, setVisualScene] = useState(communityScene);
@@ -208,6 +215,10 @@ function App({
   useEffect(() => setCommunityMounted(true), []);
   const { copy, links, projects, clientProjects, media: assets } = content;
   useEffect(() => {
+    if (communityEmbedded) setVisualScene(communityScene);
+  }, [communityEmbedded, communityScene]);
+  useEffect(() => {
+    if (communityEmbedded) return;
     const controller = new AbortController();
     fetch("/api/content", { signal: controller.signal })
       .then((response) => {
@@ -219,12 +230,19 @@ function App({
       })
       .catch(() => {});
     return () => controller.abort();
-  }, []);
+  }, [communityEmbedded]);
+  const drawingPending = communityEmbedded
+    ? embeddedSaving
+    : Boolean(drawingDraft);
+  const publishDrawing = communityEmbedded
+    ? onEmbeddedDrawing
+    : setDrawingDraft;
   const lang = language === "es" ? "es" : "en";
   const t = copy[lang];
   const [menuOpen, setMenuOpen] = useState(false);
   const root = useRef(null);
   useEffect(() => {
+    if (communityEmbedded) return;
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (media.matches || !("IntersectionObserver" in window)) return;
     const node = root.current;
@@ -255,7 +273,7 @@ function App({
       node.classList.remove("motion-ready");
       media.removeEventListener("change", stopMotion);
     };
-  }, [content]);
+  }, [content, communityEmbedded]);
   return (
     <div
       ref={root}
@@ -263,7 +281,7 @@ function App({
       id="top"
       {...(visualScene ? sceneAttributes(visualScene) : {})}
     >
-      {!communityPreview && communityMounted && (
+      {!communityPreview && !communityEmbedded && communityMounted && (
         <Suspense fallback={null}>
           <CommunityControls
             language={language}
@@ -280,9 +298,11 @@ function App({
             content={content}
             language={language}
             scene={visualScene}
-            saving={Boolean(drawingDraft)}
+            saving={drawingPending}
             onDrawing={setDrawingDraft}
-            onClear={() => setDrawingDraft(null)}
+            onClear={(zone) =>
+              setDrawingDraft((draft) => (draft?.zone === zone ? null : draft))
+            }
           />
         </Suspense>
       ) : (
@@ -419,8 +439,8 @@ function App({
                         communityPreview ||
                         visualScene?.program?.layer === "page"
                       }
-                      saving={Boolean(drawingDraft)}
-                      onPublish={setDrawingDraft}
+                      saving={drawingPending}
+                      onPublish={publishDrawing}
                       onClear={(zone) =>
                         setDrawingDraft((d) => (d?.zone === zone ? null : d))
                       }
@@ -448,8 +468,8 @@ function App({
             zone="hero"
             language={language}
             preview={communityPreview}
-            saving={Boolean(drawingDraft)}
-            onPublish={setDrawingDraft}
+            saving={drawingPending}
+            onPublish={publishDrawing}
             onClear={(zone) =>
               setDrawingDraft((current) =>
                 current?.zone === zone ? null : current,
@@ -522,8 +542,8 @@ function App({
                               communityPreview ||
                               visualScene?.program?.layer === "page"
                             }
-                            saving={Boolean(drawingDraft)}
-                            onPublish={setDrawingDraft}
+                            saving={drawingPending}
+                            onPublish={publishDrawing}
                             onClear={(zone) =>
                               setDrawingDraft((d) =>
                                 d?.zone === zone ? null : d,
@@ -604,8 +624,8 @@ function App({
             zone="work"
             language={language}
             preview={communityPreview}
-            saving={Boolean(drawingDraft)}
-            onPublish={setDrawingDraft}
+            saving={drawingPending}
+            onPublish={publishDrawing}
             onClear={(zone) =>
               setDrawingDraft((current) =>
                 current?.zone === zone ? null : current,
@@ -709,8 +729,8 @@ function App({
             zone="contact"
             language={language}
             preview={communityPreview}
-            saving={Boolean(drawingDraft)}
-            onPublish={setDrawingDraft}
+            saving={drawingPending}
+            onPublish={publishDrawing}
             onClear={(zone) =>
               setDrawingDraft((current) =>
                 current?.zone === zone ? null : current,
@@ -748,7 +768,7 @@ function App({
                 </div>
               </div>
               <div className="reveal">
-                <ContactForm t={t} />
+                <ContactForm t={t} embedded={communityEmbedded} />
               </div>
             </div>
           </section>
@@ -763,18 +783,20 @@ function App({
           </div>
         </footer>
       </div>
-      {visualScene && drawingEnabled(visualScene, "page") && (
-        <CommunityCanvas
-          scene={visualScene}
-          zone="page"
-          image
-          language={language}
-          preview={communityPreview}
-          saving={Boolean(drawingDraft)}
-          onPublish={setDrawingDraft}
-          onClear={() => setDrawingDraft(null)}
-        />
-      )}
+      {visualScene &&
+        visualScene.program?.layer !== "page" &&
+        drawingEnabled(visualScene, "page") && (
+          <CommunityCanvas
+            scene={visualScene}
+            zone="page"
+            image
+            language={language}
+            preview={communityPreview}
+            saving={drawingPending}
+            onPublish={publishDrawing}
+            onClear={() => setDrawingDraft(null)}
+          />
+        )}
     </div>
   );
 }

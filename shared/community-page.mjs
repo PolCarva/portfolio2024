@@ -1,5 +1,5 @@
 import { serializeProgramData as literal } from "./community-program.mjs";
-function pageRuntime(config) {
+export function startPageRuntime(config) {
   "use strict";
   const { source, extra, viewportHeight, language } = config,
     send = parent.postMessage.bind(parent);
@@ -14,11 +14,15 @@ function pageRuntime(config) {
   addEventListener("error", (e) => report(e.error || e.message));
   addEventListener("unhandledrejection", (e) => report(e.reason));
   window.community = {
+    ...(config.api || {}),
     viewport: { width: innerWidth, height: viewportHeight },
     language: language,
     ready: () => {},
   };
-  document.body.insertAdjacentHTML("beforeend", extra);
+  (config.nativeApp
+    ? document.querySelector(".portfolio") || document.body
+    : document.body
+  ).insertAdjacentHTML("beforeend", extra);
   // Preserve the baseline controls without granting the document host access.
   const menu = document.querySelector(".menu-toggle"),
     nav = document.getElementById("navigation");
@@ -28,7 +32,7 @@ function pageRuntime(config) {
   }
   document.addEventListener("click", (event) => {
     if (event.defaultPrevented) return;
-    if (event.target.closest(".menu-toggle")) {
+    if (!config.nativeApp && event.target.closest(".menu-toggle")) {
       const open = nav?.classList.toggle("is-open");
       menu?.setAttribute("aria-expanded", String(Boolean(open)));
     }
@@ -50,7 +54,7 @@ function pageRuntime(config) {
     }
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeMenu();
+    if (!config.nativeApp && event.key === "Escape") closeMenu();
   });
   const contacts = new Map();
   community.sendContact = (data) =>
@@ -114,7 +118,12 @@ function pageRuntime(config) {
   });
   document.addEventListener("submit", async (event) => {
     const form = event.target;
-    if (event.defaultPrevented || !form.matches(".contact-form")) return;
+    if (
+      config.nativeApp ||
+      event.defaultPrevented ||
+      !form.matches(".contact-form")
+    )
+      return;
     event.preventDefault();
     const button = form.querySelector('button[type="submit"]'),
       status = form.querySelector(".form-status");
@@ -201,6 +210,14 @@ function pageRuntime(config) {
         height: Math.min(2000, Math.max(200, d.height)),
       };
       community.scrollY = Math.max(0, Number(d.scrollY) || 0);
+      document.documentElement.style.setProperty(
+        "--community-scroll-y",
+        community.scrollY + "px",
+      );
+      document.documentElement.style.setProperty(
+        "--community-view-height",
+        community.viewport.height + "px",
+      );
       document.documentElement.style.setProperty(
         "--community-vh",
         community.viewport.height / 100 + "px",
@@ -291,6 +308,42 @@ export function pageDocument(
     /<\/style/gi,
     "<\\/style",
   );
-  return `<!doctype html><html lang="${language === "es" ? "es" : "en"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-community-page'; style-src 'unsafe-inline'; img-src https: data: blob: ${origin}; font-src https: data: ${origin}; connect-src 'none'; worker-src blob:; media-src https: blob: ${origin}; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri https: ${origin}"><base href="${origin}/"><style>:root{--community-vh:${Math.max(1, Math.min(20, viewportHeight / 100))}px}html,body{margin:0;height:auto;overflow-x:hidden}.reveal{opacity:1!important;transform:none!important} ${css}</style></head><body>${html || ""}<script nonce="community-page">(${pageRuntime.toString()})(${literal({ source: program.javascript, extra: program.html, viewportHeight: Math.round(viewportHeight), language })});
+  return `<!doctype html><html lang="${language === "es" ? "es" : "en"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-community-page'; style-src 'unsafe-inline'; img-src https: data: blob: ${origin}; font-src https: data: ${origin}; connect-src 'none'; worker-src blob:; media-src https: blob: ${origin}; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri https: ${origin}"><base href="${origin}/"><style>:root{--community-vh:${Math.max(1, Math.min(20, viewportHeight / 100))}px}html,body{margin:0;height:auto;overflow-x:hidden}.reveal{opacity:1!important;transform:none!important} ${css}</style></head><body>${html || ""}<script nonce="community-page">(${startPageRuntime.toString()})(${literal({ source: program.javascript, extra: program.html, viewportHeight: Math.round(viewportHeight), language })});
 </script></body></html>`;
+}
+
+export function nativePageDocument(
+  program,
+  {
+    content,
+    scene,
+    drafts = {},
+    saving = false,
+    styles = "",
+    base = "https://www.pablocarvalho.dev",
+    viewportHeight = 900,
+    language = "es",
+  } = {},
+) {
+  const origin = new URL(base).origin;
+  const css = (
+    styles +
+    `
+html,body{margin:0;height:auto;overflow-x:hidden}
+html[data-community-embedded] .community-floating-tools{position:absolute;top:calc(var(--community-scroll-y,0px) + var(--community-view-height,900px) - 80px);bottom:auto;transform:translate(-50%,-100%)}
+` +
+    program.css
+  )
+    .replace(/([\d.]+)(?:s|d)?vh\b/g, "calc(var(--community-vh) * $1)")
+    .replace(/<\/style/gi, "<\\/style");
+  const seed = {
+    content,
+    scene: { ...scene, program: null },
+    program,
+    drafts,
+    saving,
+    language,
+    viewportHeight,
+  };
+  return `<!doctype html><html lang="${language === "es" ? "es" : "en"}" data-community-embedded><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-community-page' ${origin}/assets/ ${origin}/community/embedded.js; style-src 'unsafe-inline'; img-src https: data: blob: ${origin}; font-src https: data: ${origin}; connect-src 'none'; worker-src blob:; media-src https: blob: ${origin}; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri ${origin}"><base href="${origin}/"><style>:root{--community-vh:${Math.max(1, Math.min(20, viewportHeight / 100))}px;--community-view-height:${Math.round(viewportHeight)}px}${css}</style></head><body><div id="community-root"></div><script nonce="community-page">window.__COMMUNITY_EMBED__=${literal(seed)};</script><script nonce="community-page" type="module" crossorigin="anonymous" src="${origin}/community/embedded.js"></script></body></html>`;
 }

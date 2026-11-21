@@ -1,6 +1,7 @@
+import { applyDrawing } from "../../shared/community-scene.mjs";
 import { applyRuntimeValue } from "./runtime.mjs";
 import { contactPayload } from "../../src/contact.mjs";
-import { pageDocument } from "../../shared/community-page.mjs";
+import { nativePageDocument } from "../../shared/community-page.mjs";
 import { assessProgramQuality } from "./quality.mjs";
 import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
@@ -75,11 +76,27 @@ export async function renderReview(
           reducedMotion: scene.program ? "no-preference" : "reduce",
           deviceScaleFactor: 1,
         });
+        let documentHTML = "";
         await context.route("**/*", async (route) => {
           const url = new URL(route.request().url());
           if (url.hostname !== "portfolio-preview.invalid")
             return route.abort();
           try {
+            if (url.pathname === "/__community_preview")
+              return route.fulfill({
+                status: 200,
+                contentType: "text/html",
+                body: documentHTML,
+              });
+            if (url.pathname === "/community/embedded.js")
+              return route.fulfill({
+                status: 200,
+                contentType: "text/javascript",
+                headers: { "Access-Control-Allow-Origin": "*" },
+                body: await readFile(
+                  resolve(root, ".generated/community-embedded.js"),
+                ),
+              });
             if (url.pathname === "/api/media") {
               const name = url.searchParams.get("file");
               if (!/^[a-f0-9-]{36}\.(png|jpg|webp)$/.test(name || ""))
@@ -89,6 +106,7 @@ export async function renderReview(
               return route.fulfill({
                 status: 200,
                 contentType: mime[extname(name)],
+                headers: { "Access-Control-Allow-Origin": "*" },
                 body: media.bytes,
               });
             }
@@ -98,6 +116,7 @@ export async function renderReview(
               status: 200,
               contentType:
                 mime[extname(url.pathname)] || "application/octet-stream",
+              headers: { "Access-Control-Allow-Origin": "*" },
               body: await readFile(resolve(root, "public" + url.pathname)),
             });
           } catch {
@@ -111,10 +130,19 @@ export async function renderReview(
           pageErrors = [];
         // Collect browser exceptions outside the generated document as well as
         // its telemetry. An initialization error must not pass a runtime test.
-        let previewValues = {};
+        let previewValues = {},
+          previewScene = scene;
         await page.exposeBinding(
           "__communityPreviewBridge",
           (_source, data) => {
+            if (data.type === "community-page-drawing") {
+              try {
+                previewScene = applyDrawing(previewScene, data.drawing);
+                return { scene: previewScene };
+              } catch {
+                return { error: "invalid" };
+              }
+            }
             if (data.type === "community-page-contact") {
               try {
                 contactPayload(data.data);
@@ -142,16 +170,33 @@ export async function renderReview(
           },
         );
         await page.addInitScript(() => {
+          const viewport = () =>
+            window.postMessage(
+              { type: "community-page-viewport", height: innerHeight, scrollY },
+              "*",
+            );
+          addEventListener("scroll", viewport, { passive: true });
+          addEventListener("resize", viewport);
           addEventListener("message", async (event) => {
             if (
               event.source !== window ||
-              !["community-page-data", "community-page-contact"].includes(
-                event.data?.type,
-              )
+              ![
+                "community-page-data",
+                "community-page-contact",
+                "community-page-drawing",
+              ].includes(event.data?.type)
             )
               return;
             const data = event.data,
               result = await window.__communityPreviewBridge(data);
+            if (data.type === "community-page-drawing") {
+              if (result.scene)
+                window.postMessage(
+                  { type: "community-scene-update", scene: result.scene },
+                  "*",
+                );
+              return;
+            }
             window.postMessage(
               {
                 ...result,
@@ -175,6 +220,7 @@ export async function renderReview(
           if (Date.now() > deadline) throw new Error("Preview timeout");
           pageErrors.length = 0;
           previewValues = {};
+          previewScene = scene;
           mark("viewport_" + width);
           await page.setViewportSize({ width, height });
           await page.emulateMedia({
@@ -185,15 +231,18 @@ export async function renderReview(
             isPage ? { ...scene, program: null } : scene,
             "es",
           );
-          await page.setContent(
-            isPage
-              ? pageDocument(scene.program, {
-                  html: markup,
-                  styles: css,
-                  base: "https://portfolio-preview.invalid",
-                  viewportHeight: height,
-                })
-              : `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important} *:not(.community-node){animation:none!important;transition:none!important}.community-node{animation-play-state:paused!important}</style></head><body>${markup}</body></html>`,
+          documentHTML = isPage
+            ? nativePageDocument(scene.program, {
+                content,
+                scene,
+                styles: css,
+                base: "https://portfolio-preview.invalid",
+                viewportHeight: height,
+              })
+            : `<!doctype html><html lang="es"><head><base href="https://portfolio-preview.invalid/"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css} html{scroll-behavior:auto!important} *:not(.community-node){animation:none!important;transition:none!important}.community-node{animation-play-state:paused!important}</style></head><body>${markup}</body></html>`;
+          await page.goto(
+            "https://portfolio-preview.invalid/__community_preview?width=" +
+              width,
             { waitUntil: "load", timeout: 10000 },
           );
           mark("html_ready");
@@ -375,7 +424,49 @@ export async function renderReview(
                   await locator.press(step.value, { timeout: 2500 });
                 if (step.action === "hover")
                   await locator.hover({ timeout: 2500 });
-                if (step.expectSelector) {
+                let styleResult;
+                if (step.action === "style") {
+                  await locator.waitFor({ state: "attached", timeout: 2500 });
+                  await page
+                    .waitForFunction(
+                      ({ selector, property, expected }) => {
+                        const el = document.querySelector(selector);
+                        if (!el) return false;
+                        const actual =
+                          el.computedStyleMap?.().get(property)?.toString() ??
+                          getComputedStyle(el).getPropertyValue(property);
+                        return actual.trim() === expected.trim();
+                      },
+                      {
+                        selector: step.selector,
+                        property: step.value,
+                        expected: step.expectText,
+                      },
+                      { timeout: 2500 },
+                    )
+                    .catch(async () => {
+                      const actual = await locator.evaluate(
+                        (el, property) =>
+                          el.computedStyleMap?.().get(property)?.toString() ??
+                          getComputedStyle(el).getPropertyValue(property),
+                        step.value,
+                      );
+                      throw Error(
+                        `Style mismatch: ${step.value} is ${actual}, expected ${step.expectText}; ${step.selector}`,
+                      );
+                    });
+                  styleResult = {
+                    property: step.value,
+                    expected: step.expectText,
+                    actual: await locator.evaluate(
+                      (el, property) =>
+                        el.computedStyleMap?.().get(property)?.toString() ??
+                        getComputedStyle(el).getPropertyValue(property),
+                      step.value,
+                    ),
+                  };
+                }
+                if (step.expectSelector && step.action !== "style") {
                   const expected = page.locator(step.expectSelector).first();
                   await expected.waitFor({ state: "visible", timeout: 2500 });
                   if (step.expectText)
@@ -391,6 +482,7 @@ export async function renderReview(
                 results.push({
                   action: step.action,
                   selector: step.selector,
+                  ...styleResult,
                   passed: true,
                 });
               }
@@ -408,10 +500,55 @@ export async function renderReview(
                 throw Error(
                   [...pageErrors, ...(probe.errors || [])].join("; "),
                 );
+              const cssAudit = await page.evaluate((css) => {
+                const sheet = new CSSStyleSheet();
+                sheet.replaceSync(css);
+                const result = [];
+                const visit = (rules) => {
+                  for (const rule of rules) {
+                    if (result.length >= 40) return;
+                    if (rule.cssRules) visit(rule.cssRules);
+                    if (!rule.selectorText || !rule.style) continue;
+                    let matches;
+                    try {
+                      matches = [
+                        ...document.querySelectorAll(rule.selectorText),
+                      ];
+                    } catch {
+                      continue;
+                    }
+                    const properties = [...rule.style].slice(0, 4);
+                    const item = {
+                      selector: rule.selectorText.slice(0, 300),
+                      matches: matches.length,
+                      elements: matches
+                        .slice(0, 2)
+                        .map((el) =>
+                          Object.fromEntries(
+                            properties.map((property) => [
+                              property,
+                              el
+                                .computedStyleMap?.()
+                                .get(property)
+                                ?.toString() ??
+                                getComputedStyle(el).getPropertyValue(property),
+                            ]),
+                          ),
+                        ),
+                    };
+                    if (JSON.stringify([...result, item]).length > 12000)
+                      return;
+                    result.push(item);
+                  }
+                };
+                visit(sheet.cssRules);
+                return result;
+              }, scene.program.css);
               temporalReports.push({
                 viewport: width < 800 ? "mobile" : "desktop",
                 frames: probe.frames,
                 tests: results,
+                cssAudit,
                 errors: 0,
               });
             } catch (error) {

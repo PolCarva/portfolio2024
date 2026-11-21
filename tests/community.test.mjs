@@ -696,6 +696,7 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
         };
       };
       const result = await createEvaluator({
+        readSource: async () => ({ html: "<main>Fixture</main>", css: "" }),
         render: async () => ({
           images: [Buffer.from("test")],
           contentRevision: "initial",
@@ -1929,4 +1930,57 @@ test("partial generation patches preserve existing code and drawings without ech
       "Cambiar todo",
     ),
   );
+});
+
+test("CSS publication cannot pass by checking only that a container exists", async () => {
+  const { createEvaluator } = await import("../server/community/ai.mjs");
+  let rendered = 0;
+  const base = structuredClone(originalScene);
+  const evaluate = createEvaluator({
+    respond: async (model) => ({
+      value:
+        model === "claude-haiku-5-5"
+          ? {
+              changedFields: ["program"],
+              scene: {
+                ...base,
+                program: {
+                  layer: "page",
+                  html: "",
+                  css: ".portrait-mark{z-index:10}",
+                  javascript: "",
+                  tests: [
+                    {
+                      action: "assert",
+                      selector: "#community-canvas-portrait",
+                      value: "",
+                      expectSelector: "#community-canvas-portrait",
+                      expectText: "",
+                    },
+                  ],
+                },
+              },
+            }
+          : {
+              requestFulfilled: true,
+              animationStable: true,
+              qualityIssues: [],
+            },
+      usage: { model, input: 1, output: 1 },
+    }),
+    render: async () => {
+      rendered++;
+      return { images: [], contentRevision: "initial" };
+    },
+    readContent: async () => null,
+  });
+  const result = await evaluate({
+    prompt: "z-index 10",
+    scene: base,
+    deadline: Date.now() + 10000,
+  });
+  assert.equal(result.approved, false);
+  assert.equal(result.reason, "quality");
+  assert.equal(rendered, 0);
+  assert.match(result.checks.qualityIssues[0], /style browser tests/);
 });

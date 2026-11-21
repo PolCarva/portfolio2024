@@ -169,6 +169,12 @@ export default function AdminCommunity() {
               Probar interacción generada
             </button>
           </div>
+          <button
+            disabled={busy || !data.configured}
+            onClick={() => act("test-ai", null, "styles")}
+          >
+            Probar estilos en controles reales
+          </button>
           <h3>Cupos por navegador</h3>
           <form
             key={JSON.stringify(data.settings)}
@@ -291,9 +297,26 @@ export default function AdminCommunity() {
                     </small>
                   )
                 )}
-                {j.checks?.error && (
-                  <small>Error técnico: {j.checks.error}</small>
+                {j.checks?.assertions?.length > 0 && (
+                  <details>
+                    <summary>Ver pruebas realizadas</summary>
+                    <ul>
+                      {j.checks.assertions.map((check, index) => (
+                        <li key={index}>
+                          {check.viewport} · {check.selector}:{" "}
+                          {check.property
+                            ? `${check.property} = ${check.actual}`
+                            : check.action}{" "}
+                          · {check.passed ? "OK" : "Falló"}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 )}
+                {j.checks?.error &&
+                  !["published", "verified"].includes(j.status) && (
+                    <small>Error técnico: {j.checks.error}</small>
+                  )}
                 {j.checks?.qualityIssues?.length > 0 && (
                   <small>{j.checks.qualityIssues.join(" · ")}</small>
                 )}

@@ -1,8 +1,9 @@
 import { api as communityApi } from "./request.mjs";
-import Canvas from "./Artwork.jsx";
 import { contactPayload, deliverContact } from "../contact.mjs";
-import { useEffect, useRef, useState } from "react";
-import { pageDocument } from "../../shared/community-page.mjs";
+import { useEffect, useMemo, useRef } from "react";
+import { nativePageDocument } from "../../shared/community-page.mjs";
+import { drawingEnabled } from "../../shared/community-catalog.mjs";
+import { loadDraft, saveDraft, fingerprint } from "./draft.mjs";
 export default function PageProgram({
   program,
   content,
@@ -13,22 +14,25 @@ export default function PageProgram({
   onClear,
 }) {
   const frame = useRef(null),
-    contact = useRef({ pending: false, at: 0 }),
-    [source, setSource] = useState(""),
-    [surfaces, setSurfaces] = useState([]);
-  useEffect(() => {
-    const root = document.querySelector(".community-original-content");
-    if (!root) return;
-    const clone = root.cloneNode(true);
-    clone
-      .querySelectorAll(
-        ".community-draw-controls,.community-canvas-hint,.community-strokes,script",
-      )
-      .forEach((n) => n.remove());
-    const parent = root.closest(".portfolio").cloneNode(false);
-    parent.removeAttribute("data-community-page");
-    parent.removeAttribute("data-community-page-ready");
-    parent.append(clone);
+    contact = useRef({ pending: false, at: 0 });
+  const current = useRef({ scene, saving, onDrawing, onClear });
+  current.current = { scene, saving, onDrawing, onClear };
+  const identity = JSON.stringify({ program, content, language });
+  const source = useMemo(() => {
+    const seed = JSON.parse(identity);
+    const zones = [
+      "hero",
+      "work",
+      "contact",
+      "portrait",
+      "page",
+      ...seed.content.projects.map((p) => "project:" + p.id),
+    ];
+    const drafts = Object.fromEntries(
+      zones
+        .map((zone) => [zone, loadDraft(zone)])
+        .filter(([, strokes]) => strokes.length),
+    );
     const styles = [...document.styleSheets]
       .map((sheet) => {
         try {
@@ -38,39 +42,49 @@ export default function PageProgram({
         }
       })
       .join("\n");
-    setSource(
-      pageDocument(program, {
-        html: parent.outerHTML,
-        styles,
-        base: location.origin,
-        viewportHeight: innerHeight,
-        language,
-      }),
-    );
-  }, [program, content, language]);
+    return nativePageDocument(seed.program, {
+      ...seed,
+      scene: current.current.scene,
+      saving: current.current.saving,
+      drafts,
+      styles,
+      base: location.origin,
+      viewportHeight: innerHeight,
+    });
+  }, [identity]);
   useEffect(() => {
     const root = frame.current?.closest(".portfolio");
+    let initialized = false;
     async function message(event) {
       if (event.source !== frame.current?.contentWindow) return;
       const d = event.data;
       if (!d || typeof d !== "object") return;
-      if (d.type === "community-page-surfaces") {
-        if (!Array.isArray(d.surfaces) || d.surfaces.length > 20) return;
-        const valid = d.surfaces.filter(
-          (s) =>
-            s &&
-            typeof s.zone === "string" &&
-            (s.zone === "portrait" ||
-              /^project:[a-z0-9-]{1,80}$/.test(s.zone)) &&
-            ["width", "height", "a", "b", "c", "d", "e", "f"].every(
-              (k) => Number.isFinite(s[k]) && Math.abs(s[k]) <= 30000,
-            ) &&
-            s.width > 0 &&
-            s.height > 0 &&
-            s.width <= 4000 &&
-            s.height <= 4000,
-        );
-        setSurfaces(valid);
+      if (["community-page-draft", "community-page-drawing"].includes(d.type)) {
+        const draft = d.type === "community-page-drawing" ? d.drawing : d;
+        if (
+          !draft ||
+          (!["hero", "work", "contact", "portrait", "page"].includes(
+            draft.zone,
+          ) &&
+            !/^project:[a-z0-9-]{1,80}$/.test(draft.zone || ""))
+        )
+          return;
+        if (!drawingEnabled(current.current.scene, draft.zone)) return;
+        try {
+          if (d.type === "community-page-draft") {
+            saveDraft(draft.zone, draft.strokes);
+            if (Array.isArray(draft.strokes) && !draft.strokes.length)
+              current.current.onClear?.(draft.zone);
+          } else {
+            fingerprint(draft);
+            current.current.onDrawing({
+              zone: draft.zone,
+              strokes: draft.strokes,
+            });
+          }
+        } catch {
+          /* Invalid numeric data never reaches persistence. */
+        }
         return;
       }
       if (
@@ -161,10 +175,18 @@ export default function PageProgram({
       if (!Number.isFinite(h) || h < 400 || h > 30000) return;
       frame.current.style.height = h + "px";
       root?.setAttribute("data-community-page-ready", "true");
-      frame.current.contentWindow?.postMessage(
-        { type: "community-page-viewport", height: innerHeight, scrollY },
-        "*",
-      );
+      if (!initialized) {
+        initialized = true;
+        frame.current.contentWindow.postMessage(
+          { type: "community-scene-update", scene: current.current.scene },
+          "*",
+        );
+        frame.current.contentWindow.postMessage(
+          { type: "community-saving-update", saving: current.current.saving },
+          "*",
+        );
+      }
+      viewport();
     }
     const viewport = () =>
       frame.current?.contentWindow?.postMessage(
@@ -181,53 +203,30 @@ export default function PageProgram({
       root?.removeAttribute("data-community-page-ready");
     };
   }, [source]);
-  const targets = scene?.drawingTargets || [];
+  const sceneKey = JSON.stringify(scene);
+  useEffect(() => {
+    frame.current?.contentWindow?.postMessage(
+      { type: "community-scene-update", scene: JSON.parse(sceneKey) },
+      "*",
+    );
+  }, [sceneKey]);
+  useEffect(() => {
+    frame.current?.contentWindow?.postMessage(
+      { type: "community-saving-update", saving },
+      "*",
+    );
+  }, [saving]);
   return (
-    <>
-      <iframe
-        ref={frame}
-        className="community-page-frame"
-        title={
-          language === "es" ? "Portfolio intervenido" : "Community portfolio"
-        }
-        sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
-        referrerPolicy="no-referrer"
-        allow="camera 'none'; microphone 'none'; geolocation 'none'; clipboard-read 'none'; clipboard-write 'none'"
-        onLoad={() =>
-          frame.current?.contentWindow?.postMessage(
-            { type: "community-page-ping" },
-            "*",
-          )
-        }
-        srcDoc={source || undefined}
-      />
-      {surfaces
-        .filter((s) =>
-          s.zone === "portrait"
-            ? targets.includes("portrait")
-            : targets.includes("projects"),
-        )
-        .map((s) => (
-          <div
-            key={s.zone}
-            className="community-image-mirror"
-            style={{
-              width: s.width,
-              height: s.height,
-              transform: `matrix(${s.a},${s.b},${s.c},${s.d},${s.e + (frame.current?.offsetLeft || 0)},${s.f + (frame.current?.offsetTop || 0)})`,
-            }}
-          >
-            <Canvas
-              scene={scene}
-              zone={s.zone}
-              image
-              language={language}
-              saving={saving}
-              onPublish={onDrawing}
-              onClear={onClear}
-            />
-          </div>
-        ))}
-    </>
+    <iframe
+      ref={frame}
+      className="community-page-frame"
+      title={
+        language === "es" ? "Portfolio intervenido" : "Community portfolio"
+      }
+      sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
+      referrerPolicy="no-referrer"
+      allow="camera 'none'; microphone 'none'; geolocation 'none'; clipboard-read 'none'; clipboard-write 'none'"
+      srcDoc={source}
+    />
   );
 }

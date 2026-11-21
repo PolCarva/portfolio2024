@@ -69,7 +69,14 @@ export const sceneSchema = z
           .array(
             z
               .object({
-                action: z.enum(["click", "fill", "press", "hover", "assert"]),
+                action: z.enum([
+                  "click",
+                  "fill",
+                  "press",
+                  "hover",
+                  "assert",
+                  "style",
+                ]),
                 selector: z.string().max(300),
                 value: z.string().max(500),
                 expectSelector: z.string().max(300),

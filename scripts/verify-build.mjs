@@ -64,12 +64,13 @@ for (const language of ["EN", "ES"]) {
   const pdf = await readFile(`dist/cv/Pablo_Carvalho_${language}.pdf`);
   assert(pdf.subarray(0, 5).toString() === "%PDF-", "Invalid resume file");
 }
-const javascript = (await readdir("dist/assets")).filter((file) =>
-  file.endsWith(".js"),
-);
+const javascript = (await readdir("dist/assets"))
+  .filter((file) => file.endsWith(".js"))
+  .map((file) => "assets/" + file);
+javascript.push("community/embedded.js");
 let total = 0;
 for (const file of javascript) {
-  const bytes = await readFile(`dist/assets/${file}`);
+  const bytes = await readFile(`dist/${file}`);
   total += bytes.length;
   console.log(
     `${file}: ${bytes.length.toLocaleString()} bytes / gzip ${gzipSync(bytes).length.toLocaleString()} bytes`,

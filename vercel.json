@@ -43,6 +43,10 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=604800"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
         }
       ]
     },
@@ -54,20 +58,38 @@
           "value": "application/json; charset=utf-8"
         }
       ]
+    },
+    {
+      "source": "/assets/:path*",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/community/:path*",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
     }
   ],
   "functions": {
     "api/community/changes.js": {
       "maxDuration": 150,
-      "includeFiles": "{.generated/community-preview.mjs,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**,node_modules/@sparticuz/chromium/bin/**}"
+      "includeFiles": "{.generated/community-preview.mjs,.generated/community-embedded.js,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**,node_modules/@sparticuz/chromium/bin/**}"
     },
     "api/community.js": {
       "maxDuration": 150,
-      "includeFiles": "{.generated/community-preview.mjs,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**,node_modules/@sparticuz/chromium/bin/**}"
+      "includeFiles": "{.generated/community-preview.mjs,.generated/community-embedded.js,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**,node_modules/@sparticuz/chromium/bin/**}"
     },
     "api/community/changes/*.js": {
       "maxDuration": 150,
-      "includeFiles": "{.generated/community-preview.mjs,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**,node_modules/@sparticuz/chromium/bin/**}"
+      "includeFiles": "{.generated/community-preview.mjs,.generated/community-embedded.js,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**,node_modules/@sparticuz/chromium/bin/**}"
     }
   },
   "crons": [
