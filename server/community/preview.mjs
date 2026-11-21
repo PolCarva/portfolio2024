@@ -378,12 +378,14 @@ export async function renderReview(
                 if (step.expectSelector) {
                   const expected = page.locator(step.expectSelector).first();
                   await expected.waitFor({ state: "visible", timeout: 2500 });
-                  if (
-                    step.expectText &&
-                    !(await expected.textContent()).includes(step.expectText)
-                  )
-                    throw Error(
-                      "Expected text missing: " + step.expectText.slice(0, 80),
+                  if (step.expectText)
+                    await page.waitForFunction(
+                      ({ selector, text }) =>
+                        document
+                          .querySelector(selector)
+                          ?.textContent?.includes(text),
+                      { selector: step.expectSelector, text: step.expectText },
+                      { timeout: 2500 },
                     );
                 }
                 results.push({
