@@ -407,6 +407,7 @@ function App({
                     image
                     language={lang}
                     preview={communityPreview}
+                    saving={Boolean(drawingDraft)}
                     onPublish={setDrawingDraft}
                     onClear={(zone) =>
                       setDrawingDraft((d) => (d?.zone === zone ? null : d))
@@ -435,6 +436,7 @@ function App({
           zone="hero"
           language={language}
           preview={communityPreview}
+          saving={Boolean(drawingDraft)}
           onPublish={setDrawingDraft}
           onClear={(zone) =>
             setDrawingDraft((current) =>
@@ -502,6 +504,7 @@ function App({
                           image
                           language={lang}
                           preview={communityPreview}
+                          saving={Boolean(drawingDraft)}
                           onPublish={setDrawingDraft}
                           onClear={(zone) =>
                             setDrawingDraft((d) =>
@@ -583,6 +586,7 @@ function App({
           zone="work"
           language={language}
           preview={communityPreview}
+          saving={Boolean(drawingDraft)}
           onPublish={setDrawingDraft}
           onClear={(zone) =>
             setDrawingDraft((current) =>
@@ -687,6 +691,7 @@ function App({
           zone="contact"
           language={language}
           preview={communityPreview}
+          saving={Boolean(drawingDraft)}
           onPublish={setDrawingDraft}
           onClear={(zone) =>
             setDrawingDraft((current) =>

@@ -24,8 +24,11 @@ export async function renderReview(
     deadline = Date.now() + 45000,
     prompt: argumentsPrompt = "",
     drawingZone,
+    drawingOnly = false,
   } = {},
 ) {
+  // A manual drawing changes only trusted numeric strokes; do not rerun unrelated code.
+  if (drawingOnly) scene = { ...scene, program: null };
   const started = Date.now(),
     mark = (stage) =>
       console.info("community_preview", stage, Date.now() - started);
@@ -302,7 +305,8 @@ export async function renderReview(
               ...report,
             });
           }
-          await shot({ x: 0, y: 0, width, height: Math.ceil(size.height) });
+          if (!drawingOnly)
+            await shot({ x: 0, y: 0, width, height: Math.ceil(size.height) });
           const imageZones =
             drawingZone &&
             (drawingZone === "portrait" || drawingZone.startsWith("project:"))
@@ -338,6 +342,28 @@ export async function renderReview(
               width: Math.max(...xs) - Math.min(...xs),
               height: Math.max(...ys) - Math.min(...ys),
             });
+          }
+          if (drawingOnly) {
+            if (
+              !["portrait"].includes(drawingZone) &&
+              !drawingZone?.startsWith("project:")
+            ) {
+              const { model } = await cdp.send("DOM.getBoxModel", {
+                nodeId:
+                  bands.nodeIds[
+                    ["hero", "work", "contact"].indexOf(drawingZone)
+                  ],
+              });
+              const xs = model.border.filter((_, i) => i % 2 === 0),
+                ys = model.border.filter((_, i) => i % 2 === 1);
+              await shot({
+                x: Math.max(0, Math.min(...xs)),
+                y: Math.max(0, Math.min(...ys)),
+                width: Math.max(...xs) - Math.min(...xs),
+                height: Math.max(...ys) - Math.min(...ys),
+              });
+            }
+            continue;
           }
           mark("full_screenshot_done");
 
@@ -385,6 +411,7 @@ export async function renderReview(
         mark("captured");
         return {
           images,
+          viewports: ["desktop", "mobile"],
           quality: scene.program
             ? assessProgramQuality(temporalReports, argumentsPrompt, {
                 canvasExpected: !scene.program.html.trim(),

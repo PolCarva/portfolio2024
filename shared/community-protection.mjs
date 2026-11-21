@@ -1,5 +1,5 @@
 export const protectedVisualSelector =
-  ".portfolio h1,.portfolio h2,.portfolio h3,.portfolio h4,.portfolio p,.portfolio a,.portfolio button,.portfolio input,.portfolio textarea,.portfolio label,.portfolio img,.site-header,.community-bar,.community-panel,.community-floating-tools";
+  ".portfolio h1,.portfolio h2,.portfolio h3,.portfolio h4,.portfolio p,.portfolio a,.portfolio button,.portfolio input,.portfolio textarea,.portfolio label,.portfolio img,.site-header,.community-bar,.community-panel,.community-drawing-save, .community-floating-tools";
 export function exclusionPath(rects, width, height) {
   const regions = rects
     .filter(

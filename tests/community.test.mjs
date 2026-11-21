@@ -833,6 +833,7 @@ test("drawing images must pass two independent visual reviewers before saving", 
     let renders = 0;
     const evaluate = createEvaluator({
       respond: async (model, schema, system, user) => {
+        assert(system.includes("Do not reject taste"));
         calls.push(model);
         assert(Array.isArray(user));
         assert(user.some((x) => x.type === "image"));
@@ -844,6 +845,7 @@ test("drawing images must pass two independent visual reviewers before saving", 
                   reason: deny === "first" ? "unsafe" : "ok",
                 }
               : {
+                  accepted: deny !== "second",
                   approved: deny !== "second",
                   identityIntact: true,
                   readable: true,
@@ -856,7 +858,8 @@ test("drawing images must pass two independent visual reviewers before saving", 
           usage: { model, input: 10, output: 10 },
         };
       },
-      render: async (candidate) => {
+      render: async (candidate, options) => {
+        assert.equal(options.drawingOnly, true);
         renders++;
         assert(candidate.nodes.some((n) => n.shape === "stroke"));
         return {
@@ -1745,4 +1748,75 @@ test("pause cancels private staged artifacts and stale continuation tokens never
   );
   assert.equal(result.reason, "stale");
   assert.equal(calls, 0);
+});
+
+test("manual strokes review only their surface, not unchanged generated motion, across invocations", async () => {
+  const { createEvaluator } = await import("../server/community/ai.mjs");
+  const drawing = {
+    zone: "portrait",
+    strokes: [
+      {
+        points: [
+          { x: 10, y: 20 },
+          { x: 20, y: 30 },
+        ],
+        color: "blue",
+        width: 4,
+      },
+    ],
+  };
+  const base = {
+    ...originalScene,
+    program: {
+      html: "",
+      css: "",
+      javascript: "function render() {}",
+      layer: "foreground",
+    },
+  };
+  let calls = 0;
+  const evaluate = createEvaluator({
+    respond: async (model, schema, system, user) => {
+      calls++;
+      assert(!JSON.stringify(user).includes("function render"));
+      return {
+        value: { accepted: true, reason: "ok" },
+        usage: { model, input: 30, output: 10 },
+      };
+    },
+    render: async (candidate, options) => {
+      assert.equal(options.drawingOnly, true);
+      assert.equal(options.drawingZone, "portrait");
+      return {
+        images: [Buffer.from("photo")],
+        quality: null,
+        contentRevision: "initial",
+      };
+    },
+    readContent: async () => null,
+  });
+  const pending = await evaluate({
+    scene: base,
+    prompt: "my doodle",
+    drawing,
+    deferStages: true,
+    deadline: Date.now() + 10000,
+  });
+  assert.equal(pending.pending.kind, "review");
+  assert.equal(calls, 1);
+  const result = await evaluate({
+    scene: base,
+    prompt: "my doodle",
+    drawing: true,
+    deferStages: true,
+    resume: {
+      ...pending.pending,
+      usage: pending.usage,
+      previews: { ...pending.pending.previews, images: [Buffer.from("photo")] },
+    },
+    deadline: Date.now() + 10000,
+  });
+  assert.equal(result.approved, true);
+  assert.equal(calls, 2);
+  assert.deepEqual(result.scene.program, base.program);
 });

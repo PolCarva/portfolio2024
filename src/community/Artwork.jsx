@@ -1,3 +1,4 @@
+import { loadDraft, saveDraft, fingerprint } from "./draft.mjs";
 import { Component, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -115,15 +116,20 @@ function CommunityCanvas({
   onPublish,
   onClear,
   image = false,
+  saving = false,
 }) {
-  const [strokes, setStrokes] = useState([]),
+  const [strokes, setStrokes] = useState(() =>
+      preview ? [] : loadDraft(zone),
+    ),
     [drawing, setDrawing] = useState(false),
     [color, setColor] = useState("ink"),
-    [width, setWidth] = useState(4);
+    [width, setWidth] = useState(4),
+    [completed, setCompleted] = useState(0);
   const active = useRef(null),
     area = useRef(null),
     coordinates = useRef(null),
     activePointer = useRef(null),
+    lastSent = useRef(""),
     es = language === "es";
   useEffect(() => {
     if (!scene) return;
@@ -143,6 +149,28 @@ function CommunityCanvas({
       return next.length === previous.length ? previous : next;
     });
   }, [scene, zone]);
+  useEffect(() => {
+    if (!preview) saveDraft(zone, strokes);
+  }, [zone, strokes, preview]);
+  useEffect(() => {
+    if (
+      preview ||
+      saving ||
+      !onPublish ||
+      !strokes.length ||
+      strokes.some((s) => s.points.length < 2)
+    )
+      return;
+    const draft = { zone, strokes },
+      signature = fingerprint(draft);
+    if (signature === lastSent.current) return;
+    const timer = setTimeout(() => {
+      if (active.current) return;
+      lastSent.current = signature;
+      onPublish(draft);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [zone, strokes, saving, onPublish, preview, completed]);
   if (!scene) return null;
   const colors = {
     ...sceneColors(scene),
@@ -181,6 +209,7 @@ function CommunityCanvas({
     if (
       !drawing ||
       !enabled ||
+      saving ||
       active.current ||
       e.button !== 0 ||
       strokes.length >= 12
@@ -224,6 +253,7 @@ function CommunityCanvas({
     }
     active.current = null;
     activePointer.current = null;
+    setCompleted((v) => v + 1);
   }
   return (
     <aside
@@ -289,6 +319,7 @@ function CommunityCanvas({
           >
             <button
               type="button"
+              disabled={saving}
               aria-pressed={drawing}
               onClick={() => setDrawing((v) => !v)}
             >
@@ -344,7 +375,9 @@ function CommunityCanvas({
                 </div>
                 <button
                   type="button"
+                  disabled={saving}
                   onClick={() => {
+                    lastSent.current = "";
                     setStrokes([]);
                     active.current = null;
                     activePointer.current = null;
@@ -355,19 +388,19 @@ function CommunityCanvas({
                 </button>
                 <button
                   type="button"
-                  disabled={!strokes.length || !onPublish}
+                  disabled={saving || !strokes.length || !onPublish}
                   onClick={() => {
-                    setDrawing(false);
+                    lastSent.current = fingerprint({ zone, strokes });
                     onPublish({ zone, strokes });
                   }}
                 >
-                  {es ? "Publicar este dibujo" : "Publish this drawing"} ↗
+                  {es ? "Guardar ahora" : "Save now"} ↗
                 </button>
                 <small>
                   {strokes.length}/12{" "}
                   {es
-                    ? "trazos · Se guardan para todos después de la revisión con IA. Consultá tu cupo en el formulario."
-                    : "strokes · Saved for everyone after AI review. Check your allowance in the form."}
+                    ? "trazos · Guardado automático al hacer una pausa. Borrador conservado en este navegador."
+                    : "strokes · Automatically saved when you pause. Draft retained in this browser."}
                 </small>
               </>
             )}

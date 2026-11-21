@@ -159,7 +159,7 @@ test("drawing on the profile photo creates a target-specific publishable draft",
   await act(async () => {
     renderer.root
       .findAllByType("button")
-      .find((b) => b.children.join("").includes("Publicar este dibujo"))
+      .find((b) => b.children.join("").includes("Guardar ahora"))
       .props.onClick();
   });
   assert.equal(published.zone, "portrait");
@@ -168,4 +168,39 @@ test("drawing on the profile photo creates a target-specific publishable draft",
   await act(async () => {
     renderer.unmount();
   });
+});
+
+test("finished numeric strokes are automatically submitted after a drawing pause", async () => {
+  let renderer, submitted;
+  await act(async () => {
+    renderer = create(
+      React.createElement(Canvas, {
+        scene: { ...originalScene, drawing: true },
+        zone: "hero",
+        onPublish: (d) => (submitted = d),
+      }),
+      options,
+    );
+  });
+  await act(async () =>
+    renderer.root
+      .findAllByType("button")
+      .find((b) => b.children.join("") === "Dibujar acá")
+      .props.onClick(),
+  );
+  const area = renderer.root.findByProps({
+    className: "community-drawing-area",
+  });
+  await act(async () => {
+    area.props.onPointerDown(event());
+    area.props.onPointerMove(event(200, 100));
+    area.props.onPointerUp(event());
+  });
+  assert.equal(submitted, undefined);
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 2600));
+  });
+  assert.equal(submitted.zone, "hero");
+  assert.equal(submitted.strokes.length, 1);
+  await act(async () => renderer.unmount());
 });

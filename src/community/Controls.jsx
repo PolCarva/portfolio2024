@@ -1,3 +1,6 @@
+import DrawingAutosave from "./DrawingAutosave";
+import Turnstile from "./Turnstile";
+import { api, follow } from "./request.mjs";
 import { useEffect, useRef, useState } from "react";
 import { communityMarkPath } from "../../shared/community-catalog.mjs";
 const copy = {
@@ -130,56 +133,6 @@ const copy = {
     },
   },
 };
-async function api(path, options = {}) {
-  const r = await fetch(path, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...options.headers },
-    credentials: "same-origin",
-    cache: "no-store",
-  });
-  const d = await r.json();
-  if (!r.ok) throw new Error(d.error || "unavailable");
-  return d;
-}
-function Turnstile({ siteKey, onToken, reset }) {
-  const node = useRef(null);
-  useEffect(() => {
-    let widget,
-      cancelled = false;
-    function render() {
-      if (cancelled || !node.current || !window.turnstile) return;
-      widget = window.turnstile.render(node.current, {
-        sitekey: siteKey,
-        action: "portfolio-change",
-        callback: onToken,
-        "expired-callback": () => onToken(""),
-        "error-callback": () => {
-          onToken("");
-          return true;
-        },
-      });
-    }
-    let script = document.querySelector("script[data-portfolio-turnstile]");
-    if (window.turnstile) render();
-    else {
-      if (!script) {
-        script = document.createElement("script");
-        script.src =
-          "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-        script.async = true;
-        script.dataset.portfolioTurnstile = "true";
-        document.head.append(script);
-      }
-      script.addEventListener("load", render);
-    }
-    return () => {
-      cancelled = true;
-      script?.removeEventListener("load", render);
-      if (widget !== undefined) window.turnstile?.remove(widget);
-    };
-  }, [siteKey, onToken, reset]);
-  return <div ref={node} className="community-turnstile" />;
-}
 export default function CommunityControls({
   language,
   onScene,
@@ -252,25 +205,6 @@ export default function CommunityControls({
     };
   }, [open, busy]);
   useEffect(() => {
-    if (drawingDraft) {
-      setOpen(true);
-      setNotice("");
-      setPrompt(
-        es
-          ? drawingDraft.zone === "portrait"
-            ? "Quiero sumar este dibujo al lienzo compartido de la foto de perfil."
-            : drawingDraft.zone.startsWith("project:")
-              ? "Quiero sumar este dibujo al lienzo compartido de esta imagen de proyecto."
-              : "Quiero sumar este dibujo al lienzo comunitario."
-          : drawingDraft.zone === "portrait"
-            ? "I want to add this drawing to the shared profile-photo canvas."
-            : drawingDraft.zone.startsWith("project:")
-              ? "I want to add this drawing to this project image's shared canvas."
-              : "I want to add this drawing to the community canvas.",
-      );
-    }
-  }, [drawingDraft, es]);
-  useEffect(() => {
     if (!open) return;
     const before = document.activeElement;
     dialog.current?.querySelector("button")?.focus();
@@ -306,31 +240,6 @@ export default function CommunityControls({
     const d = await api("/api/community");
     if (!closed.current) setData(d);
   }
-  async function follow(id) {
-    for (let i = 0; i < 145; i++) {
-      let d = await api("/api/community/changes/" + id);
-      if (d.continueRequired) {
-        try {
-          d = await api("/api/community/changes/" + id, {
-            method: "POST",
-            body: JSON.stringify({ step: d.step }),
-          });
-        } catch (error) {
-          if (
-            error.message === "Failed to fetch" ||
-            error.message === "NetworkError when attempting to fetch resource."
-          ) {
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            continue;
-          }
-          throw error;
-        }
-      }
-      if (d.status !== "processing") return d;
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    }
-    throw new Error("timeout");
-  }
   async function submit(e) {
     e.preventDefault();
     if (busy || !token || prompt.trim().length < 3 || prompt.length > 500)
@@ -347,7 +256,6 @@ export default function CommunityControls({
             id,
             prompt: prompt.trim(),
             token,
-            ...(drawingDraft ? { drawing: drawingDraft } : {}),
           }),
         });
       } catch (e) {
@@ -365,7 +273,6 @@ export default function CommunityControls({
           : result.reason || "technical",
       );
       if (result.status === "published") {
-        onDrawingComplete?.();
         setPrompt("");
         setOriginal(false);
       }
@@ -385,6 +292,20 @@ export default function CommunityControls({
   if (!data) return null;
   return (
     <>
+      {drawingDraft && (
+        <DrawingAutosave
+          key={JSON.stringify(drawingDraft)}
+          draft={drawingDraft}
+          language={language}
+          data={data}
+          onSaved={async () => {
+            await refresh();
+            setToast(true);
+            onDrawingComplete?.();
+          }}
+          onCancel={onDrawingComplete}
+        />
+      )}
       {toast && (
         <div className="community-toast" role="status">
           {t.success}
@@ -469,47 +390,14 @@ export default function CommunityControls({
                 </div>
               ) : (
                 <>
-                  {drawingDraft && (
-                    <p className="community-notice">
-                      {es
-                        ? `${drawingDraft.strokes.length} ${drawingDraft.strokes.length === 1 ? "trazo listo" : "trazos listos"} para revisar y guardar. Tu aporte se suma al lienzo compartido.`
-                        : `${drawingDraft.strokes.length} ${drawingDraft.strokes.length === 1 ? "stroke" : "strokes"} ready for review and saving. Your drawing joins the shared canvas.`}
-                    </p>
-                  )}
-                  {drawingDraft && (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => {
-                        onDrawingComplete?.();
-                        setPrompt("");
-                      }}
-                    >
-                      {es
-                        ? "Continuar solo con un prompt"
-                        : "Continue with a prompt only"}
-                    </button>
-                  )}
-                  <label htmlFor="community-prompt">
-                    {drawingDraft
-                      ? es
-                        ? "Describí tu dibujo"
-                        : "Describe your drawing"
-                      : t.label}
-                  </label>
+                  <label htmlFor="community-prompt">{t.label}</label>
                   <textarea
                     id="community-prompt"
                     maxLength={500}
                     minLength={3}
                     required
                     rows={4}
-                    placeholder={
-                      drawingDraft
-                        ? es
-                          ? "Describí lo que dibujaste…"
-                          : "Describe what you drew…"
-                        : t.placeholder
-                    }
+                    placeholder={t.placeholder}
                     value={prompt}
                     disabled={busy}
                     onChange={(e) => setPrompt(e.target.value)}
@@ -517,7 +405,7 @@ export default function CommunityControls({
                   <small>
                     {prompt.length}/500 {t.counter}
                   </small>
-                  {!drawingDraft && (
+                  {
                     <div className="community-example-row">
                       {t.examples.map((example) => (
                         <button
@@ -530,7 +418,7 @@ export default function CommunityControls({
                         </button>
                       ))}
                     </div>
-                  )}
+                  }
                   <small>
                     {data.participation
                       ? es

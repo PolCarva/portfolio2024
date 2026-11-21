@@ -93,3 +93,10 @@ Los candidatos, capturas y métricas de la etapa pendiente permanecen en el docu
 El lienzo captura una copia del trazo en cada actualización de React, sin depender de un ref que puede vaciarse al soltar el clic. Una barrera de errores por lienzo permite restablecerlo sin perder el portfolio.
 
 El presupuesto de descarga de JavaScript se ajustó de 230 a 240 KB para las superficies interactivas y las continuaciones; se mantienen las comprobaciones de tamaño, assets, EN/ES, OG y CV.
+
+
+### Guardado automático de dibujos
+
+El lienzo conserva el borrador numérico en `localStorage` durante un máximo de 30 días, separado por superficie y validado al recuperar. Después de 2,5 segundos sin dibujar se envía automáticamente, con Turnstile y un indicador de estado sin abrir formularios. Se bloquean nuevos trazos durante ese envío para no mezclar versiones. La solicitud guarda su UUID antes del POST; recargar retoma el estado y las etapas de esa misma solicitud sin duplicar el aporte. Los fallos transitorios tienen un solo reintento automático, con nueva verificación antibot, y luego ofrecen reintentar o seguir editando; el borrador nunca se borra por un rechazo. El cupo por navegador, los límites diarios y el presupuesto siguen vigentes. Al aprobarse, se muestra el dibujo compartido y se retiran únicamente los trazos ya guardados del borrador.
+
+Los dibujos manuales usan dos revisiones breves de seguridad sobre acercamientos de su superficie en escritorio y móvil. No regeneran código ni vuelven a probar animaciones preexistentes: se revisa el trazo numérico realmente aportado. Se permiten garabatos, anotaciones, letras decorativas y dibujos sobre la foto; solo se frenan contenidos claramente prohibidos. Los cambios generados mediante prompts conservan sus pruebas de funcionamiento y revisión independiente. Los errores técnicos registran una categoría acotada en administración, sin secretos ni mensajes crudos del proveedor.

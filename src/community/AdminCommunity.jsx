@@ -258,12 +258,22 @@ export default function AdminCommunity() {
                         admin_reverted: "Deshecho por el administrador",
                       }[j.reason]}
                 </p>
-                {j.checks && (
+                {j.checks?.review === "drawing_safety" ? (
                   <small>
-                    Comprobaciones: {j.checks.framesTested} fotogramas ·{" "}
-                    {j.checks.viewports?.join(" / ") || "sin animación"} ·{" "}
-                    {j.checks.repairAttempts} corrección automática.
+                    Revisión de seguridad del dibujo · {j.checks.previewCount}{" "}
+                    vistas · {j.checks.viewports?.join(" / ")}
                   </small>
+                ) : (
+                  j.checks && (
+                    <small>
+                      Comprobaciones: {j.checks.framesTested} fotogramas ·{" "}
+                      {j.checks.viewports?.join(" / ") || "sin animación"} ·{" "}
+                      {j.checks.repairAttempts} corrección automática.
+                    </small>
+                  )
+                )}
+                {j.checks?.error && (
+                  <small>Error técnico: {j.checks.error}</small>
                 )}
                 {j.checks?.qualityIssues?.length > 0 && (
                   <small>{j.checks.qualityIssues.join(" · ")}</small>
