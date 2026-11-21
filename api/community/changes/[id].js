@@ -15,7 +15,7 @@ import {
   reserveRepair,
 } from "../../../server/community/state.mjs";
 const input = z.object({ step: z.uuid() }).strict();
-export const config = { maxDuration: 60 };
+export const config = { maxDuration: 150 };
 export function createContinuationHandler({ evaluate = evaluateChange } = {}) {
   return async function handler(req, res) {
     try {

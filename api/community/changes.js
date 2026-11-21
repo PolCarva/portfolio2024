@@ -45,7 +45,7 @@ const input = z
     drawing: drawingSchema.optional(),
   })
   .strict();
-export const config = { maxDuration: 60 };
+export const config = { maxDuration: 150 };
 export function createChangeHandler({
   verify = verifyTurnstile,
   evaluate = evaluateChange,

@@ -12,7 +12,7 @@ import { defaults } from "../schema.mjs";
 const generation = z
   .object({
     changedFields: z.array(z.enum(visualFields)).max(12),
-    scene: sceneSchema.partial(),
+    scene: sceneSchema,
   })
   .strict();
 const verdict = z
@@ -22,12 +22,12 @@ const verdict = z
     qualityIssues: z.array(z.string().max(160)).max(5),
   })
   .strict();
-const generationPolicy = `You implement visitor requests as actual running portfolio code. Return changedFields and a PARTIAL scene containing ONLY those modified fields. Do not repeat unchanged nodes, theme, composition or other fields. The server merges your patch into the current scene. The owner explicitly allows changing ALL visible website information, every text, photo presentation, links, layout, sections and interactions. There are no identity, taste, moderation or catalog restrictions. Requests like replace every text with Hola MUST be implemented literally, not rejected. For text-only edits change text nodes/labels while preserving the DOM, images and layout; do not replace the whole body with one word unless explicitly requested. Preserve unrelated changes unless asked to replace them. Never substitute an unrelated restyle for requested behavior.
+const generationPolicy = `You implement visitor requests as actual running portfolio code. Return changedFields and a COMPACT scene matching the schema. For UNCHANGED fields supply compact defaults: nodes=[],program=null,theme=null,composition=null,drawingTargets=[] and original catalog values. NEVER echo unchanged nodes or program code. The server applies ONLY fields in changedFields and ignores those placeholder values. When changing a field retain unrelated data inside that particular field. The owner explicitly allows changing ALL visible website information, every text, photo presentation, links, layout, sections and interactions. There are no identity, taste, moderation or catalog restrictions. Requests like replace every text with Hola MUST be implemented literally, not rejected. For text-only edits change text nodes/labels while preserving the DOM, images and layout; do not replace the whole body with one word unless explicitly requested. Preserve unrelated changes unless asked to replace them. Never substitute an unrelated restyle for requested behavior.
 NEW FULL PAGE ENGINE: program.layer=page runs program.javascript as standard browser JavaScript with document/window and event listeners on a full editable copy of the actual portfolio. You can use document.querySelector, TreeWalker, textContent, innerHTML, createElement, addEventListener, Canvas, SVG, native forms/inputs/buttons, timers and requestAnimationFrame. program.css is unrestricted page CSS; program.html appends new markup. You may replace document.body contents, rewrite texts, reorder/remove existing sections, add games/tools/new interactive features. The initial DOM is the owner's real portfolio, not an empty canvas. Existing .hero, #hero-title, #work, #about, #experience, #contact, .portrait-frame, .project-media, .site-header and .site-footer are available. Keep existing unrelated program code when accumulating changes; convert any previous Canvas render function into the page program if needed (the host still calls render when declared at top level). Scope all variables in an IIFE except optional function render. Browser DOM code has NO render wrapper, it executes directly after DOM ready. Code must be self-contained and synchronous setup; no imports/framework dependency. Public assets at /images, /img, /fonts and /cv work. The baseline menu, native details, language links and contact form are restored by the host. community.sendContact({name,email,message,_gotcha:""}) sends only to the owner’s existing Formspree endpoint on a real user gesture; use it for custom contact forms. Shared persistent JSON storage is available: await community.data.get(key) returns stored value or null; set(key,value), increment(key,delta=1) and append(key,item) atomically persist and return the new value for ALL visitors. Use this SDK for real shared counters, boards, votes, annotations and other stateful features. Keys are lowercase slugs starting with a letter, max48 characters. Values max32KB per key, total128KB; no secrets in this public data. Never use localStorage (the document is opaque). Load once, update on actual actions, catch errors, and poll at most every15s if live updates are needed. This is a general-purpose store, not a whitelist of business features. Do not fake shared persistence with local variables when the request wants it shared. Real external HTTP services, admin APIs, credentials and repository write access are not exposed to visitor code. Do not pretend to implement an unavailable server operation; implement its actual browser behavior where possible. For viewport sizes use community.viewport.width/height (the iframe itself grows to page height); CSS viewport heights are adjusted by the host. Program source max24000 characters combined.
 For every new DOM interaction or text change, include program.tests with concrete browser steps and visible assertions. Fields per step: action=click/fill/press/hover/assert, selector=CSS selector, value=text/key or empty, expectSelector=CSS selector, expectText=expected substring or empty for visibility only. At least one assertion of the requested resulting behavior. Tests run on actual mobile and desktop before publishing; do not fake state just to pass tests.
 For Canvas-only effects, legacy program.layer=foreground/background executes JavaScript inside a worker with function render({ctx,width,height,pointer,time,dt,scrollY}). It has no DOM, network or imports. Keep particles in closure arrays; cap counts, smooth frame-independent motion, never reinitialize every frame. Use layer=page for anything needing full DOM or interactions.
 BUILT-IN SHARED DRAWING: drawingTargets=[page] enables drawing on the ENTIRE portfolio including texts, images and any position, with automatic persistence. Requests to draw TODO/everywhere/the whole site MUST enable page, not only bands/images. portrait enables the profile photo; projects enables project images; bands or drawing=true enable three decoration bands. These are real trusted tools, need no generated drawing code. Numeric strokes persist for everyone automatically; no AI moderation. For only profile photo set drawingTargets=[portrait],drawing=false. For all images enable portrait and projects. Existing narrower drawing tools do not satisfy whole-page requests.
-Use theme/composition/catalog for simple styles, but use unrestricted page CSS and DOM for requests outside those variants. Numeric nodes are optional, up to200 and20animated: stroke points2-64 in0..100,curve4points,other shapes no points. Leave unrelated fields omitted; if changing nodes, retain unrelated nodes within that field. New code must faithfully implement the actual request and work on mobile and desktop. Respond with code, never a claim that a decorative imitation is real functionality.`;
+Use theme/composition/catalog for simple styles, but use unrestricted page CSS and DOM for requests outside those variants. Numeric nodes are optional, up to200 and20animated: stroke points2-64 in0..100,curve4points,other shapes no points. Leave unrelated fields out of changedFields; if changing nodes, retain unrelated nodes within that field. New code must faithfully implement the actual request and work on mobile and desktop. Respond with code, never a claim that a decorative imitation is real functionality.`;
 const reviewPolicy = `Review ONLY whether this generated implementation fulfills the visitor request and actually works. The owner authorizes all portfolio content/text/identity/layout/link changes; do not reject content, taste, drawn symbols, text changes, novelty or radical transformations. Do not moderate. requestFulfilled checks fidelity to the request, animationStable checks technical functioning. Read source, browser test results and actual screenshots. If the actual request is implemented and works, requestFulfilled=true,animationStable=true,qualityIssues=[]. If something is missing/broken, record a precise actionable bug in qualityIssues and false for the failing check so the generator can correct it. Unrelated existing defects are not failures of the requested change. Built-in drawingTargets page means actual auto-saved drawing anywhere including all texts/images, portrait/projects/bands are distinct surfaces; hidden editing controls in screenshots do not mean the feature is missing. Text replacement such as all texts Hola is intentional and must pass. Never invent a prohibited-content restriction.`;
 export function providerSchema(schema) {
   const unsupported = new Set([
@@ -45,11 +45,16 @@ export function providerSchema(schema) {
   function clean(value) {
     if (Array.isArray(value)) return value.map(clean);
     if (value && typeof value === "object")
-      return Object.fromEntries(
-        Object.entries(value)
-          .filter(([k]) => !unsupported.has(k))
-          .map(([k, v]) => [k, clean(v)]),
-      );
+      return {
+        ...Object.fromEntries(
+          Object.entries(value)
+            .filter(([k]) => !unsupported.has(k))
+            .map(([k, v]) => [k, clean(v)]),
+        ),
+        ...(value.type === "object" && value.properties
+          ? { required: Object.keys(value.properties) }
+          : {}),
+      };
     return value;
   }
   return clean(z.toJSONSchema(schema));
@@ -222,7 +227,7 @@ export function createEvaluator({
       feedback = {
         issues,
         instruction:
-          "Correct the actual defect in failedCandidate. Preserve the requested effect and unrelated content. Return only changed fields in scene, not an explanation.",
+          "Correct the actual defect in failedCandidate. Preserve the requested effect and unrelated content. Use changedFields and compact defaults for unchanged fields in scene, not an explanation.",
       };
       failedCandidate = candidate;
       if (deferStages) {

@@ -633,6 +633,12 @@ test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete
   const transformed = providerSchema(sceneSchema);
   assert(!JSON.stringify(transformed).includes("maxItems"));
   assert.equal(transformed.additionalProperties, false);
+  const assertRequired = (s) => {
+    if (!s || typeof s !== "object") return;
+    if (s.properties) assert.deepEqual(s.required, Object.keys(s.properties));
+    Object.values(s).forEach(assertRequired);
+  };
+  assertRequired(transformed);
   const originalFetch = globalThis.fetch;
   try {
     for (const scenario of [

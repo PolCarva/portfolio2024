@@ -60,7 +60,7 @@ const copy = {
       unsupported:
         "Ese pedido está fuera de las posibilidades visuales del experimento.",
       stale: "El diseño cambió durante la revisión. Tu turno sigue disponible.",
-      technical: "No pudimos completar la revisión. Tu turno sigue disponible.",
+      technical: "No pudimos construir el cambio. Tu turno sigue disponible.",
       timeout: "La revisión tardó demasiado. Tu turno sigue disponible.",
       invalid: "El pedido debe tener entre 3 y 500 caracteres.",
       unavailable: "No pudimos conectar. Intentá más tarde.",
