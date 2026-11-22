@@ -90,6 +90,10 @@
     "api/community/changes/*.js": {
       "maxDuration": 150,
       "includeFiles": "{.generated/community-preview.mjs,.generated/community-embedded.js,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**,node_modules/@sparticuz/chromium/bin/**}"
+    },
+    "api/community/process.js": {
+      "maxDuration": 150,
+      "includeFiles": "{.generated/community-preview.mjs,.generated/community-embedded.js,src/index.css,src/project-artwork.css,src/community/community.css,public/fonts/**,public/images/**,public/img/**,node_modules/@sparticuz/chromium/bin/**}"
     }
   },
   "crons": [

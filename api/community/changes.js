@@ -22,6 +22,11 @@ import {
 } from "../../server/community/state.mjs";
 import { verifyTurnstile } from "../../server/community/turnstile.mjs";
 import { evaluateChange } from "../../server/community/ai.mjs";
+import {
+  backgroundEnabled,
+  keepAlive,
+  dispatchPending,
+} from "../../server/community/background.mjs";
 const input = z
   .object({
     id: z.uuid(),
@@ -49,6 +54,9 @@ export const config = { maxDuration: 150 };
 export function createChangeHandler({
   verify = verifyTurnstile,
   evaluate = evaluateChange,
+  background = backgroundEnabled,
+  runInBackground = keepAlive,
+  dispatch = dispatchPending,
 } = {}) {
   return async function handler(req, res) {
     try {
@@ -94,22 +102,36 @@ export function createChangeHandler({
       });
       if (reservation.duplicate)
         return json(res, 200, jobResult(reservation.job));
-      let result;
-      try {
-        result = await evaluate({
-          prompt: data.prompt,
-          drawing: data.drawing,
-          scene: reservation.scene,
-          deadline: reservation.job.createdAt + 120000,
-          reserveRepair: () => reserveRepair(data.id),
-          deferStages: true,
-          deferRuntime: true,
+      const work = async () => {
+        let result;
+        try {
+          result = await evaluate({
+            prompt: data.prompt,
+            drawing: data.drawing,
+            scene: reservation.scene,
+            deadline: reservation.job.createdAt + 120000,
+            reserveRepair: () => reserveRepair(data.id),
+            deferStages: true,
+            deferRuntime: true,
+          });
+        } catch {
+          result = { approved: false, reason: "technical" };
+        }
+        const job = await finish(data.id, result);
+        if (job.background) await dispatch(job);
+        return job;
+      };
+      if (!data.drawing && background()) {
+        const job = await mutate((state) => {
+          const pending = state.jobs[data.id];
+          pending.background = true;
+          pending.leaseAt = Date.now();
+          return pending;
         });
-      } catch {
-        result = { approved: false, reason: "technical" };
+        runInBackground(work());
+        return json(res, 202, jobResult(job));
       }
-      const job = await finish(data.id, result);
-      return json(res, 200, jobResult(job));
+      return json(res, 200, jobResult(await work()));
     } catch (e) {
       return communityFailure(res, e);
     }

@@ -3,16 +3,15 @@ import { json, body } from "../../../server/http.mjs";
 import { sameOrigin, validSession } from "../../../server/auth.mjs";
 import { communityFailure } from "../../community.js";
 import { evaluateChange } from "../../../server/community/ai.mjs";
+import { continueChange } from "../../../server/community/process.mjs";
+import { recoverQueued } from "../../../server/community/background.mjs";
 import {
   visitor,
   secret,
   readState,
-  mutate,
   prune,
   problem,
   jobResult,
-  finish,
-  reserveRepair,
 } from "../../../server/community/state.mjs";
 const input = z.object({ step: z.uuid() }).strict();
 export const config = { maxDuration: 150 };
@@ -30,6 +29,7 @@ export function createContinuationHandler({ evaluate = evaluateChange } = {}) {
         job && (job.owner === owner || (job.diagnostic && admin));
       if (req.method === "GET") {
         const state = await readState();
+        await recoverQueued(state);
         prune(state);
         const job = state.jobs[id];
         if (!owns(job)) throw problem(404, "not_found");
@@ -48,70 +48,7 @@ export function createContinuationHandler({ evaluate = evaluateChange } = {}) {
       }
       if (!sameOrigin(req)) throw problem(403, "origin");
       const { step } = input.parse(await body(req, 300));
-      const claim = await mutate((state) => {
-        const job = state.jobs[id];
-        if (!owns(job)) throw problem(404, "not_found");
-        if (
-          !job.pendingStep ||
-          job.pendingStep !== step ||
-          !job.status.startsWith("awaiting_")
-        )
-          return { claimed: false, job };
-        if (
-          state.active !== id ||
-          state.revision !== job.base ||
-          (!job.diagnostic && state.paused)
-        ) {
-          job.status = "failed";
-          job.reason = "stale";
-          delete job.pending;
-          delete job.pendingStep;
-          if (state.active === id) state.active = null;
-          return { claimed: false, job };
-        }
-        const pending = job.pending;
-        delete job.pending;
-        delete job.pendingStep;
-        job.status = "processing";
-        job.leaseAt = Date.now();
-        return { claimed: true, job, pending, scene: state.scene };
-      });
-      if (!claim.claimed) return json(res, 200, jobResult(claim.job));
-      const { job, pending } = claim;
-      let result;
-      try {
-        const resume = {
-          ...pending,
-          usage: job.usage || [],
-          checks: job.checks,
-        };
-        if (pending.kind === "review")
-          resume.previews = {
-            ...pending.previews,
-            images: pending.previews.images.map((data) =>
-              Buffer.from(data, "base64"),
-            ),
-          };
-        result = await evaluate({
-          prompt: job.prompt,
-          scene: claim.scene,
-          drawing: pending.drawing || job.kind === "drawing" ? true : undefined,
-          resume,
-          deferStages: true,
-          deferRuntime: true,
-          deadline: Date.now() + 120000,
-          reserveRepair: () => reserveRepair(id),
-        });
-      } catch {
-        result = {
-          approved: false,
-          reason: "technical",
-          usage: job.usage,
-          cost: job.measuredCost,
-          checks: job.checks,
-        };
-      }
-      const completed = await finish(id, result);
+      const completed = await continueChange(id, step, { owns, evaluate });
       return json(res, 200, {
         ...jobResult(completed),
         ...(completed.diagnostic

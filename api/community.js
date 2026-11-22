@@ -2,6 +2,7 @@ import { z } from "zod";
 import { canUndo, undoRequest } from "../server/community/undo.mjs";
 import { renderReview } from "../server/community/preview.mjs";
 import { evaluateChange } from "../server/community/ai.mjs";
+import { recoverQueued } from "../server/community/background.mjs";
 import { randomUUID } from "node:crypto";
 import { sameOrigin, validSession } from "../server/auth.mjs";
 import { json, body } from "../server/http.mjs";
@@ -78,6 +79,7 @@ export default async function handler(req, res) {
           siteKey: null,
         });
       const state = await readState();
+      await recoverQueued(state);
       prune(state);
       const id = secret() ? visitor(req, res, true) : null;
       if (

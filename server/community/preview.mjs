@@ -1,4 +1,5 @@
 import { applyDrawing } from "../../shared/community-scene.mjs";
+import { createAssetLoader } from "./assets.mjs";
 import { applyRuntimeValue } from "./runtime.mjs";
 import { contactPayload } from "../../src/contact.mjs";
 import { nativePageDocument } from "../../shared/community-page.mjs";
@@ -77,10 +78,28 @@ export async function renderReview(
           deviceScaleFactor: 1,
         });
         let documentHTML = "";
+        const remoteAsset = createAssetLoader();
         await context.route("**/*", async (route) => {
           const url = new URL(route.request().url());
-          if (url.hostname !== "portfolio-preview.invalid")
-            return route.abort();
+          if (url.hostname !== "portfolio-preview.invalid") {
+            const kind = route.request().resourceType();
+            if (!["image", "font"].includes(kind)) return route.abort();
+            try {
+              const asset = await remoteAsset(url.href, kind);
+              return route.fulfill({
+                status: 200,
+                contentType: asset.type,
+                body: asset.bytes,
+                headers: {
+                  "Access-Control-Allow-Origin": "*",
+                  "X-Content-Type-Options": "nosniff",
+                },
+              });
+            } catch (error) {
+              console.info("community_asset_error", error.message);
+              return route.abort();
+            }
+          }
           try {
             if (url.pathname === "/__community_preview")
               return route.fulfill({

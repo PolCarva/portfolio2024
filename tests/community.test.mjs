@@ -627,9 +627,8 @@ test("private diagnostics reserve the same budget but can never publish or consu
 });
 
 test("Anthropic transport counts tokens, constrains JSON, and rejects incomplete or over-budget replies", async () => {
-  const { createEvaluator, providerSchema } = await import(
-    "../server/community/ai.mjs"
-  );
+  const { createEvaluator, providerSchema } =
+    await import("../server/community/ai.mjs");
   const transformed = providerSchema(sceneSchema);
   assert(!JSON.stringify(transformed).includes("maxItems"));
   assert.equal(transformed.additionalProperties, false);
@@ -759,9 +758,8 @@ test("generated labels cannot become arbitrary public text through visual identi
 });
 
 test("shared drawings accept only bounded numeric strokes and preserve prior content", async () => {
-  const { drawingSchema, applyDrawing } = await import(
-    "../shared/community-scene.mjs"
-  );
+  const { drawingSchema, applyDrawing } =
+    await import("../shared/community-scene.mjs");
   const drawing = {
     zone: "hero",
     strokes: [
@@ -970,9 +968,8 @@ test("selective undo preserves a later conflicting style and reports the skipped
 });
 
 test("free visual colors and composition preserve readable text without accepting code", async () => {
-  const { sceneColors, contrast, sceneAttributes } = await import(
-    "../shared/community-catalog.mjs"
-  );
+  const { sceneColors, contrast, sceneAttributes } =
+    await import("../shared/community-catalog.mjs");
   const composition = {
     hero: "portrait-first",
     columns: 3,
@@ -1409,9 +1406,8 @@ test("repair budget reservations are atomic, idempotent and do not spend a secon
 });
 
 test("staged review is owner-bound, idempotent, private and publishes once after approval", async () => {
-  const { createContinuationHandler } = await import(
-    "../api/community/changes/[id].js"
-  );
+  const { createContinuationHandler } =
+    await import("../api/community/changes/[id].js");
   await reset();
   const c = await cookie(),
     other = await cookie(),
@@ -1650,9 +1646,8 @@ test("whole-page drawing is distinct from image and band tools", async () => {
 });
 
 test("pause cancels private staged artifacts and stale continuation tokens never execute AI", async () => {
-  const { createContinuationHandler } = await import(
-    "../api/community/changes/[id].js"
-  );
+  const { createContinuationHandler } =
+    await import("../api/community/changes/[id].js");
   await reset();
   const c = await cookie(),
     r = await reserve({
@@ -1983,4 +1978,141 @@ test("CSS publication cannot pass by checking only that a container exists", asy
   assert.equal(result.reason, "quality");
   assert.equal(rendered, 0);
   assert.match(result.checks.qualityIssues[0], /style browser tests/);
+});
+
+test("server background publication finishes without any visitor continuation and duplicate delivery cannot repeat provider calls", async () => {
+  await reset();
+  const { continueChange } = await import("../server/community/process.mjs");
+  const { jobResult } = await import("../server/community/state.mjs");
+  let generated = 0,
+    rendered = 0,
+    reviewed = 0;
+  const { createEvaluator } = await import("../server/community/ai.mjs");
+  const evaluate = createEvaluator({
+    respond: async (model) => {
+      if (model === "claude-haiku-5-5") {
+        generated++;
+        return {
+          value: {
+            changedFields: ["palette"],
+            scene: { ...originalScene, palette: "cherry" },
+          },
+          usage: { model, input: 20, output: 20 },
+        };
+      }
+      reviewed++;
+      return {
+        value: {
+          requestFulfilled: true,
+          animationStable: true,
+          qualityIssues: [],
+        },
+        usage: { model, input: 10, output: 10 },
+      };
+    },
+    render: async () => {
+      rendered++;
+      return { images: [Buffer.from("image")], contentRevision: "initial" };
+    },
+    readContent: async () => null,
+  });
+  let task,
+    deliveries = 0;
+  const dispatch = async (job) => {
+    if (!job.pendingStep) return;
+    deliveries++;
+    // Same nonce can be delivered twice by a network retry.
+    const results = await Promise.all([
+      continueChange(job.id, job.pendingStep, { evaluate }),
+      continueChange(job.id, job.pendingStep, { evaluate }),
+    ]);
+    const next = results.find((x) => x.pendingStep);
+    if (next) await dispatch(next);
+  };
+  const c = await cookie(),
+    data = request();
+  const handler = createChangeHandler({
+    verify: async () => {},
+    evaluate,
+    background: () => true,
+    runInBackground: (p) => {
+      task = p;
+    },
+    dispatch,
+  });
+  const response = await direct(handler, data, c);
+  assert.equal(response.status, 202);
+  assert.equal(response.payload.background, true);
+  assert.equal(response.payload.continueRequired, undefined);
+  // No client GET or POST is used to drive the remaining work.
+  await task;
+  const s = await readState(),
+    job = s.jobs[data.id];
+  assert.equal(job.status, "published");
+  assert.equal(s.scene.palette, "cherry");
+  assert.equal(s.visitors[identity(c)].count, 1);
+  assert.equal(s.budgets[job.month].reserved, RESERVATION);
+  assert.equal(generated, 1);
+  assert.equal(rendered, 1);
+  assert.equal(reviewed, 1);
+  assert.equal(deliveries, 2);
+  assert.equal(jobResult(job).step, undefined);
+  await direct(handler, data, c);
+  assert.equal(generated, 1);
+});
+
+test("background worker authorization binds job, step and expiry and rejects malformed tokens", async () => {
+  const { workerToken, validWorkerToken } =
+    await import("../server/community/background.mjs");
+  const id = randomUUID(),
+    step = randomUUID(),
+    now = Date.now(),
+    token = workerToken(id, step, now);
+  assert.equal(validWorkerToken(token, id, step, now), true);
+  assert.equal(validWorkerToken(token, id, step, now + 120001), false);
+  assert.equal(validWorkerToken(token, randomUUID(), step, now), false);
+  assert.equal(validWorkerToken(token, id, randomUUID(), now), false);
+  assert.equal(validWorkerToken(token + ".extra", id, step, now), false);
+  const response = await call("/api/community/process", "POST", { id, step });
+  assert.equal(response.status, 401);
+});
+
+test("queued server stages survive a browser absence but stale admin changes cannot publish them", async () => {
+  await reset();
+  const { continueChange } = await import("../server/community/process.mjs");
+  const owner = identity(await cookie()),
+    id = randomUUID();
+  await reserve({
+    id,
+    owner,
+    ip: "background",
+    prompt: "green",
+    tokenHash: randomUUID(),
+  });
+  await mutate((s) => {
+    s.jobs[id].background = true;
+  });
+  const job = await finish(id, {
+    approved: false,
+    reason: null,
+    cost: 10,
+    pending: { kind: "runtime", candidate: scene() },
+  });
+  const s = await readState();
+  prune(s, Date.now() + 200000);
+  assert.equal(s.jobs[id].status, "awaiting_runtime");
+  assert.equal(s.active, id);
+  await mutate((s) => {
+    s.revision = randomUUID();
+  });
+  let calls = 0;
+  const result = await continueChange(id, job.pendingStep, {
+    evaluate: async () => {
+      calls++;
+      return { approved: true, scene: scene() };
+    },
+  });
+  assert.equal(calls, 0);
+  assert.equal(result.reason, "stale");
+  assert.equal((await readState()).scene.palette, "original");
 });

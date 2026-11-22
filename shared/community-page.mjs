@@ -188,13 +188,14 @@ export function startPageRuntime(config) {
   }
   let lastHeight = 0;
   function size() {
+    // scrollHeight has a viewport-height floor. Using it makes an iframe unable
+    // to shrink and lets viewport-following overlays create empty space below a footer.
+    const contentHeight =
+      document.body.getBoundingClientRect?.().height ??
+      document.body.scrollHeight;
     const height = Math.min(
       30000,
-      Math.max(
-        400,
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight,
-      ),
+      Math.max(community.viewport.height || 400, Math.ceil(contentHeight)),
     );
     if (height !== lastHeight) {
       lastHeight = height;

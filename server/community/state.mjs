@@ -66,7 +66,9 @@ export function prune(state, now = Date.now()) {
         "awaiting_repair",
         "awaiting_runtime",
       ].includes(job.status) &&
-      now - (job.leaseAt || job.createdAt) > LEASE_MS
+      (job.background && job.queued
+        ? now - job.createdAt > 86400000
+        : now - (job.leaseAt || job.createdAt) > LEASE_MS)
     ) {
       job.status = "failed";
       job.reason = "timeout";
@@ -349,6 +351,10 @@ export async function finish(id, result) {
       } else {
         job.pending = result.pending;
         job.pendingStep = randomUUID();
+        if (job.background) {
+          job.queued = true;
+          job.dispatchedAt = Date.now();
+        }
         job.leaseAt = Date.now();
         job.status = "awaiting_" + result.pending.kind;
         return job;
@@ -420,7 +426,10 @@ export async function finish(id, result) {
 export const jobResult = (job) => ({
   id: job.id,
   status: job.status.startsWith("awaiting_") ? "processing" : job.status,
-  ...(job.pendingStep ? { continueRequired: true, step: job.pendingStep } : {}),
+  ...(job.pendingStep && !job.background
+    ? { continueRequired: true, step: job.pendingStep }
+    : {}),
+  ...(job.background ? { background: true } : {}),
   reason: job.reason,
   revision: job.revision,
 });

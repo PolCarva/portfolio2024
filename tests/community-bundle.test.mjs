@@ -28,9 +28,8 @@ before(async () => {
     ".generated/minified-community-runtime-test.mjs",
     compressed.code,
   );
-  ({ programDocument, pageDocument } = await import(
-    "../.generated/minified-community-runtime-test.mjs"
-  ));
+  ({ programDocument, pageDocument } =
+    await import("../.generated/minified-community-runtime-test.mjs"));
 });
 function bootstrap(html, nonce) {
   const start =
@@ -191,4 +190,41 @@ test("page Canvas input follows the visible viewport after scrolling and pressin
   handlers.pointerup({ clientX: 150, clientY: 1400, buttons: 0 });
   calls.at(-1)(140);
   assert.equal(received.pointer.down, false);
+});
+
+test("editable page height can shrink after deleting content despite the previous iframe viewport floor", () => {
+  const { context, calls, handlers } = environment();
+  const heights = [];
+  let height = 6000;
+  context.document.body.getBoundingClientRect = () => ({ height });
+  context.document.body.scrollHeight = 9000;
+  context.document.documentElement.scrollHeight = 9000;
+  context.parent.postMessage = (d) => {
+    if (d.type === "community-page-size") heights.push(d.height);
+  };
+  runInNewContext(
+    bootstrap(
+      pageDocument(
+        { ...program, layer: "page" },
+        { html: "<h1>Original</h1>", viewportHeight: 844 },
+      ),
+      "community-page",
+    ),
+    context,
+  );
+  calls.shift()(100);
+  calls.shift()(200);
+  assert.equal(heights.at(-1), 6000);
+  height = 2300;
+  handlers.message({
+    source: context.parent,
+    data: { type: "community-page-viewport", height: 844, scrollY: 0 },
+  });
+  assert.equal(heights.at(-1), 2300);
+  height = 100;
+  handlers.message({
+    source: context.parent,
+    data: { type: "community-page-viewport", height: 844, scrollY: 0 },
+  });
+  assert.equal(heights.at(-1), 844);
 });

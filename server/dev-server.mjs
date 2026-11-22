@@ -7,12 +7,14 @@ import community from "../api/community.js";
 import changes from "../api/community/changes.js";
 import changeStatus from "../api/community/changes/[id].js";
 import runtimeData from "../api/community/data.js";
+import worker from "../api/community/process.js";
 import maintenance from "../api/community/maintenance.js";
 const handlers = {
   "/api/community": community,
   "/api/community/changes": changes,
   "/api/community/data": runtimeData,
   "/api/community/maintenance": maintenance,
+  "/api/community/process": worker,
   "/api/session": session,
   "/api/content": content,
   "/api/upload": upload,
