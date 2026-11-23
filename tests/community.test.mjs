@@ -2116,3 +2116,84 @@ test("queued server stages survive a browser absence but stale admin changes can
   assert.equal(result.reason, "stale");
   assert.equal((await readState()).scene.palette, "original");
 });
+
+test("admin can retry a failed prompt on the current revision idempotently without publishing it before runtime and review", async () => {
+  await reset();
+  const c = await cookie(),
+    original = request();
+  await direct(
+    createChangeHandler({
+      verify: async () => {},
+      evaluate: async () => ({ approved: false, reason: "technical" }),
+    }),
+    original,
+    c,
+  );
+  const retry = {
+    action: "retry",
+    requestId: original.id,
+    retryId: randomUUID(),
+  };
+  assert.equal((await call("/api/community", "POST", retry, c)).status, 401);
+  assert.equal(
+    (
+      await call(
+        "/api/community",
+        "POST",
+        retry,
+        adminCookie,
+        "https://evil.test",
+      )
+    ).status,
+    403,
+  );
+  const previousFetch = globalThis.fetch;
+  let generations = 0;
+  globalThis.fetch = async (url, options) => {
+    if (!String(url).startsWith("https://api.anthropic.com/"))
+      return previousFetch(url, options);
+    if (String(url).endsWith("/count_tokens"))
+      return { ok: true, json: async () => ({ input_tokens: 50 }) };
+    generations++;
+    return {
+      ok: true,
+      json: async () => ({
+        stop_reason: "end_turn",
+        usage: { input_tokens: 50, output_tokens: 50 },
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              changedFields: ["palette"],
+              scene: { ...originalScene, palette: "cherry" },
+            }),
+          },
+        ],
+      }),
+    };
+  };
+  try {
+    const r = await call("/api/community", "POST", retry, adminCookie);
+    assert.equal(r.status, 200);
+    assert.equal((await r.json()).continueRequired, true);
+    assert.equal(
+      (await call("/api/community", "POST", retry, adminCookie)).status,
+      200,
+    );
+    assert.equal(generations, 1);
+    const state = await readState(),
+      job = state.jobs[retry.retryId];
+    assert.equal(job.owner, identity(c));
+    assert.equal(job.prompt, original.prompt);
+    assert.equal(job.status, "awaiting_runtime");
+    assert.equal(state.scene.palette, "original");
+    assert.equal(state.budgets[job.month].reserved, 2 * RESERVATION);
+    assert.equal(
+      (await call("/api/community/changes/" + job.id, "GET", null, adminCookie))
+        .status,
+      200,
+    );
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});

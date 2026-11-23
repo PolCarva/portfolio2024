@@ -14,13 +14,12 @@ import {
   mutate,
   takeRate,
   reserve,
-  reserveRepair,
-  finish,
   readState,
   problem,
   jobResult,
 } from "../../server/community/state.mjs";
 import { verifyTurnstile } from "../../server/community/turnstile.mjs";
+import { startChange } from "../../server/community/process.mjs";
 import { evaluateChange } from "../../server/community/ai.mjs";
 import {
   backgroundEnabled,
@@ -102,36 +101,15 @@ export function createChangeHandler({
       });
       if (reservation.duplicate)
         return json(res, 200, jobResult(reservation.job));
-      const work = async () => {
-        let result;
-        try {
-          result = await evaluate({
-            prompt: data.prompt,
-            drawing: data.drawing,
-            scene: reservation.scene,
-            deadline: reservation.job.createdAt + 120000,
-            reserveRepair: () => reserveRepair(data.id),
-            deferStages: true,
-            deferRuntime: true,
-          });
-        } catch {
-          result = { approved: false, reason: "technical" };
-        }
-        const job = await finish(data.id, result);
-        if (job.background) await dispatch(job);
-        return job;
-      };
-      if (!data.drawing && background()) {
-        const job = await mutate((state) => {
-          const pending = state.jobs[data.id];
-          pending.background = true;
-          pending.leaseAt = Date.now();
-          return pending;
-        });
-        runInBackground(work());
-        return json(res, 202, jobResult(job));
-      }
-      return json(res, 200, jobResult(await work()));
+      const job = await startChange(reservation, {
+        prompt: data.prompt,
+        drawing: data.drawing,
+        evaluate,
+        background: background(),
+        runInBackground,
+        dispatch,
+      });
+      return json(res, job.background ? 202 : 200, jobResult(job));
     } catch (e) {
       return communityFailure(res, e);
     }

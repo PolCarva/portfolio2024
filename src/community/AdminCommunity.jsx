@@ -38,6 +38,7 @@ export default function AdminCommunity() {
           ...(revision ? { revision } : {}),
           ...(test ? { test } : {}),
           ...(requestId ? { requestId } : {}),
+          ...(action === "retry" ? { retryId: crypto.randomUUID() } : {}),
         }),
       });
       for (let i = 0; result.status === "processing" && i < 145; i++) {
@@ -320,6 +321,17 @@ export default function AdminCommunity() {
                 {j.checks?.qualityIssues?.length > 0 && (
                   <small>{j.checks.qualityIssues.join(" · ")}</small>
                 )}
+                {j.kind === "prompt" &&
+                  j.prompt &&
+                  ["failed", "rejected"].includes(j.status) && (
+                    <button
+                      type="button"
+                      disabled={busy || data.paused}
+                      onClick={() => act("retry", null, null, j.id)}
+                    >
+                      Reintentar y publicar
+                    </button>
+                  )}
                 {j.canUndo && (
                   <button
                     type="button"

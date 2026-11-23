@@ -2,6 +2,7 @@ import { z } from "zod";
 import { canUndo, undoRequest } from "../server/community/undo.mjs";
 import { renderReview } from "../server/community/preview.mjs";
 import { evaluateChange } from "../server/community/ai.mjs";
+import { startChange } from "../server/community/process.mjs";
 import { recoverQueued } from "../server/community/background.mjs";
 import { randomUUID } from "node:crypto";
 import { sameOrigin, validSession } from "../server/auth.mjs";
@@ -35,6 +36,7 @@ const command = z
       "test-ai",
       "private",
       "undo",
+      "retry",
     ]),
     settings: z
       .object({
@@ -60,6 +62,7 @@ const command = z
       ])
       .optional(),
     requestId: z.uuid().optional(),
+    retryId: z.uuid().optional(),
   })
   .strict();
 export default async function handler(req, res) {
@@ -120,6 +123,26 @@ export default async function handler(req, res) {
     if (!validSession(req)) throw problem(401, "unauthorized");
     if (!sameOrigin(req)) throw problem(403, "origin");
     const data = command.parse(await body(req, 2000));
+    if (data.action === "retry") {
+      if (!data.requestId || !data.retryId) throw problem(400, "invalid");
+      const previous = (await readState()).jobs[data.requestId];
+      if (
+        !previous?.prompt ||
+        previous.kind !== "prompt" ||
+        !["rejected", "failed"].includes(previous.status)
+      )
+        throw problem(409, "retry_unavailable");
+      const reservation = await reserve({
+        id: data.retryId,
+        owner: previous.owner,
+        ip: digest("admin-retry"),
+        prompt: previous.prompt,
+        tokenHash: digest("admin-retry:" + data.retryId),
+        allowPrivate: true,
+      });
+      const job = await startChange(reservation);
+      return json(res, job.background ? 202 : 200, jobResult(job));
+    }
     if (data.action === "verify") {
       const preview = await renderReview((await readState()).scene);
       return json(res, 200, {

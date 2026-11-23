@@ -25,8 +25,7 @@ export function createContinuationHandler({ evaluate = evaluateChange } = {}) {
       const id =
         req.query?.id ||
         new URL(req.url, "https://local").pathname.split("/").pop();
-      const owns = (job) =>
-        job && (job.owner === owner || (job.diagnostic && admin));
+      const owns = (job) => job && (job.owner === owner || admin);
       if (req.method === "GET") {
         const state = await readState();
         await recoverQueued(state);

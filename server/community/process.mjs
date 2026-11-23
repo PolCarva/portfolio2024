@@ -1,5 +1,55 @@
 import { evaluateChange } from "./ai.mjs";
 import { mutate, finish, reserveRepair, problem } from "./state.mjs";
+import {
+  backgroundEnabled,
+  keepAlive,
+  dispatchPending,
+} from "./background.mjs";
+
+export async function startChange(
+  reservation,
+  {
+    prompt = reservation.job.prompt,
+    drawing,
+    evaluate = evaluateChange,
+    background = backgroundEnabled(),
+    runInBackground = keepAlive,
+    dispatch = dispatchPending,
+  } = {},
+) {
+  if (reservation.duplicate) return reservation.job;
+  const id = reservation.job.id;
+  const work = async () => {
+    let result;
+    try {
+      result = await evaluate({
+        prompt,
+        drawing,
+        scene: reservation.scene,
+        deadline: Date.now() + 120000,
+        reserveRepair: () => reserveRepair(id),
+        deferStages: true,
+        deferRuntime: true,
+      });
+    } catch {
+      result = { approved: false, reason: "technical" };
+    }
+    const job = await finish(id, result);
+    if (job.background) await dispatch(job);
+    return job;
+  };
+  if (!drawing && background) {
+    const job = await mutate((state) => {
+      const item = state.jobs[id];
+      item.background = true;
+      item.leaseAt = Date.now();
+      return item;
+    });
+    runInBackground(work());
+    return job;
+  }
+  return work();
+}
 
 // Browser-owned continuations and the server worker share the same atomic claim.
 export async function continueChange(
